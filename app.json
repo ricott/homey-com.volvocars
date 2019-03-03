@@ -1,0 +1,419 @@
+{
+  "id": "com.volvocars",
+  "version": "1.0.0",
+  "compatibility": ">=1.5.4",
+  "sdk": 2,
+  "name": {
+    "en": "Volvo On Call"
+  },
+  "tags": {
+    "en": ["volvo", "car", "voc", "volvo on call"]
+  },
+  "description": {
+    "en": "Control your Volvo car"
+  },
+  "author": {
+    "name": "Richard Barkestam",
+    "email": "richard@barkestam.se"
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "RBarkestam",
+        "currency": "EUR"
+      }
+    }
+  },
+  "category": [
+    "localization"
+  ],
+  "permissions":[
+    "homey:manager:geolocation"
+  ],
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  },
+  "capabilities":{
+    "distance": {
+      "type": "string",
+      "title": {
+        "en": "Distance from Homey"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/home.svg"
+    },
+    "location_human": {
+      "type": "string",
+      "title": {
+        "en": "Location"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/map.svg"
+    },
+    "range": {
+      "type": "number",
+      "title": {
+        "en": "Fuel range"
+      },
+      "units": {
+        "en": "km"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/fuel.svg"
+    },
+    "locked": {
+      "type": "boolean",
+      "title": {
+        "en": "Locked"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/lock.svg"
+    },
+    "heater": {
+      "type": "string",
+      "title": {
+        "en": "Parking heater"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/heater.svg"
+    },
+    "engine": {
+      "type": "boolean",
+      "title": {
+        "en": "Engine running"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/drivers/voc/assets/engine.svg"
+    }
+  },
+  "drivers": [
+    {
+      "id": "voc",
+      "class": "other",
+      "name": {
+        "en": "Volvo On Call"
+      },
+      "images": {
+        "large": "/drivers/voc/assets/images/volvo_l.png",
+        "small": "/drivers/voc/assets/images/volvo_s.png"
+      },
+      "capabilities": ["distance", "location_human", "engine", "heater", "locked", "range", "measure_battery"],
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "App settings"
+          },
+          "children": [
+            {
+              "id": "refresh_status",
+              "type": "number",
+              "label": {
+                "en": "Refresh status (minutes)"
+              },
+              "value": 5,
+              "min": 5,
+              "max": 1440
+            },
+            {
+              "id": "refresh_position",
+              "type": "number",
+              "label": {
+                "en": "Refresh position (minutes)"
+              },
+              "value": 10,
+              "min": 10,
+              "max": 1440
+            },
+            {
+              "id": "proximity_home",
+              "type": "number",
+              "label": {
+                "en": "Proximity of home (meters)"
+              },
+              "value": 50,
+              "min": 10,
+              "max": 1000
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Information"
+          },
+          "children": [
+            {
+              "id": "model",
+              "type": "text",
+              "label": {
+                "en": "Model"
+              },
+              "value": ""
+            },
+            {
+              "id": "license_plate",
+              "type": "text",
+              "label": {
+                "en": "License plate"
+              },
+              "value": ""
+            },
+            {
+              "id": "fuelType",
+              "type": "text",
+              "label": {
+                "en": "Fuel type and capacity"
+              },
+              "value": ""
+            },
+            {
+              "id": "subscriptionEndDate",
+              "type": "text",
+              "label": {
+                "en": "VOC subscription end"
+              },
+              "value": ""
+            }
+          ]
+        }
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "flow": {
+    "triggers":[
+      {
+        "id": "car_left_home",
+        "title": {
+          "en": "Car left home"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id": "car_came_home",
+        "title": {
+          "en": "Car came home"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id": "engine_started",
+        "title": {
+          "en": "Engine started"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id": "heater_started",
+        "title": {
+          "en": "Heater started"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id":"heaterState",
+        "title":{
+           "en":"Heater is !{{on|off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"engineState",
+        "title":{
+           "en":"Engine is !{{on|off}}"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"vehicleAtHome",
+        "title":{
+           "en":"Car is !{{|not}} at home"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id":"heaterControl",
+        "title":{
+          "en":"Heater"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          },
+          {
+            "name": "heaterAction",
+            "type": "dropdown",
+            "values": [
+              {"id": "ON", "label": {"en": "On"}},
+              {"id": "OFF","label": {"en": "Off"}}
+            ]
+          }
+        ]
+      },
+      {
+        "id":"lockControl",
+        "title":{
+          "en":"Doors & Locks"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          },
+          {
+            "name": "lockAction",
+            "type": "dropdown",
+            "values": [
+              {"id": "LOCK", "label": {"en": "Lock"}},
+              {"id": "UNLOCK","label": {"en": "Unlock"}}
+            ]
+          }
+        ]
+      },
+      {
+        "id":"engineControl",
+        "title":{
+          "en":"Engine, remote start"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          },
+          {
+            "name": "engineAction",
+            "type": "dropdown",
+            "values": [
+              {"id": "START", "label": {"en": "Start"}},
+              {"id": "STOP","label": {"en": "Stop"}}
+            ]
+          },
+          {
+            "name": "engineDuration",
+            "type": "range",
+            "min": 1,
+            "max": 15,
+            "step": 1,
+            "label": " minutes",
+            "labelDecimals": 0
+          }
+        ]
+      },
+      {
+        "id":"blinkLightsControl",
+        "title":{
+          "en":"Blink lights"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"honkHornControl",
+        "title":{
+          "en":"Honk horn"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"honkHornAndBlinkLightsControl",
+        "title":{
+          "en":"Blink lights & Honk horn"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      }
+    ]
+  }
+}

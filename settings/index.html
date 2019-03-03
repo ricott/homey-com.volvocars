@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+    <head>
+
+        <!-- The '/homey.js' script must be included in your settings view to work -->
+        <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
+
+    </head>
+    <body>
+
+        <h1 data-i18n="settings.title">
+            <!--
+            This field will automatically be filled by a translated string with key 'settings.title'.
+            Read more about translations at Internationalization.
+            -->
+        </h1>
+        <p data-i18n="settings.subtitle">
+            <!--
+            This field will also be translated
+            -->
+        </p>
+
+        <fieldset>
+            <legend>Settings</legend>
+            <div class="field row">
+                <label for="username">Username</label>
+                <input id="username" type="text" value="" />
+            </div>
+            <div class="field row">
+                <label for="password">Password</label>
+                <input id="password" type="password" value="" />
+            </div>
+            <div class="field row">
+                <label for="region">Region</label><br/>
+                <select id="region">
+                  <option value="eu">Europe</option>
+                  <option value="na">North America</option>
+                  <option value="cn">China</option>
+                </select>
+            </div>
+        </fieldset>
+
+        <button id="save" class="right">Save changes</button>
+
+        <script type="text/javascript">
+
+        // a method named 'onHomeyReady' must be present in your code
+        function onHomeyReady( Homey ){
+
+            // Tell Homey we're ready to be displayed
+            Homey.ready();
+
+            var usernameElement = document.getElementById('username');
+            var passwordElement = document.getElementById('password');
+            var regionElement = document.getElementById('region');
+            var saveElement = document.getElementById('save');
+
+            Homey.get('username', function( err, username ) {
+               if( err ) return Homey.alert( err );
+               usernameElement.value = username;
+            });
+
+            Homey.get('password', function( err, password ) {
+               if( err ) return Homey.alert( err );
+               passwordElement.value = password;
+            });
+
+            Homey.get('region', function( err, region ) {
+               if( err ) return Homey.alert( err );
+               regionElement.value = region;
+            });
+
+            saveElement.addEventListener('click', function(e) {
+
+                Homey.set('username', usernameElement.value, function( err ){
+                    if( err ) return Homey.alert( err );
+                });
+                Homey.set('password', passwordElement.value, function( err ){
+                    if( err ) return Homey.alert( err );
+                });
+                Homey.set('region', regionElement.value, function( err ){
+                    if( err ) return Homey.alert( err );
+                });
+
+            });
+        }
+        </script>
+
+    </body>
+</html>
