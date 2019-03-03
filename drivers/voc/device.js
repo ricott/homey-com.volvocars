@@ -82,8 +82,9 @@ class voc_ice extends Homey.Device {
     this.car.vocApi.on('car_action_status', response => {
       this.log(`Action '${response.action}' with result '${response.result}'`);
       if (response.result &&
-          (response.action !== 'blinkLights' || response.action !== 'honkHorn' ||
-            response.action !== 'honkHornAndBlinkLights')) {
+            response.action !== 'blinkLights' &&
+            response.action !== 'honkHorn' &&
+            response.action !== 'honkHornAndBlinkLights') {
         //We successfully invoked and action, lets refresh status so it shows that
         this.car.vocApi.refreshVehicleStatus(this.car.vin);
       }
@@ -97,7 +98,12 @@ class voc_ice extends Homey.Device {
       //Update capabilities of cloud device
       this._updateProperty('range', vehicle.distanceToEmpty);
       this._updateProperty('locked', vehicle.carLocked);
-      this._updateProperty('engine', vehicle.engineRunning);
+
+      if (vehicle.engineRunning || vehicle.ERS.status !== 'off') {
+        this._updateProperty('engine', true);
+      } else {
+        this._updateProperty('engine', false);
+      }
 
       let heaterStatus = 'Off';
       if (vehicle.heater.status!=='off') {

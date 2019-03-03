@@ -15,14 +15,7 @@ class VOCDriver extends Homey.Driver {
 
 	_registerFlows() {
     this.log('Registering flows');
-/*
-		// Register normal triggers
-		let triggers = [
-			'a_device_connected',
-			'a_device_disconnected'
-		];
-		this._registerFlow('trigger', triggers, Homey.FlowCardTrigger);
-*/
+
 		// Register device triggers
 		let triggers = [
 			'car_left_home',
@@ -81,25 +74,35 @@ class VOCDriver extends Homey.Driver {
 			return true;
 		});
 
-
 		this.flowCards['action.engineControl'].registerRunListener(( args, state ) => {
 			this.log('----- Engine action triggered');
 			this.log(`Action: '${args.engineAction}' with param '${args.engineDuration}'`);
-			this.log(`Current state: '${args.device.getCapabilityValue('engine')}'`);
+			this.log(`Current ERS state: '${args.device.car.status.ERS.status}'`);
+			this.log(`Current engine state: '${args.device.car.status.engineRunning}'`);
+			this.log(`Current warning: '${args.device.car.status.ERS.engineStartWarning}'`);
 
 			if (args.engineAction === 'START') {
 				//Cant start engine if already started
-				if (args.device.getCapabilityValue('engine')) {
+				if (args.device.car.status.engineRunning) {
 					this.log('Engine already running!');
 					return false;
-				}
-				args.device.startEngine(args.engineDuration);
-			} else if (args.engineAction === 'STOP') {
-				//Cant stop engine if already stopped
-				if (!args.device.getCapabilityValue('engine')) {
-					this.log('Engine already stopped!');
+				} else if (args.device.car.status.ERS.status !== 'off') {
+					this.log('Engine remote start (ERS) already running!');
+					return false;
+				} else if (args.device.car.status.ERS.engineStartWarning !== 'None') {
+					this.log(`Can't remote start engine, warning: '${args.device.car.status.ERS.engineStartWarning}'`);
 					return false;
 				}
+
+				args.device.startEngine(args.engineDuration);
+
+			} else if (args.engineAction === 'STOP') {
+				//Cant stop engine if already stopped
+				if (args.device.car.status.ERS.status === 'off') {
+					this.log('Engine remote start (ERS) already stopped!');
+					return false;
+				}
+
 				args.device.stopEngine();
 			}
 			return true;
@@ -143,8 +146,10 @@ class VOCDriver extends Homey.Driver {
 						this.log(`- device.distance: ${args.device.car.distanceFromHome}`);
 
 						if (args.device.carAtHome()) {
+							this.log('Car is at home');
 							return true;
 						} else {
+							this.log('Car is not at home');
 							return false;
 						}
 				});
