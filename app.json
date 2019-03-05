@@ -107,8 +107,8 @@
         "en": "Volvo On Call"
       },
       "images": {
-        "large": "/drivers/voc/assets/images/volvo_l.png",
-        "small": "/drivers/voc/assets/images/volvo_s.png"
+        "large": "/drivers/voc/assets/images/voc_l.png",
+        "small": "/drivers/voc/assets/images/voc_s.png"
       },
       "capabilities": ["distance", "location_human", "engine", "heater", "locked", "range", "measure_battery"],
       "settings": [
