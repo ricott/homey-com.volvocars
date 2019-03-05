@@ -8,7 +8,7 @@ Before adding a car you need to go to app settings and enter your Volvo On Call 
 - Car came home
 - Engine started
 - Heater started
-- Batter level changed (only works for PHEVs)
+- Battery level changed (only works for PHEVs)
 
 ## Conditions
 - Heater is on/off
