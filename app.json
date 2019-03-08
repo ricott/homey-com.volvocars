@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
