@@ -23,14 +23,6 @@
         <fieldset>
             <legend>Settings</legend>
             <div class="field row">
-                <label for="username">Username</label>
-                <input id="username" type="text" value="" />
-            </div>
-            <div class="field row">
-                <label for="password">Password</label>
-                <input id="password" type="password" value="" />
-            </div>
-            <div class="field row">
                 <label for="region">Region</label><br/>
                 <select id="region">
                   <option value="eu">Europe</option>
@@ -50,20 +42,8 @@
             // Tell Homey we're ready to be displayed
             Homey.ready();
 
-            var usernameElement = document.getElementById('username');
-            var passwordElement = document.getElementById('password');
             var regionElement = document.getElementById('region');
             var saveElement = document.getElementById('save');
-
-            Homey.get('username', function( err, username ) {
-               if( err ) return Homey.alert( err );
-               usernameElement.value = username;
-            });
-
-            Homey.get('password', function( err, password ) {
-               if( err ) return Homey.alert( err );
-               passwordElement.value = password;
-            });
 
             Homey.get('region', function( err, region ) {
                if( err ) return Homey.alert( err );
@@ -72,12 +52,6 @@
 
             saveElement.addEventListener('click', function(e) {
 
-                Homey.set('username', usernameElement.value, function( err ){
-                    if( err ) return Homey.alert( err );
-                });
-                Homey.set('password', passwordElement.value, function( err ){
-                    if( err ) return Homey.alert( err );
-                });
                 Homey.set('region', regionElement.value, function( err ){
                     if( err ) return Homey.alert( err );
                 });

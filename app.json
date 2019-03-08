@@ -125,7 +125,7 @@
                 "en": "Refresh status (minutes)"
               },
               "value": 5,
-              "min": 5,
+              "min": 1,
               "max": 1440
             },
             {
@@ -135,7 +135,7 @@
                 "en": "Refresh position (minutes)"
               },
               "value": 10,
-              "min": 10,
+              "min": 1,
               "max": 1440
             },
             {
@@ -145,7 +145,7 @@
                 "en": "Proximity of home (meters)"
               },
               "value": 50,
-              "min": 10,
+              "min": 1,
               "max": 1000
             }
           ]
@@ -158,7 +158,7 @@
           "children": [
             {
               "id": "model",
-              "type": "text",
+              "type": "label",
               "label": {
                 "en": "Model"
               },
@@ -166,7 +166,7 @@
             },
             {
               "id": "license_plate",
-              "type": "text",
+              "type": "label",
               "label": {
                 "en": "License plate"
               },
@@ -174,7 +174,7 @@
             },
             {
               "id": "fuelType",
-              "type": "text",
+              "type": "label",
               "label": {
                 "en": "Fuel type and capacity"
               },
@@ -182,7 +182,7 @@
             },
             {
               "id": "subscriptionEndDate",
-              "type": "text",
+              "type": "label",
               "label": {
                 "en": "VOC subscription end"
               },
@@ -192,6 +192,16 @@
         }
       ],
       "pair": [
+        {
+          "id":"login_credentials",
+          "template":"login_credentials",
+          "options":{
+            "logo":"/drivers/voc/assets/images/voc_s.png",
+            "usernameLabel":"Volvo On Call account email",
+            "usernamePlaceholder":"name@domain.com",
+            "passwordLabel":"Password"
+          }
+        },
         {
           "id": "list_devices",
           "template": "list_devices",

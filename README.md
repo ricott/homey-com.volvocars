@@ -1,7 +1,9 @@
 # Volvo On Call
 Control your Volvo car with Volvo On Call services.
 
-Before adding a car you need to go to app settings and enter your Volvo On Call user, password and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region in order to find your car.
+Before adding a car you need to go to app settings and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region in order to find your car.
+
+When adding a car you are prompted for your Volvo On Call username and password.
 
 ## Triggers
 - Car left home
@@ -51,3 +53,4 @@ Icons from;
 - https://thenounproject.com/fandikur007/
 - https://thenounproject.com/ralfschmitzer/
 - https://thenounproject.com/LAFS/
+- https://thenounproject.com/iconproducer/

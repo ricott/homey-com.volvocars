@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const VOC = require('../../lib/voc.js');
 const Osm = require('../../lib/maps.js');
+const Triggers = require('../../lib/flows/triggers.js');
 
 class voc_ice extends Homey.Device {
 
@@ -14,7 +15,7 @@ class voc_ice extends Homey.Device {
     this.refresh_position = this.getSettings().refresh_position || 10;
     this.refresh_status = this.getSettings().refresh_status || 2;
     this.proximity_home = this.getSettings().proximity_home || 50;
-    this.triggerCarLeftHomeFlow = true;
+    this.lastTriggerLocation = 'unknown';
 
     this.car = {
       vin: this.getData().id,
@@ -27,9 +28,20 @@ class voc_ice extends Homey.Device {
       vocApi: null
     };
 
+    if (!Homey.ManagerSettings.get(`${this.getData().id}.username`)) {
+			//This is a newly added device, lets copy login details to homey settings
+      this.log(`Setting login details for user '${this.getData().username}'`);
+
+      Homey.ManagerSettings.set(`${this.getData().id}.username`, this.getData().username);
+  		Homey.ManagerSettings.set(`${this.getData().id}.password`, this.getData().password);
+
+      //Remove password from device data
+      this.getData().password = null;
+		}
+
     this.car.vocApi = new VOC({
-      username: Homey.ManagerSettings.get('username'),
-		  password: Homey.ManagerSettings.get('password'),
+      username: Homey.ManagerSettings.get(`${this.getData().id}.username`),
+		  password: Homey.ManagerSettings.get(`${this.getData().id}.password`),
 		  region: Homey.ManagerSettings.get('region')
     });
 
@@ -106,7 +118,8 @@ class voc_ice extends Homey.Device {
       }
 
       let heaterStatus = 'Off';
-      if (vehicle.heater.status!=='off') {
+      if (vehicle.heater.status!=='off' ||
+          (vehicle.remoteClimatizationStatus !== null && vehicle.remoteClimatizationStatus !== 'off')) {
         heaterStatus = 'On';
       }
       this._updateProperty('heater', heaterStatus);
@@ -114,7 +127,6 @@ class voc_ice extends Homey.Device {
       if (this.car.phev && vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
       }
-
     });
 
     //refreshVehiclePosition
@@ -134,6 +146,14 @@ class voc_ice extends Homey.Device {
         this.car.distanceFromHome = distanceHomey;
         distanceHomey = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
         this._updateProperty('distance', distanceHomey);
+
+        if (this.lastTriggerLocation === 'unknown') {
+          if (this.carAtHome()) {
+            this.lastTriggerLocation = 'home';
+          } else {
+            this.lastTriggerLocation = 'away';
+          }
+        }
 
         Osm.geocodeLatLng(position.latitude, position.longitude).then((address) => {
            this._updateProperty('location_human', `${address.place}, ${address.city}`);
@@ -167,6 +187,37 @@ class voc_ice extends Homey.Device {
 
   }
 
+  startHeater() {
+    if (this.car.attributes.remoteHeaterSupported) {
+      this.log('Heater supported, using heater/start');
+      this.car.vocApi.startHeater(this.car.vin);
+
+    } else if (this.car.attributes.preclimatizationSupported) {
+      this.log('Pre climatization supported, using preclimatization/start');
+
+      this.car.vocApi.startPreClimatization(this.car.vin);
+
+    } else {
+      this.log('No heater or preclimatization support.');
+      //TOOD device.setWarning();
+    }
+  }
+
+  stopHeater() {
+    if (this.car.attributes.remoteHeaterSupported) {
+      this.log('heater/stop');
+      this.car.vocApi.stopHeater(this.car.vin);
+
+    } else if (this.car.attributes.preclimatizationSupported) {
+      this.log('preclimatization/stop');
+
+      this.car.vocApi.stopPreClimatization(this.car.vin);
+
+    } else {
+      this.log('No heater or preclimatization support.');
+    }
+  }
+
   initializeVehicleAttributes() {
     this.car.vocApi.getVehicleAttributes(this.car.vin);
   }
@@ -176,12 +227,7 @@ class voc_ice extends Homey.Device {
   refreshVehiclePosition() {
     this.car.vocApi.getVehiclePosition(this.car.vin);
   }
-  startHeater() {
-    this.car.vocApi.startHeater(this.car.vin);
-  }
-  stopHeater() {
-    this.car.vocApi.stopHeater(this.car.vin);
-  }
+
   lock() {
     this.car.vocApi.lock(this.car.vin);
   }
@@ -225,20 +271,25 @@ class voc_ice extends Homey.Device {
         this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
         this.setCapabilityValue(key, value);
 
-
         if (key == 'heater' && value === 'On') {
-          this.getDriver().triggerFlow('heater_started', {}, this);
+          Triggers.triggerFlow('heater_started', {}, this);
 
         } else if (key == 'engine' && value) {
-          this.getDriver().triggerFlow('engine_started', {}, this);
+          Triggers.triggerFlow('engine_started', {}, this);
 
-        } else if (key == 'distance' && !this.carAtHome() && this.triggerCarLeftHomeFlow) {
-          this.triggerCarLeftHomeFlow = false;
-          this.getDriver().triggerFlow('car_left_home', {}, this);
+        } else if (key == 'distance' && !this.carAtHome() &&
+                        this.lastTriggerLocation === 'home') {
 
-        } else if (key == 'distance' && this.carAtHome() && !this.triggerCarLeftHomeFlow) {
-          this.triggerCarLeftHomeFlow = true;
-          this.getDriver().triggerFlow('car_came_home', {}, this);
+          this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
+          this.lastTriggerLocation = 'away';
+          Triggers.triggerFlow('car_left_home', {}, this);
+
+        } else if (key == 'distance' && this.carAtHome() &&
+                        this.lastTriggerLocation === 'away') {
+
+          this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
+          this.lastTriggerLocation = 'home';
+          Triggers.triggerFlow('car_came_home', {}, this);
         }
 
     } else {
@@ -252,6 +303,9 @@ class voc_ice extends Homey.Device {
     this.log(`Deleting VOC ICE '${this.getName()}' from Homey.`);
     this._deleteTimers();
     this.car = null;
+
+    Homey.ManagerSettings.unset(`${this.getData().id}.username`);
+    Homey.ManagerSettings.unset(`${this.getData().id}.password`);
   }
 
   onRenamed (name) {
