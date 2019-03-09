@@ -3,7 +3,6 @@
 const Homey = require('homey');
 const VOC = require('../../lib/voc.js');
 const Osm = require('../../lib/maps.js');
-const Triggers = require('../../lib/flows/triggers.js');
 
 class voc_ice extends Homey.Device {
 
@@ -272,24 +271,24 @@ class voc_ice extends Homey.Device {
         this.setCapabilityValue(key, value);
 
         if (key == 'heater' && value === 'On') {
-          Triggers.triggerFlow('heater_started', {}, this);
+          this.getDriver().triggerFlow('trigger.heater_started_v2', {}, this);
 
         } else if (key == 'engine' && value) {
-          Triggers.triggerFlow('engine_started', {}, this);
+          this.getDriver().triggerFlow('trigger.engine_started_v2', {}, this);
 
         } else if (key == 'distance' && !this.carAtHome() &&
                         this.lastTriggerLocation === 'home') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'away';
-          Triggers.triggerFlow('car_left_home', {}, this);
+          this.getDriver().triggerFlow('trigger.car_left_home_v2', {}, this);
 
         } else if (key == 'distance' && this.carAtHome() &&
                         this.lastTriggerLocation === 'away') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'home';
-          Triggers.triggerFlow('car_came_home', {}, this);
+          this.getDriver().triggerFlow('trigger.car_came_home_v2', {}, this);
         }
 
     } else {

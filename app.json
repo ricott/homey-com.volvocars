@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -219,7 +219,7 @@
   "flow": {
     "triggers":[
       {
-        "id": "car_left_home",
+        "id": "car_left_home_v2",
         "title": {
           "en": "Car left home"
         },
@@ -232,7 +232,7 @@
         ]
       },
       {
-        "id": "car_came_home",
+        "id": "car_came_home_v2",
         "title": {
           "en": "Car came home"
         },
@@ -245,7 +245,7 @@
         ]
       },
       {
-        "id": "engine_started",
+        "id": "engine_started_v2",
         "title": {
           "en": "Engine started"
         },
@@ -258,7 +258,7 @@
         ]
       },
       {
-        "id": "heater_started",
+        "id": "heater_started_v2",
         "title": {
           "en": "Heater started"
         },
@@ -273,7 +273,7 @@
     ],
     "conditions": [
       {
-        "id":"heaterState",
+        "id":"heaterState_v2",
         "title":{
            "en":"Heater is !{{on|off}}"
         },
@@ -286,7 +286,7 @@
         ]
       },
       {
-        "id":"engineState",
+        "id":"engineState_v2",
         "title":{
            "en":"Engine is !{{on|off}}"
         },
@@ -299,7 +299,7 @@
         ]
       },
       {
-        "id":"vehicleAtHome",
+        "id":"vehicleAtHome_v2",
         "title":{
            "en":"Car is !{{|not}} at home"
         },
@@ -314,7 +314,7 @@
     ],
     "actions": [
       {
-        "id":"heaterControl",
+        "id":"heaterControl_v2",
         "title":{
           "en":"Heater"
         },
@@ -335,7 +335,7 @@
         ]
       },
       {
-        "id":"lockControl",
+        "id":"lockControl_v2",
         "title":{
           "en":"Doors & Locks"
         },
@@ -356,7 +356,7 @@
         ]
       },
       {
-        "id":"engineControl",
+        "id":"engineControl_v2",
         "title":{
           "en":"Engine, remote start"
         },
@@ -386,7 +386,7 @@
         ]
       },
       {
-        "id":"blinkLightsControl",
+        "id":"blinkLightsControl_v2",
         "title":{
           "en":"Blink lights"
         },
@@ -399,7 +399,7 @@
         ]
       },
       {
-        "id":"honkHornControl",
+        "id":"honkHornControl_v2",
         "title":{
           "en":"Honk horn"
         },
@@ -412,7 +412,7 @@
         ]
       },
       {
-        "id":"honkHornAndBlinkLightsControl",
+        "id":"honkHornAndBlinkLightsControl_v2",
         "title":{
           "en":"Blink lights & Honk horn"
         },
