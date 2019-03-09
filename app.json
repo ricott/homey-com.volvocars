@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -302,6 +302,19 @@
         "id":"vehicleAtHome_v2",
         "title":{
            "en":"Car is !{{|not}} at home"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"vehicleLocked_v2",
+        "title":{
+           "en":"Car is !{{|not}} locked"
         },
         "args": [
           {

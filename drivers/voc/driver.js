@@ -42,87 +42,145 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['action.heaterControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Heater action triggered');
 			this.log(`Action: '${args.heaterAction}'`);
-			if (args.heaterAction === 'ON') {
-				args.device.startHeater();
-			} else if (args.heaterAction === 'OFF') {
-				args.device.stopHeater();
+			if (args.device.car.attributes.remoteHeaterSupported ||
+					args.device.car.attributes.preclimatizationSupported) {
+				if (args.heaterAction === 'ON') {
+					args.device.startHeater();
+				} else if (args.heaterAction === 'OFF') {
+					args.device.stopHeater();
+				}
+				return true;
+			} else {
+				this.log('Heater not supported!');
+				let notification = new Homey.Notification({excerpt: Homey.__('error.noHeaterSupport')});
+				notification.register();
+				return false;
 			}
-			return true;
 		});
 
 		this.flowCards['action.lockControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Lock action triggered');
 			this.log(`Action: '${args.lockAction}'`);
 			if (args.lockAction === 'LOCK') {
-				args.device.lock();
+				if (args.device.car.attributes.lockSupported) {
+					args.device.lock();
+				} else {
+					this.log('Lock not supported!');
+					let notification = new Homey.Notification({excerpt: Homey.__('error.noLockSupport')});
+					notification.register();
+					return false;
+				}
 			} else if (args.lockAction === 'UNLOCK') {
-				args.device.unlock();
+				if (args.device.car.attributes.unlockSupported) {
+					args.device.unlock();
+				} else {
+					this.log('Unlock not supported!');
+					let notification = new Homey.Notification({excerpt: Homey.__('error.noUnlockSupport')});
+					notification.register();
+					return false;
+				}
 			}
 			return true;
 		});
 
 		this.flowCards['action.blinkLightsControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Blink lights action triggered');
-			args.device.blinkLights();
-			return true;
+			if (args.device.car.attributes.honkAndBlinkSupported) {
+				args.device.blinkLights();
+				return true;
+			} else {
+				this.log('Honk and blink not supported!');
+				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				notification.register();
+
+				return false;
+			}
 		});
 		this.flowCards['action.honkHornControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn action triggered');
-			args.device.honkHorn();
-			return true;
+			if (args.device.car.attributes.honkAndBlinkSupported) {
+				args.device.honkHorn();
+				return true;
+			} else {
+				this.log('Honk and blink not supported!');
+				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				notification.register();
+
+				return false;
+			}
 		});
 		this.flowCards['action.honkHornAndBlinkLightsControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn and blink lights action triggered');
-			args.device.honkHornAndBlinkLights();
-			return true;
+			if (args.device.car.attributes.honkAndBlinkSupported) {
+				args.device.honkHornAndBlinkLights();
+				return true;
+			} else {
+				this.log('Honk and blink not supported!');
+				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				notification.register();
+
+				return false;
+			}
 		});
 
 		this.flowCards['action.engineControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Engine action triggered');
 			this.log(`Action: '${args.engineAction}' with param '${args.engineDuration}'`);
-			this.log(`Current ERS state: '${args.device.car.status.ERS.status}'`);
-			this.log(`Current engine state: '${args.device.car.status.engineRunning}'`);
-			this.log(`Current warning: '${args.device.car.status.ERS.engineStartWarning}'`);
 
-			if (args.engineAction === 'START') {
-				//Cant start engine if already started
-				if (args.device.car.status.engineRunning) {
-					this.log('Engine already running!');
-					return false;
-				} else if (args.device.car.status.ERS.status !== 'off') {
-					this.log('Engine remote start (ERS) already running!');
-					return false;
-				} else if (args.device.car.status.ERS.engineStartWarning !== 'None') {
-					this.log(`Can't remote start engine, warning: '${args.device.car.status.ERS.engineStartWarning}'`);
-					return false;
+			//If Engine Remote Start (ERS) section is missing from status API - then no support for ERS
+			if (args.device.car.attributes.engineStartSupported && args.device.car.status.ERS) {
+				this.log(`Current ERS state: '${args.device.car.status.ERS.status}'`);
+				this.log(`Current engine state: '${args.device.car.status.engineRunning}'`);
+				this.log(`Current warning: '${args.device.car.status.ERS.engineStartWarning}'`);
+
+				if (args.engineAction === 'START') {
+					//Cant start engine if already started
+					if (args.device.car.status.engineRunning) {
+						this.log('Engine already running!');
+						return false;
+					} else if (args.device.car.status.ERS.status !== 'off') {
+						this.log('Engine remote start (ERS) already running!');
+						return false;
+					} else if (args.device.car.status.ERS.engineStartWarning !== 'None') {
+						this.log(`Can't remote start engine, warning: '${args.device.car.status.ERS.engineStartWarning}'`);
+						return false;
+					}
+
+					args.device.startEngine(args.engineDuration);
+
+				} else if (args.engineAction === 'STOP') {
+					//Cant stop engine if already stopped
+					if (args.device.car.status.ERS.status === 'off') {
+						this.log('Engine remote start (ERS) already stopped!');
+						return false;
+					}
+
+					args.device.stopEngine();
 				}
+				return true;
+			} else {
+				this.log('Engine Remote Start (ERS) not supported!');
+				let notification = new Homey.Notification({excerpt: Homey.__('error.noERSSupport')});
+				notification.register();
 
-				args.device.startEngine(args.engineDuration);
-
-			} else if (args.engineAction === 'STOP') {
-				//Cant stop engine if already stopped
-				if (args.device.car.status.ERS.status === 'off') {
-					this.log('Engine remote start (ERS) already stopped!');
-					return false;
-				}
-
-				args.device.stopEngine();
+				return false;
 			}
-			return true;
+
 		});
 
 		//Register conditions
 		triggers = [
 			'heaterState_v2',
 			'engineState_v2',
-			'vehicleAtHome_v2'
+			'vehicleAtHome_v2',
+			'vehicleLocked_v2'
 		];
 		this._registerFlow('condition', triggers, Homey.FlowCardCondition);
 
 		this.flowCards['condition.heaterState_v2']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.heaterState');
-					this.log(`- device.heater: ${args.device.getCapabilityValue('heater')}`);
+					this.log(`- car.heater: ${args.device.getCapabilityValue('heater')}`);
 
 					if (args.device.getCapabilityValue('heater') === 'On') {
 						return true;
@@ -134,7 +192,7 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['condition.engineState_v2']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.engineState');
-					this.log(`- device.engine: ${args.device.getCapabilityValue('engine')}`);
+					this.log(`- car.engine: ${args.device.getCapabilityValue('engine')}`);
 
 					if (args.device.getCapabilityValue('engine')) {
 						return true;
@@ -146,7 +204,7 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['condition.vehicleAtHome_v2']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.vehicleAtHome');
-					this.log(`- device.distance: ${args.device.car.distanceFromHome}`);
+					this.log(`- car.distance: ${args.device.car.distanceFromHome}`);
 
 					if (args.device.carAtHome()) {
 						this.log('Car is at home');
@@ -155,6 +213,18 @@ class VOCDriver extends Homey.Driver {
 						this.log('Car is not at home');
 						return false;
 					}
+			});
+
+		this.flowCards['condition.vehicleLocked_v2']
+			.registerRunListener((args, state, callback) => {
+				this.log('Flow condition.vehicleLocked');
+				this.log(`- car.locked: ${args.device.getCapabilityValue('locked')}`);
+
+				if (args.device.getCapabilityValue('locked')) {
+					return true;
+				} else {
+					return false;
+				}
 			});
 	}
 

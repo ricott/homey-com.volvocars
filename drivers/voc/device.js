@@ -7,7 +7,7 @@ const Osm = require('../../lib/maps.js');
 class voc_ice extends Homey.Device {
 
   onInit() {
-    this.log('VOC ICE initiated', this.getName());
+    this.log('VOC car initiated', this.getName());
 
     this.homeyActions = {};
     this.pollIntervals = [];
@@ -92,9 +92,8 @@ class voc_ice extends Homey.Device {
 
     this.car.vocApi.on('car_action_status', response => {
       this.log(`Action '${response.action}' with result '${response.result}'`);
-      if (response.result &&
-            response.action !== 'blinkLights' &&
-            response.action !== 'honkHorn' &&
+      //if (response.result)
+      if (response.action !== 'blinkLights' && response.action !== 'honkHorn' &&
             response.action !== 'honkHornAndBlinkLights') {
         //We successfully invoked and action, lets refresh status so it shows that
         this.car.vocApi.refreshVehicleStatus(this.car.vin);
@@ -110,19 +109,31 @@ class voc_ice extends Homey.Device {
       this._updateProperty('range', vehicle.distanceToEmpty);
       this._updateProperty('locked', vehicle.carLocked);
 
-      if (vehicle.engineRunning || vehicle.ERS.status !== 'off') {
-        this._updateProperty('engine', true);
-      } else {
-        this._updateProperty('engine', false);
+      let engineRunning = false;
+      //Either engine is running or ERS is running
+      if (vehicle.engineRunning) {
+        engineRunning = true;
+      } else if (this.car.attributes.engineStartSupported) {
+        if (vehicle.ERS && vehicle.ERS.status !== 'off') {
+          engineRunning = true;
+        }
       }
+      this._updateProperty('engine', engineRunning);
 
       let heaterStatus = 'Off';
-      if (vehicle.heater.status!=='off' ||
-          (vehicle.remoteClimatizationStatus !== null && vehicle.remoteClimatizationStatus !== 'off')) {
-        heaterStatus = 'On';
+      //Either heater is supported or pre climatization (I'm guessing)
+      if (this.car.attributes.remoteHeaterSupported) {
+        if (vehicle.heater && vehicle.heater.status!=='off') {
+          heaterStatus = 'On';
+        }
+      } else if (this.car.attributes.preclimatizationSupported) {
+        if (vehicle.remoteClimatizationStatus !== null && vehicle.remoteClimatizationStatus !== 'off') {
+          heaterStatus = 'On';
+        }
       }
       this._updateProperty('heater', heaterStatus);
 
+      //Only update battery status if car is a phev, e.g. highVoltageBatterySupported=true
       if (this.car.phev && vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
       }
@@ -186,6 +197,15 @@ class voc_ice extends Homey.Device {
 
   }
 
+  initializeVehicleAttributes() {
+    this.car.vocApi.getVehicleAttributes(this.car.vin);
+  }
+  refreshVehicleStatus() {
+    this.car.vocApi.refreshVehicleStatus(this.car.vin);
+  }
+  refreshVehiclePosition() {
+    this.car.vocApi.getVehiclePosition(this.car.vin);
+  }
   startHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('Heater supported, using heater/start');
@@ -198,10 +218,8 @@ class voc_ice extends Homey.Device {
 
     } else {
       this.log('No heater or preclimatization support.');
-      //TOOD device.setWarning();
     }
   }
-
   stopHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('heater/stop');
@@ -216,43 +234,60 @@ class voc_ice extends Homey.Device {
       this.log('No heater or preclimatization support.');
     }
   }
-
-  initializeVehicleAttributes() {
-    this.car.vocApi.getVehicleAttributes(this.car.vin);
-  }
-  refreshVehicleStatus() {
-    this.car.vocApi.refreshVehicleStatus(this.car.vin);
-  }
-  refreshVehiclePosition() {
-    this.car.vocApi.getVehiclePosition(this.car.vin);
-  }
-
   lock() {
-    this.car.vocApi.lock(this.car.vin);
+    if (this.car.attributes.lockSupported) {
+      this.car.vocApi.lock(this.car.vin);
+    } else {
+      this.log('Lock not supported!');
+    }
   }
   unlock() {
-    this.car.vocApi.unlock(this.car.vin);
+    if (this.car.attributes.unlockSupported) {
+      this.car.vocApi.unlock(this.car.vin);
+    } else {
+      this.log('Unlock not supported!');
+    }
   }
   startEngine(duration) {
-    this.car.vocApi.startEngine(this.car.vin, duration);
+    if (this.car.attributes.engineStartSupported) {
+      this.car.vocApi.startEngine(this.car.vin, duration);
+    } else {
+      this.log('Engine Remote Start (ERS) not supported!');
+    }
   }
   stopEngine() {
-    this.car.vocApi.stopEngine(this.car.vin);
+    if (this.car.attributes.engineStartSupported) {
+      this.car.vocApi.stopEngine(this.car.vin);
+    } else {
+      this.log('Engine Remote Start (ERS) not supported!');
+    }
   }
   blinkLights() {
-    this.car.vocApi.blinkLights(this.car.vin,
-                                  this.car.position.latitude,
-                                  this.car.position.longitude);
+    if (this.car.attributes.honkAndBlinkSupported) {
+      this.car.vocApi.blinkLights(this.car.vin,
+                                    this.car.position.latitude,
+                                    this.car.position.longitude);
+    } else {
+      this.log('Honk and blink not supported!');
+    }
   }
   honkHorn() {
-    this.car.vocApi.honkHorn(this.car.vin,
-                                  this.car.position.latitude,
-                                  this.car.position.longitude);
+    if (this.car.attributes.honkAndBlinkSupported) {
+      this.car.vocApi.honkHorn(this.car.vin,
+                                    this.car.position.latitude,
+                                    this.car.position.longitude);
+    } else {
+      this.log('Honk and blink not supported!');
+    }
   }
   honkHornAndBlinkLights() {
-    this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
-                                  this.car.position.latitude,
-                                  this.car.position.longitude);
+    if (this.car.attributes.honkAndBlinkSupported) {
+      this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
+                                    this.car.position.latitude,
+                                    this.car.position.longitude);
+    } else {
+      this.log('Honk and blink not supported!');
+    }
   }
 
   carAtHome() {
@@ -276,15 +311,13 @@ class voc_ice extends Homey.Device {
         } else if (key == 'engine' && value) {
           this.getDriver().triggerFlow('trigger.engine_started_v2', {}, this);
 
-        } else if (key == 'distance' && !this.carAtHome() &&
-                        this.lastTriggerLocation === 'home') {
+        } else if (key == 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'away';
           this.getDriver().triggerFlow('trigger.car_left_home_v2', {}, this);
 
-        } else if (key == 'distance' && this.carAtHome() &&
-                        this.lastTriggerLocation === 'away') {
+        } else if (key == 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'home';

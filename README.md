@@ -16,6 +16,7 @@ When adding a car you are prompted for your Volvo On Call username and password.
 - Heater is on/off
 - Engine is on/off
 - Car is (not) at home
+- Car is (not) locked
 
 ## Actions
 - Heater on/off

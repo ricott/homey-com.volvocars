@@ -2,5 +2,12 @@
   "settings": {
     "title": "Volvo On Call settings",
     "subtitle": "Please select region"
+  },
+  "error": {
+    "noERSSupport": "Engine Remote Start (ERS) is not supported on your car.",
+    "noBlinkHonkSupport": "Blink and honk is not supported on your car.",
+    "noLockSupport": "Lock is not supported on your car.",
+    "noUnlockSupport": "Unlock is not supported on your car.",
+    "noHeaterSupport": "Heater is not supported on your car."
   }
 }
