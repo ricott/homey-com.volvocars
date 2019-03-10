@@ -121,15 +121,8 @@ class voc_ice extends Homey.Device {
       this._updateProperty('engine', engineRunning);
 
       let heaterStatus = 'Off';
-      //Either heater is supported or pre climatization (I'm guessing)
-      if (this.car.attributes.remoteHeaterSupported) {
-        if (vehicle.heater && vehicle.heater.status!=='off') {
-          heaterStatus = 'On';
-        }
-      } else if (this.car.attributes.preclimatizationSupported) {
-        if (vehicle.remoteClimatizationStatus !== null && vehicle.remoteClimatizationStatus !== 'off') {
-          heaterStatus = 'On';
-        }
+      if (vehicle.heater && vehicle.heater.status !== 'off') {
+        heaterStatus = 'On';
       }
       this._updateProperty('heater', heaterStatus);
 
