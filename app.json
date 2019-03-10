@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -185,6 +185,30 @@
               "type": "label",
               "label": {
                 "en": "VOC subscription end"
+              },
+              "value": ""
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Debug"
+          },
+          "children": [
+            {
+              "id": "voc_status",
+              "type": "textarea",
+              "label": {
+                "en": "VOC Status"
+              },
+              "value": ""
+            },
+            {
+              "id": "voc_attributes",
+              "type": "textarea",
+              "label": {
+                "en": "VOC Attributes"
               },
               "value": ""
             }

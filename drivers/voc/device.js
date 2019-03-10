@@ -130,6 +130,11 @@ class voc_ice extends Homey.Device {
       if (this.car.phev && vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
       }
+
+      this.setSettings({voc_status: JSON.stringify(this.car.status, null, "  ")})
+        .catch(err => {
+          this.error('Failed to update settings', err);
+        });
     });
 
     //refreshVehiclePosition
@@ -177,7 +182,8 @@ class voc_ice extends Homey.Device {
       this.setSettings({license_plate: attributes.registrationNumber,
                         model: `${attributes.vehicleType}, ${attributes.modelYear}`,
                         fuelType: `${attributes.fuelType}, ${attributes.fuelTankVolume}l`,
-                        subscriptionEndDate: subscrEndDate})
+                        subscriptionEndDate: subscrEndDate,
+                        voc_attributes: JSON.stringify(this.car.attributes, null, "  ")})
         .catch(err => {
           this.error('Failed to update settings', err);
         });
