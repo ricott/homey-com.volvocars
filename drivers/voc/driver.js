@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey	= require('homey');
-const VOC = require('../../lib/voc.js')
+const VOC = require('../../lib/voc.js');
 
 class VOCDriver extends Homey.Driver {
 
