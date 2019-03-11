@@ -104,8 +104,11 @@ class voc_ice extends Homey.Device {
     this.car.vocApi.on('car_status_update', vehicle => {
       this.log('Refreshing status from VOC');
       this.car.status = vehicle;
+      this.setSettings({voc_status: JSON.stringify(this.car.status, null, "  ")})
+        .catch(err => {
+          this.error('Failed to update settings', err);
+        });
 
-      //Update capabilities of cloud device
       this._updateProperty('range', vehicle.distanceToEmpty);
       this._updateProperty('locked', vehicle.carLocked);
 
@@ -130,11 +133,21 @@ class voc_ice extends Homey.Device {
       if (this.car.phev && vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
       }
+      //Connection status means charge cable status
+      let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
+      if (vehicle.connectionStatus) {
+          if (vehicle.connectionStatus === 'Disconnected') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
+          } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
+          } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
+          } else {
+            chargeCableStatus = vehicle.connectionStatus;
+          }
+      }
+      this._updateProperty('charge_cable_status', chargeCableStatus);
 
-      this.setSettings({voc_status: JSON.stringify(this.car.status, null, "  ")})
-        .catch(err => {
-          this.error('Failed to update settings', err);
-        });
     });
 
     //refreshVehiclePosition
@@ -304,23 +317,28 @@ class voc_ice extends Homey.Device {
         this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
         this.setCapabilityValue(key, value);
 
-        if (key == 'heater' && value === 'On') {
+        if (key === 'heater' && value === 'On') {
           this.getDriver().triggerFlow('trigger.heater_started_v2', {}, this);
 
-        } else if (key == 'engine' && value) {
+        } else if (key === 'engine' && value) {
           this.getDriver().triggerFlow('trigger.engine_started_v2', {}, this);
 
-        } else if (key == 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
+        } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'away';
           this.getDriver().triggerFlow('trigger.car_left_home_v2', {}, this);
 
-        } else if (key == 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
+        } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'home';
           this.getDriver().triggerFlow('trigger.car_came_home_v2', {}, this);
+        } else if (key === 'charge_cable_status') {
+          let tokens = {
+            charge_cable_status: this.car.status.connectionStatus || 'n/a'
+          }
+          this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
         }
 
     } else {

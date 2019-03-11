@@ -9,5 +9,11 @@
     "noLockSupport": "Lock is not supported on your car.",
     "noUnlockSupport": "Unlock is not supported on your car.",
     "noHeaterSupport": "Heater is not supported on your car."
+  },
+  "device": {
+    "chargeCableStatus_disabled": "n/a",
+    "chargeCableStatus_disconnected": "Disconnected",
+    "chargeCableStatus_ConnectedNoPower": "Connected, no Power",
+    "chargeCableStatus_ConnectedWithPower": "Connected, with Power"
   }
 }

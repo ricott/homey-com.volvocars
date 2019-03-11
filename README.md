@@ -55,3 +55,4 @@ Icons from;
 - https://thenounproject.com/ralfschmitzer/
 - https://thenounproject.com/LAFS/
 - https://thenounproject.com/iconproducer/
+- https://thenounproject.com/hrnico/
