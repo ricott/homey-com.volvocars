@@ -10,7 +10,8 @@ When adding a car you are prompted for your Volvo On Call username and password.
 - Car came home
 - Engine started
 - Heater started
-- Battery level changed (only works for PHEVs)
+- Battery level changed (only for PHEVs)
+- Charge cable status changed (only for PHEVs)
 
 ## Conditions
 - Heater is on/off
