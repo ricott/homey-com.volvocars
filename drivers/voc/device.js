@@ -146,7 +146,9 @@ class voc_ice extends Homey.Device {
             chargeCableStatus = vehicle.connectionStatus;
           }
       }
-      this._updateProperty('charge_cable_status', chargeCableStatus);
+      if (this.hasCapability('charge_cable_status')) {
+        this._updateProperty('charge_cable_status', chargeCableStatus);
+      }
 
     });
 
