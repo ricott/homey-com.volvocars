@@ -41,7 +41,8 @@ class voc_ice extends Homey.Device {
     this.car.vocApi = new VOC({
       username: Homey.ManagerSettings.get(`${this.getData().id}.username`),
 		  password: Homey.ManagerSettings.get(`${this.getData().id}.password`),
-		  region: Homey.ManagerSettings.get('region')
+		  region: Homey.ManagerSettings.get('region'),
+      uuid: this.getDriver().deviceUUID
     });
 
     //Initialize static attributes

@@ -1,7 +1,9 @@
 'use strict';
 
 const Homey	= require('homey');
+const uuidv4 = require('uuid/v4');
 const VOC = require('../../lib/voc.js');
+
 
 class VOCDriver extends Homey.Driver {
 
@@ -12,6 +14,8 @@ class VOCDriver extends Homey.Driver {
 			Homey.ManagerSettings.set('region', 'eu');
 		}
 
+		this.deviceUUID = uuidv4().toUpperCase();
+		this.log(`Generating device uuid '${this.deviceUUID}'`);
 		this.flowCards = {};
 		this._registerFlows();
 	}
@@ -262,7 +266,8 @@ class VOCDriver extends Homey.Driver {
 			vocSession = new VOC({
 			  username: account.username,
 			  password: account.password,
-			  region: Homey.ManagerSettings.get('region')
+			  region: Homey.ManagerSettings.get('region'),
+				uuid: this.deviceUUID
 			});
 
       vocSession.login()
