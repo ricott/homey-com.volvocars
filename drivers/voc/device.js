@@ -118,8 +118,11 @@ class voc_ice extends Homey.Device {
       if (vehicle.engineRunning) {
         engineRunning = true;
       } else if (this.car.attributes.engineStartSupported) {
-        if (vehicle.ERS && vehicle.ERS.status !== 'off') {
-          engineRunning = true;
+        if (vehicle.ERS) {
+          let ersStatus = vehicle.ERS.status || 'off';
+          if (ersStatus.indexOf('on') > -1) {
+            engineRunning = true;
+          }
         }
       }
       this._updateProperty('engine', engineRunning);
