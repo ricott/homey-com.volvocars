@@ -355,7 +355,7 @@ class voc_ice extends Homey.Device {
   }
 
   onDeleted() {
-    this.log(`Deleting VOC ICE '${this.getName()}' from Homey.`);
+    this.log(`Deleting VOC car '${this.getName()}' from Homey.`);
     this._deleteTimers();
     this.car = null;
 

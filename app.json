@@ -399,6 +399,9 @@
           {
             "name": "heaterAction",
             "type": "dropdown",
+            "title": {
+                "en": "Heater action"
+            },
             "values": [
               {"id": "ON", "label": {"en": "On"}},
               {"id": "OFF","label": {"en": "Off"}}
@@ -420,6 +423,9 @@
           {
             "name": "lockAction",
             "type": "dropdown",
+            "title": {
+                "en": "Lock action"
+            },
             "values": [
               {"id": "LOCK", "label": {"en": "Lock"}},
               {"id": "UNLOCK","label": {"en": "Unlock"}}
@@ -441,6 +447,9 @@
           {
             "name": "engineAction",
             "type": "dropdown",
+            "title": {
+                "en": "Engine action"
+            },
             "values": [
               {"id": "START", "label": {"en": "Start"}},
               {"id": "STOP","label": {"en": "Stop"}}
@@ -449,6 +458,9 @@
           {
             "name": "engineDuration",
             "type": "range",
+            "title": {
+                "en": "Duration"
+            },
             "min": 1,
             "max": 15,
             "step": 1,
