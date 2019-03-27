@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -219,6 +219,14 @@
               "type": "textarea",
               "label": {
                 "en": "VOC Attributes"
+              },
+              "value": ""
+            },
+            {
+              "id": "voc_last_error",
+              "type": "textarea",
+              "label": {
+                "en": "Most recent VOC Error"
               },
               "value": ""
             }

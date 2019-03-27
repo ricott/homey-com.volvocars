@@ -211,6 +211,23 @@ class voc_ice extends Homey.Device {
     this.car.vocApi.on('voc_api_error', error => {
       this.error('Houston we have a problem', error);
 
+      let message = '';
+      if (this.isError(error)) {
+        message = error.stack;
+      } else {
+        try {
+          message = JSON.stringify(error, null, "  ");
+        } catch(e) {
+          this.log('Failed to stringify object', e);
+          message = error.toString();
+        }
+      }
+
+      this.setSettings({voc_last_error: message})
+        .catch(err => {
+          this.error('Failed to update settings', err);
+        });
+
     });
 
   }
@@ -227,84 +244,91 @@ class voc_ice extends Homey.Device {
   startHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('Heater supported, using heater/start');
-      this.car.vocApi.startHeater(this.car.vin);
+      return this.car.vocApi.startHeater(this.car.vin);
 
     } else if (this.car.attributes.preclimatizationSupported) {
       this.log('Pre climatization supported, using preclimatization/start');
-
-      this.car.vocApi.startPreClimatization(this.car.vin);
+      return this.car.vocApi.startPreClimatization(this.car.vin);
 
     } else {
       this.log('No heater or preclimatization support.');
+      return false;
     }
   }
   stopHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('heater/stop');
-      this.car.vocApi.stopHeater(this.car.vin);
+      return this.car.vocApi.stopHeater(this.car.vin);
 
     } else if (this.car.attributes.preclimatizationSupported) {
       this.log('preclimatization/stop');
-
-      this.car.vocApi.stopPreClimatization(this.car.vin);
+      return this.car.vocApi.stopPreClimatization(this.car.vin);
 
     } else {
       this.log('No heater or preclimatization support.');
+      return false;
     }
   }
   lock() {
     if (this.car.attributes.lockSupported) {
-      this.car.vocApi.lock(this.car.vin);
+      return this.car.vocApi.lock(this.car.vin);
     } else {
       this.log('Lock not supported!');
+      return false;
     }
   }
   unlock() {
     if (this.car.attributes.unlockSupported) {
-      this.car.vocApi.unlock(this.car.vin);
+      return this.car.vocApi.unlock(this.car.vin);
     } else {
       this.log('Unlock not supported!');
+      return false;
     }
   }
   startEngine(duration) {
     if (this.car.attributes.engineStartSupported) {
-      this.car.vocApi.startEngine(this.car.vin, duration);
+      return this.car.vocApi.startEngine(this.car.vin, duration);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
+      return false;
     }
   }
   stopEngine() {
     if (this.car.attributes.engineStartSupported) {
-      this.car.vocApi.stopEngine(this.car.vin);
+      return this.car.vocApi.stopEngine(this.car.vin);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
+      return false;
     }
   }
   blinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      this.car.vocApi.blinkLights(this.car.vin,
+      return this.car.vocApi.blinkLights(this.car.vin,
                                     this.car.position.latitude,
                                     this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
+      return false;
     }
   }
   honkHorn() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      this.car.vocApi.honkHorn(this.car.vin,
+      return this.car.vocApi.honkHorn(this.car.vin,
                                     this.car.position.latitude,
                                     this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
+      return false;
     }
   }
   honkHornAndBlinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
+      return this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
                                     this.car.position.latitude,
                                     this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
+      return false;
     }
   }
 
@@ -398,6 +422,10 @@ class voc_ice extends Homey.Device {
   }
   formatValue (t) {
     return Math.round(t.toFixed(1) * 10) / 10
+  }
+
+  isError(err) {
+    return (err && err.stack && err.message);
   }
 
 }

@@ -50,16 +50,28 @@ class VOCDriver extends Homey.Driver {
 			if (args.device.car.attributes.remoteHeaterSupported ||
 					args.device.car.attributes.preclimatizationSupported) {
 				if (args.heaterAction === 'ON') {
-					args.device.startHeater();
+					return args.device.startHeater().then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedStartHeater'));
+						}
+					});
+
 				} else if (args.heaterAction === 'OFF') {
-					args.device.stopHeater();
+					return args.device.stopHeater().then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedStopHeater'));
+						}
+					});
 				}
-				return true;
 			} else {
 				this.log('Heater not supported!');
 				let notification = new Homey.Notification({excerpt: Homey.__('error.noHeaterSupport')});
 				notification.register();
-				return false;
+				return Promise.reject(Homey.__('error.noHeaterSupport'));
 			}
 		});
 
@@ -68,21 +80,37 @@ class VOCDriver extends Homey.Driver {
 			this.log(`Action: '${args.lockAction}'`);
 			if (args.lockAction === 'LOCK') {
 				if (args.device.car.attributes.lockSupported) {
-					args.device.lock();
+
+					return args.device.lock().then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedLock'));
+						}
+					});
+
 				} else {
 					this.log('Lock not supported!');
 					let notification = new Homey.Notification({excerpt: Homey.__('error.noLockSupport')});
 					notification.register();
-					return false;
+					return Promise.reject(Homey.__('error.noLockSupport'));
 				}
 			} else if (args.lockAction === 'UNLOCK') {
 				if (args.device.car.attributes.unlockSupported) {
-					args.device.unlock();
+
+					return args.device.unlock().then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedUnLock'));
+						}
+					});
+
 				} else {
 					this.log('Unlock not supported!');
 					let notification = new Homey.Notification({excerpt: Homey.__('error.noUnlockSupport')});
 					notification.register();
-					return false;
+					return Promise.reject(Homey.__('error.noUnlockSupport'));
 				}
 			}
 			return true;
@@ -91,40 +119,58 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['action.blinkLightsControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
-				args.device.blinkLights();
-				return true;
+
+				return args.device.blinkLights().then((result) => {
+					if (result) {
+						return Promise.resolve(true);
+					} else {
+						return Promise.reject(Homey.__('error.failedBlinkLights'));
+					}
+				});
+
 			} else {
 				this.log('Honk and blink not supported!');
 				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
 				notification.register();
-
-				return false;
+				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
 		this.flowCards['action.honkHornControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
-				args.device.honkHorn();
-				return true;
+
+				return args.device.honkHorn().then((result) => {
+					if (result) {
+						return Promise.resolve(true);
+					} else {
+						return Promise.reject(Homey.__('error.failedHonkHorn'));
+					}
+				});
+
 			} else {
 				this.log('Honk and blink not supported!');
 				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
 				notification.register();
-
-				return false;
+				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
 		this.flowCards['action.honkHornAndBlinkLightsControl_v2'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn and blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
-				args.device.honkHornAndBlinkLights();
-				return true;
+
+				return args.device.honkHornAndBlinkLights().then((result) => {
+					if (result) {
+						return Promise.resolve(true);
+					} else {
+						return Promise.reject(Homey.__('error.failedHonkHornAndBlinkLights'));
+					}
+				});
+
 			} else {
 				this.log('Honk and blink not supported!');
 				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
 				notification.register();
-
-				return false;
+				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
 
@@ -142,33 +188,47 @@ class VOCDriver extends Homey.Driver {
 					//Cant start engine if already started
 					if (args.device.car.status.engineRunning) {
 						this.log('Engine already running!');
-						return false;
+						return Promise.reject(Homey.__('error.engineAlreadyRunning'));
+
 					} else if (args.device.car.status.ERS.status !== 'off') {
 						this.log('Engine remote start (ERS) already running!');
-						return false;
+						return Promise.reject(Homey.__('error.engineERSAlreadyRunning'));
+
 					} else if (args.device.car.status.ERS.engineStartWarning !== 'None') {
 						this.log(`Can't remote start engine, warning: '${args.device.car.status.ERS.engineStartWarning}'`);
-						return false;
+						return Promise.reject(Homey.__('error.engineERSWarning',
+																						{ 'ERSwarning': args.device.car.status.ERS.engineStartWarning }));
 					}
 
-					args.device.startEngine(args.engineDuration);
+					return args.device.startEngine(args.engineDuration).then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedStartERS'));
+						}
+					});
 
 				} else if (args.engineAction === 'STOP') {
 					//Cant stop engine if already stopped
 					if (args.device.car.status.ERS.status === 'off') {
 						this.log('Engine remote start (ERS) already stopped!');
-						return false;
+						return Promise.reject(Homey.__('error.engineAlreadyStopped'));
 					}
 
-					args.device.stopEngine();
+					return args.device.stopEngine().then((result) => {
+						if (result) {
+							return Promise.resolve(true);
+						} else {
+							return Promise.reject(Homey.__('error.failedStopERS'));
+						}
+					});
 				}
-				return true;
+
 			} else {
 				this.log('Engine Remote Start (ERS) not supported!');
 				let notification = new Homey.Notification({excerpt: Homey.__('error.noERSSupport')});
 				notification.register();
-
-				return false;
+				return Promise.reject(Homey.__('error.noERSSupport'));
 			}
 
 		});
@@ -245,7 +305,7 @@ class VOCDriver extends Homey.Driver {
 		// this.log(this.flowCards[flow])
 		if (this.flowCards[flow] instanceof Homey.FlowCardTriggerDevice) {
 				this.log('- device trigger for ', device.getName());
-				this.flowCards[flow].trigger(device, tokens, device.state);
+				this.flowCards[flow].trigger(device, tokens);
 		}
 		else if (this.flowCards[flow] instanceof Homey.FlowCardTrigger) {
 				this.log('- regular trigger');

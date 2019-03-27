@@ -8,7 +8,20 @@
     "noBlinkHonkSupport": "Blink and honk is not supported on your car.",
     "noLockSupport": "Lock is not supported on your car.",
     "noUnlockSupport": "Unlock is not supported on your car.",
-    "noHeaterSupport": "Heater is not supported on your car."
+    "noHeaterSupport": "Heater is not supported on your car.",
+    "failedStopERS": "Failed to stop engine (ERS)!",
+    "failedStartERS": "Failed to start engine (ERS)!",
+    "engineAlreadyRunning": "Engine is already running!",
+    "engineAlreadyStopped": "Engine remote start (ERS) already stopped!",
+    "engineERSWarning": "Can't start engine(ERS), there is a warning: __ERSwarning__!",
+    "failedStartHeater": "Failed to start heater!",
+    "failedStopHeater": "Failed to stop heater!",
+    "failedLock": "Failed to lock car!",
+    "failedUnLock": "Failed to unlock car!",
+    "failedBlinkLights": "Failed to blink the lights!",
+    "failedHonkHorn": "Failed to honk the horn!",
+    "failedHonkHornAndBlinkLights": "Failed to honk the horn and blink the lights!"
+
   },
   "device": {
     "chargeCableStatus_disabled": "n/a",
