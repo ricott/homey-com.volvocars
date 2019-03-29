@@ -38,6 +38,12 @@ class voc_ice extends Homey.Device {
       this.getData().password = null;
 		}
 
+    //Clear last error on app restart
+    this.setSettings({voc_last_error: ''})
+      .catch(err => {
+        this.error('Failed to update settings', err);
+      });
+
     this.car.vocApi = new VOC({
       username: Homey.ManagerSettings.get(`${this.getData().id}.username`),
 		  password: Homey.ManagerSettings.get(`${this.getData().id}.password`),
