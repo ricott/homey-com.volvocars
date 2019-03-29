@@ -222,8 +222,8 @@ class voc_ice extends Homey.Device {
           message = error.toString();
         }
       }
-
-      this.setSettings({voc_last_error: message})
+      let dateTime = new Date().toISOString(); //.replace(/T/, ' ').replace(/\..+/, '');
+      this.setSettings({voc_last_error: dateTime + '\n' + message})
         .catch(err => {
           this.error('Failed to update settings', err);
         });
