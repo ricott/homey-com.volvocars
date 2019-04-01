@@ -4,7 +4,7 @@ const Homey = require('homey');
 const VOC = require('../../lib/voc.js');
 const Osm = require('../../lib/maps.js');
 
-class voc_ice extends Homey.Device {
+class VOCDevice extends Homey.Device {
 
   onInit() {
     this.log('VOC car initiated', this.getName());
@@ -436,4 +436,4 @@ class voc_ice extends Homey.Device {
 
 }
 
-module.exports = voc_ice;
+module.exports = VOCDevice;
