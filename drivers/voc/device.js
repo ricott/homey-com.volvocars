@@ -228,12 +228,12 @@ class VOCDevice extends Homey.Device {
           message = error.toString();
         }
       }
-      let dateTime = new Date().toISOString(); //.replace(/T/, ' ').replace(/\..+/, '');
+
+      let dateTime = new Date().toISOString();
       this.setSettings({voc_last_error: dateTime + '\n' + message})
         .catch(err => {
           this.error('Failed to update settings', err);
         });
-
     });
 
   }
