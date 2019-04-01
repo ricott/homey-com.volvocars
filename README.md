@@ -57,3 +57,11 @@ Icons from;
 - https://thenounproject.com/LAFS/
 - https://thenounproject.com/iconproducer/
 - https://thenounproject.com/hrnico/
+
+# Versions
+
+## 0.9.9
+- Fixed bug related to start of parking climate
+
+## 0.9.8
+- Added debug information in device advanced settings. Last VOC API response for attributes, status and most recent VOC error received when invoking an action.
