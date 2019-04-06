@@ -8,8 +8,8 @@ When adding a car you are prompted for your Volvo On Call username and password.
 ## Triggers
 - Car left home
 - Car came home
-- Engine started
-- Heater started
+- Engine started/stopped
+- Heater started/stopped
 - Battery level changed (only for PHEVs)
 - Charge cable status changed (only for PHEVs)
 
@@ -59,6 +59,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+
+## 1.0.0
+- Triggers added; Engine stopped, Heater stopped
 
 ## 0.9.9
 - Fixed bug related to start of parking climate

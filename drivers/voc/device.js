@@ -353,23 +353,31 @@ class VOCDevice extends Homey.Device {
         this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
         this.setCapabilityValue(key, value);
 
-        if (key === 'heater' && value === 'On') {
-          this.getDriver().triggerFlow('trigger.heater_started_v2', {}, this);
+        if (key === 'heater') {
+          if (value === 'On') {
+            this.getDriver().triggerFlow('trigger.heater_started', {}, this);
+          } else {
+            this.getDriver().triggerFlow('trigger.heater_stopped', {}, this);
+          }
 
-        } else if (key === 'engine' && value) {
-          this.getDriver().triggerFlow('trigger.engine_started_v2', {}, this);
+        } else if (key === 'engine') {
+          if (value) {
+            this.getDriver().triggerFlow('trigger.engine_started', {}, this);
+          } else {
+            this.getDriver().triggerFlow('trigger.engine_stopped', {}, this);
+          }
 
         } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'away';
-          this.getDriver().triggerFlow('trigger.car_left_home_v2', {}, this);
+          this.getDriver().triggerFlow('trigger.car_left_home', {}, this);
 
         } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
 
           this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
           this.lastTriggerLocation = 'home';
-          this.getDriver().triggerFlow('trigger.car_came_home_v2', {}, this);
+          this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
         } else if (key === 'charge_cable_status') {
           let tokens = {
             charge_cable_status: this.car.status.connectionStatus || 'n/a'

@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "0.9.9",
+  "version": "1.0.0",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -261,7 +261,7 @@
   "flow": {
     "triggers":[
       {
-        "id": "car_left_home_v2",
+        "id": "car_left_home",
         "title": {
           "en": "Car left home"
         },
@@ -274,7 +274,7 @@
         ]
       },
       {
-        "id": "car_came_home_v2",
+        "id": "car_came_home",
         "title": {
           "en": "Car came home"
         },
@@ -287,7 +287,7 @@
         ]
       },
       {
-        "id": "engine_started_v2",
+        "id": "engine_started",
         "title": {
           "en": "Engine started"
         },
@@ -300,9 +300,35 @@
         ]
       },
       {
-        "id": "heater_started_v2",
+        "id": "engine_stopped",
+        "title": {
+          "en": "Engine stopped"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id": "heater_started",
         "title": {
           "en": "Heater started"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id": "heater_stopped",
+        "title": {
+          "en": "Heater stopped"
         },
         "args": [
           {
@@ -340,7 +366,7 @@
     ],
     "conditions": [
       {
-        "id":"heaterState_v2",
+        "id":"heaterState",
         "title":{
            "en":"Heater is !{{on|off}}"
         },
@@ -353,7 +379,7 @@
         ]
       },
       {
-        "id":"engineState_v2",
+        "id":"engineState",
         "title":{
            "en":"Engine is !{{on|off}}"
         },
@@ -366,7 +392,7 @@
         ]
       },
       {
-        "id":"vehicleAtHome_v2",
+        "id":"vehicleAtHome",
         "title":{
            "en":"Car is !{{|not}} at home"
         },
@@ -379,7 +405,7 @@
         ]
       },
       {
-        "id":"vehicleLocked_v2",
+        "id":"vehicleLocked",
         "title":{
            "en":"Car is !{{|not}} locked"
         },
@@ -394,7 +420,7 @@
     ],
     "actions": [
       {
-        "id":"heaterControl_v2",
+        "id":"heaterControl",
         "title":{
           "en":"Heater"
         },
@@ -418,7 +444,7 @@
         ]
       },
       {
-        "id":"lockControl_v2",
+        "id":"lockControl",
         "title":{
           "en":"Doors & Locks"
         },
@@ -442,7 +468,7 @@
         ]
       },
       {
-        "id":"engineControl_v2",
+        "id":"engineControl",
         "title":{
           "en":"Engine, remote start"
         },
@@ -478,7 +504,7 @@
         ]
       },
       {
-        "id":"blinkLightsControl_v2",
+        "id":"blinkLightsControl",
         "title":{
           "en":"Blink lights"
         },
@@ -491,7 +517,7 @@
         ]
       },
       {
-        "id":"honkHornControl_v2",
+        "id":"honkHornControl",
         "title":{
           "en":"Honk horn"
         },
@@ -504,7 +530,7 @@
         ]
       },
       {
-        "id":"honkHornAndBlinkLightsControl_v2",
+        "id":"honkHornAndBlinkLightsControl",
         "title":{
           "en":"Blink lights & Honk horn"
         },

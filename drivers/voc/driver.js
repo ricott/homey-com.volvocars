@@ -25,26 +25,28 @@ class VOCDriver extends Homey.Driver {
 
 		// Register device triggers
 		let triggers = [
-			'car_left_home_v2',
-			'car_came_home_v2',
-			'engine_started_v2',
-			'heater_started_v2',
+			'car_left_home',
+			'car_came_home',
+			'engine_started',
+			'engine_stopped',
+			'heater_started',
+			'heater_stopped',
 			'charge_cable_status_changed'
 		];
 		this._registerFlow('trigger', triggers, Homey.FlowCardTriggerDevice);
 
 		//Register actions
 		triggers = [
-			'heaterControl_v2',
-			'lockControl_v2',
-			'engineControl_v2',
-			'blinkLightsControl_v2',
-			'honkHornControl_v2',
-			'honkHornAndBlinkLightsControl_v2'
+			'heaterControl',
+			'lockControl',
+			'engineControl',
+			'blinkLightsControl',
+			'honkHornControl',
+			'honkHornAndBlinkLightsControl'
 		];
 		this._registerFlow('action', triggers, Homey.FlowCardAction);
 
-		this.flowCards['action.heaterControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.heaterControl'].registerRunListener(( args, state ) => {
 			this.log('----- Heater action triggered');
 			this.log(`Action: '${args.heaterAction}'`);
 			if (args.device.car.attributes.remoteHeaterSupported ||
@@ -75,7 +77,7 @@ class VOCDriver extends Homey.Driver {
 			}
 		});
 
-		this.flowCards['action.lockControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.lockControl'].registerRunListener(( args, state ) => {
 			this.log('----- Lock action triggered');
 			this.log(`Action: '${args.lockAction}'`);
 			if (args.lockAction === 'LOCK') {
@@ -116,7 +118,7 @@ class VOCDriver extends Homey.Driver {
 			return true;
 		});
 
-		this.flowCards['action.blinkLightsControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.blinkLightsControl'].registerRunListener(( args, state ) => {
 			this.log('----- Blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -135,7 +137,7 @@ class VOCDriver extends Homey.Driver {
 				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
-		this.flowCards['action.honkHornControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.honkHornControl'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -154,7 +156,7 @@ class VOCDriver extends Homey.Driver {
 				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
-		this.flowCards['action.honkHornAndBlinkLightsControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.honkHornAndBlinkLightsControl'].registerRunListener(( args, state ) => {
 			this.log('----- Honk horn and blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -174,7 +176,7 @@ class VOCDriver extends Homey.Driver {
 			}
 		});
 
-		this.flowCards['action.engineControl_v2'].registerRunListener(( args, state ) => {
+		this.flowCards['action.engineControl'].registerRunListener(( args, state ) => {
 			this.log('----- Engine action triggered');
 			this.log(`Action: '${args.engineAction}' with param '${args.engineDuration}'`);
 
@@ -235,14 +237,14 @@ class VOCDriver extends Homey.Driver {
 
 		//Register conditions
 		triggers = [
-			'heaterState_v2',
-			'engineState_v2',
-			'vehicleAtHome_v2',
-			'vehicleLocked_v2'
+			'heaterState',
+			'engineState',
+			'vehicleAtHome',
+			'vehicleLocked'
 		];
 		this._registerFlow('condition', triggers, Homey.FlowCardCondition);
 
-		this.flowCards['condition.heaterState_v2']
+		this.flowCards['condition.heaterState']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.heaterState');
 					this.log(`- car.heater: ${args.device.getCapabilityValue('heater')}`);
@@ -254,7 +256,7 @@ class VOCDriver extends Homey.Driver {
 					}
 			});
 
-		this.flowCards['condition.engineState_v2']
+		this.flowCards['condition.engineState']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.engineState');
 					this.log(`- car.engine: ${args.device.getCapabilityValue('engine')}`);
@@ -266,7 +268,7 @@ class VOCDriver extends Homey.Driver {
 					}
 			});
 
-		this.flowCards['condition.vehicleAtHome_v2']
+		this.flowCards['condition.vehicleAtHome']
 			.registerRunListener((args, state, callback) => {
 					this.log('Flow condition.vehicleAtHome');
 					this.log(`- car.distance: ${args.device.car.distanceFromHome}`);
@@ -280,7 +282,7 @@ class VOCDriver extends Homey.Driver {
 					}
 			});
 
-		this.flowCards['condition.vehicleLocked_v2']
+		this.flowCards['condition.vehicleLocked']
 			.registerRunListener((args, state, callback) => {
 				this.log('Flow condition.vehicleLocked');
 				this.log(`- car.locked: ${args.device.getCapabilityValue('locked')}`);
