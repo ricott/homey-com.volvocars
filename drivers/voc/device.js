@@ -23,6 +23,7 @@ class VOCDevice extends Homey.Device {
       attributes: null,
       status: null,
       position: null,
+      location: null,
       distanceFromHome: 0,
       vocApi: null
     };
@@ -188,8 +189,9 @@ class VOCDevice extends Homey.Device {
           }
         }
 
-        Osm.geocodeLatLng(position.latitude, position.longitude).then((address) => {
-           this._updateProperty('location_human', `${address.place}, ${address.city}`);
+        Osm.geocodeLatLng(position.latitude, position.longitude).then((osm_location) => {
+          this.car.location = osm_location;
+          this._updateProperty('location_human', `${osm_location.address}, ${osm_location.city}`);
         });
       }
     });
@@ -383,6 +385,16 @@ class VOCDevice extends Homey.Device {
             charge_cable_status: this.car.status.connectionStatus || 'n/a'
           }
           this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
+
+        } else if (key === 'location_human') {
+          let tokens = {
+            car_location_address: this.car.location.address || '',
+            car_location_city: this.car.location.city || '',
+            car_location_postcode: this.car.location.postcode || '',
+            car_location_county: this.car.location.county || '',
+            car_location_country: this.car.location.country || ''
+          }
+          this.getDriver().triggerFlow('trigger.location_human_changed', tokens, this);
         }
 
     } else {

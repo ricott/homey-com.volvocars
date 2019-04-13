@@ -8,6 +8,7 @@ When adding a car you are prompted for your Volvo On Call username and password.
 ## Triggers
 - Car left home
 - Car came home
+- Location changed
 - Engine started/stopped
 - Heater started/stopped
 - Battery level changed (only for PHEVs)
@@ -59,6 +60,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+
+## 1.0.1
+- Added location changed trigger. For instance to allow triggering a flow when the car parks at work, etc. Use condition logic to check if location tags match desired location.
 
 ## 1.0.0
 - Triggers added; Engine stopped, Heater stopped

@@ -31,7 +31,8 @@ class VOCDriver extends Homey.Driver {
 			'engine_stopped',
 			'heater_started',
 			'heater_stopped',
-			'charge_cable_status_changed'
+			'charge_cable_status_changed',
+			'location_human_changed'
 		];
 		this._registerFlow('trigger', triggers, Homey.FlowCardTriggerDevice);
 

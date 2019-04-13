@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "compatibility": ">=1.5.4",
   "sdk": 2,
   "name": {
@@ -359,6 +359,71 @@
             },
             "example": {
                 "en": "ConnectedWithoutPower"
+            }
+          }
+        ]
+      },
+      {
+        "id": "location_human_changed",
+        "title": {
+          "en": "Location changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "car_location_address",
+            "type": "string",
+            "title": {
+                "en": "Car, street address"
+            },
+            "example": {
+                "en": "Karossvägen 2"
+            }
+          },
+          {
+            "name": "car_location_city",
+            "type": "string",
+            "title": {
+                "en": "Car, city"
+            },
+            "example": {
+                "en": "Gothenburg"
+            }
+          },
+          {
+            "name": "car_location_postcode",
+            "type": "string",
+            "title": {
+                "en": "Car, postcode"
+            },
+            "example": {
+                "en": "405 31"
+            }
+          },
+          {
+            "name": "car_location_county",
+            "type": "string",
+            "title": {
+                "en": "Car, county"
+            },
+            "example": {
+                "en": "Göteborg"
+            }
+          },
+          {
+            "name": "car_location_country",
+            "type": "string",
+            "title": {
+                "en": "Car, country"
+            },
+            "example": {
+                "en": "Sweden"
             }
           }
         ]
