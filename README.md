@@ -19,6 +19,8 @@ When adding a car you are prompted for your Volvo On Call username and password.
 - Engine is on/off
 - Car is (not) at home
 - Car is (not) locked
+- A door is (not) open
+- Door is (not) open
 
 ## Actions
 - Heater on/off
@@ -38,11 +40,11 @@ When adding a car you are prompted for your Volvo On Call username and password.
 ## Settings
 - Refresh status (minutes)
 
-   How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status.
+   How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status. Default refresh interval is 10 minutes. Please be aware that refreshing status too frequently consumes battery power in your vehicle.
 
 - Refresh position (minutes)
 
-   How frequently the position is refreshed.
+   How frequently the position is refreshed. Default value 15 minutes.
 
 - Proximity of home (meters)
 
@@ -60,6 +62,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.2
+- Added conditions for door(s) open. One condition for any door open and one for checking a specific door open.
+- Refresh status default value changed to 10 minutes and default refresh position changed to 15 minutes. This is possible to change in vehicle settings.
 
 ## 1.0.1
 - Added location changed trigger. For instance to allow triggering a flow when the car parks at work, etc. Use condition logic to check if location tags match desired location.

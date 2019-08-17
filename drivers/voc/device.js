@@ -348,6 +348,37 @@ class VOCDevice extends Homey.Device {
     }
   }
 
+  isAnyDoorOpen() {
+    if (this.car.status.doors) {
+      if (this.car.status.doors.tailgateOpen ||
+          this.car.status.doors.hoodOpen ||
+          this.car.status.doors.rearRightDoorOpen ||
+          this.car.status.doors.rearLeftDoorOpen ||
+          this.car.status.doors.frontRightDoorOpen ||
+          this.car.status.doors.frontLeftDoorOpen) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      //Doors object should never be null
+      return false;
+    }
+  }
+
+  isDoorOpen(doorName) {
+    if (this.car.status.doors) {
+      if (this.car.status.doors[doorName]) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      //Doors object should never be null
+      return false;
+    }
+  }
+
   _updateProperty(key, value) {
     let oldValue = this.getCapabilityValue(key);
     //If oldValue===null then it is a newly added device, lets not trigger flows on that

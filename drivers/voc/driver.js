@@ -241,7 +241,9 @@ class VOCDriver extends Homey.Driver {
 			'heaterState',
 			'engineState',
 			'vehicleAtHome',
-			'vehicleLocked'
+			'vehicleLocked',
+			'anyDoorOpen',
+			'doorOpen'
 		];
 		this._registerFlow('condition', triggers, Homey.FlowCardCondition);
 
@@ -289,6 +291,34 @@ class VOCDriver extends Homey.Driver {
 				this.log(`- car.locked: ${args.device.getCapabilityValue('locked')}`);
 
 				if (args.device.getCapabilityValue('locked')) {
+					return true;
+				} else {
+					return false;
+				}
+			});
+
+		this.flowCards['condition.anyDoorOpen']
+			.registerRunListener((args, state, callback) => {
+				this.log('Flow condition.anyDoorOpen');
+				let anyDoorOpen = args.device.isAnyDoorOpen();
+				this.log(`- anyDoorOpen: ${anyDoorOpen}`);
+
+				if (anyDoorOpen) {
+					return true;
+				} else {
+					return false;
+				}
+			});
+
+		this.flowCards['condition.doorOpen']
+			.registerRunListener((args, state, callback) => {
+				this.log('Flow condition.doorOpen');
+				this.log(`Door: '${args.door}'`);
+
+				let doorOpen = args.device.isDoorOpen(args.door);
+				this.log(`- doorOpen: ${doorOpen}`);
+
+				if (doorOpen) {
 					return true;
 				} else {
 					return false;
