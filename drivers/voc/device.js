@@ -124,7 +124,7 @@ class VOCDevice extends Homey.Device {
       //Either engine is running or ERS is running
       if (vehicle.engineRunning) {
         engineRunning = true;
-      } else if (this.car.attributes.engineStartSupported) {
+      } else if (this.car.attributes && this.car.attributes.engineStartSupported) {
         if (vehicle.ERS) {
           let ersStatus = vehicle.ERS.status || 'off';
           if (ersStatus.indexOf('on') > -1) {
