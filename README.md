@@ -62,6 +62,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.3
+- Increased security by encrypting your Volvo On Call credentials before persisting them locally on your Homey. Existing credentials will be automatically encrypted after installation of this version.
+
 ## 1.0.2
 - Added conditions for door(s) open. One condition for any door open and one for checking a specific door open.
 - Refresh status default value changed to 10 minutes and default refresh position changed to 15 minutes. This is possible to change in vehicle settings.

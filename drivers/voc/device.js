@@ -3,6 +3,9 @@
 const Homey = require('homey');
 const VOC = require('../../lib/voc.js');
 const Osm = require('../../lib/maps.js');
+//Encryption settings
+const crypto = require('crypto');
+const crypto_algorithm = 'aes-256-ctr';
 
 class VOCDevice extends Homey.Device {
 
@@ -30,14 +33,19 @@ class VOCDevice extends Homey.Device {
 
     if (!Homey.ManagerSettings.get(`${this.getData().id}.username`)) {
 			//This is a newly added device, lets copy login details to homey settings
-      this.log(`Setting login details for user '${this.getData().username}'`);
-
-      Homey.ManagerSettings.set(`${this.getData().id}.username`, this.getData().username);
-  		Homey.ManagerSettings.set(`${this.getData().id}.password`, this.getData().password);
-
+      this.log(`Storing credentials for user '${this.getData().username}'`);
+      this.storeCredentialsEncrypted(this.getData().username, this.getData().password);
       //Remove password from device data
       this.getData().password = null;
 		}
+
+    //Check if settings are encrypted, if not encrypt them
+    //Triggered on all existing devices
+    let userJson = Homey.ManagerSettings.get(`${this.getData().id}.username`);
+    if (!userJson.iv) {
+      //Data is not encrypted, lets
+      this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.getData().id}.password`));
+    }
 
     //Clear last error on app restart
     this.setSettings({voc_last_error: ''})
@@ -46,8 +54,8 @@ class VOCDevice extends Homey.Device {
       });
 
     this.car.vocApi = new VOC({
-      username: Homey.ManagerSettings.get(`${this.getData().id}.username`),
-		  password: Homey.ManagerSettings.get(`${this.getData().id}.password`),
+      username: this.getUsername(),
+		  password: this.getPassword(),
 		  region: Homey.ManagerSettings.get('region'),
       uuid: this.getDriver().deviceUUID
     });
@@ -483,6 +491,37 @@ class VOCDevice extends Homey.Device {
 
   isError(err) {
     return (err && err.stack && err.message);
+  }
+
+  storeCredentialsEncrypted(plainUser, plainPassword) {
+    this.log(`Encrypting credentials for user '${plainUser}'`);
+    Homey.ManagerSettings.set(`${this.getData().id}.username`, this.encryptText(plainUser));
+    Homey.ManagerSettings.set(`${this.getData().id}.password`, this.encryptText(plainPassword));
+  }
+
+  getUsername() {
+    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.username`));
+  }
+
+  getPassword() {
+    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.password`));
+  }
+
+  encryptText(plainText) {
+    let iv = crypto.randomBytes(16);
+    let cipher = crypto.createCipheriv(crypto_algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
+    let encrypted = cipher.update(plainText);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
+  }
+
+  decryptText(encryptedJson) {
+    let iv = Buffer.from(encryptedJson.iv, 'hex');
+    let encryptedText = Buffer.from(encryptedJson.encryptedData, 'hex');
+    let decipher = crypto.createDecipheriv(crypto_algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
   }
 
 }
