@@ -508,6 +508,12 @@ class VOCDevice extends Homey.Device {
   }
 
   encryptText(plainText) {
+    //Failsafe if encryption key is not found
+    if (!Homey.env.ENCRYPTION_KEY || Homey.env.ENCRYPTION_KEY === "") {
+      this.log(`Encryption key not found!!`);
+      return plainText;
+    }
+
     let iv = crypto.randomBytes(16);
     let cipher = crypto.createCipheriv(crypto_algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
     let encrypted = cipher.update(plainText);
@@ -516,6 +522,10 @@ class VOCDevice extends Homey.Device {
   }
 
   decryptText(encryptedJson) {
+    if (!encryptedJson.iv) {
+      return encryptedJson;
+    }
+
     let iv = Buffer.from(encryptedJson.iv, 'hex');
     let encryptedText = Buffer.from(encryptedJson.encryptedData, 'hex');
     let decipher = crypto.createDecipheriv(crypto_algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
