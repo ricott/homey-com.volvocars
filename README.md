@@ -38,13 +38,19 @@ When adding a car you are prompted for your Volvo On Call username and password.
 
 
 ## Settings
-- Refresh status (minutes)
+- Refresh from car (minutes)
 
-   How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status. Default refresh interval is 10 minutes. Please be aware that refreshing status too frequently consumes battery power in your vehicle.
+   How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status. The car seems to push status to Volvo On Call cloud by itself at least after a drive.
+
+   Default refresh interval is 120 minutes. Please be aware that refreshing status too frequently consumes battery power in your vehicle.
+
+- Refresh from cloud (minutes)
+
+   How frequently the status from the Volvo On Call cloud is refreshed in your Homey. Default value is 5 minutes.
 
 - Refresh position (minutes)
 
-   How frequently the position is refreshed. Default value 15 minutes.
+   How frequently the position is refreshed from Volvo On Call cloud. Default value 5 minutes.
 
 - Proximity of home (meters)
 
@@ -64,6 +70,7 @@ Icons from;
 # Versions
 ## 1.0.4
 - Remove non relevant device capabilities, e.g. ICE cars wont see battery status.
+- Split refresh settings into two; one setting from car to cloud and one setting from cloud to homey. All in order to limit car battery impact.
 
 ## 1.0.3
 - Increased security by encrypting your Volvo On Call credentials before persisting them locally on your Homey. Existing credentials will be automatically encrypted after installation of this version.

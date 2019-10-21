@@ -14,8 +14,9 @@ class VOCDevice extends Homey.Device {
 
     this.homeyActions = {};
     this.pollIntervals = [];
-    this.refresh_position = this.getSettings().refresh_position || 10;
-    this.refresh_status = this.getSettings().refresh_status || 2;
+    this.refresh_position = this.getSettings().refresh_position || 5;
+    this.refresh_status_car = this.getSettings().refresh_status_car || 120;
+    this.refresh_status_cloud = this.getSettings().refresh_status_cloud || 5;
     this.proximity_home = this.getSettings().proximity_home || 50;
     this.lastTriggerLocation = 'unknown';
 
@@ -63,7 +64,7 @@ class VOCDevice extends Homey.Device {
     //Initialize static attributes
     this._initializeEventListeners();
     this.initializeVehicleAttributes();
-    this.refreshVehicleStatus();
+    this.refreshVehicleStatusFromCar();
     this.refreshVehiclePosition();
 
     this._initilializeTimers();
@@ -72,11 +73,17 @@ class VOCDevice extends Homey.Device {
 
   _initilializeTimers() {
     this.log('Adding timers');
-    // Start a poller, to check the device status
+    // Request car to push update to cloud
     this.pollIntervals.push(setInterval(() => {
-        this.refreshVehicleStatus();
-    }, 60 * 1000 * this.refresh_status));
+        this.refreshVehicleStatusFromCar();
+    }, 60 * 1000 * this.refresh_status_car));
 
+    //Get updates from cloud
+    this.pollIntervals.push(setInterval(() => {
+        this.getVehicleStatusFromCloud();
+    }, 60 * 1000 * this.refresh_status_cloud));
+
+    //Get position update from cloud
     this.pollIntervals.push(setInterval(() => {
         this.refreshVehiclePosition();
     }, 60 * 1000 * this.refresh_position));
@@ -102,7 +109,7 @@ class VOCDevice extends Homey.Device {
         this.log('Successful refresh of vehicle status to VOC');
         //We have done a successful refresh from vehicle to voc vehicle cloud
         //lets refresh the values in Homey
-        this.car.vocApi.getVehicleStatus(this.car.vin);
+        this.getVehicleStatusFromCloud();
       }
     });
 
@@ -112,11 +119,10 @@ class VOCDevice extends Homey.Device {
       if (response.action !== 'blinkLights' && response.action !== 'honkHorn' &&
             response.action !== 'honkHornAndBlinkLights') {
         //We successfully invoked and action, lets refresh status so it shows that
-        this.car.vocApi.refreshVehicleStatus(this.car.vin);
+        this.refreshVehicleStatusFromCar();
       }
     });
 
-    //refreshVehicleStatus
     this.car.vocApi.on('car_status_update', vehicle => {
       this.log('Refreshing status from VOC');
       this.car.status = vehicle;
@@ -255,8 +261,11 @@ class VOCDevice extends Homey.Device {
   initializeVehicleAttributes() {
     this.car.vocApi.getVehicleAttributes(this.car.vin);
   }
-  refreshVehicleStatus() {
-    this.car.vocApi.refreshVehicleStatus(this.car.vin);
+  refreshVehicleStatusFromCar() {
+    this.car.vocApi.refreshVehicleStatusFromCar(this.car.vin);
+  }
+  getVehicleStatusFromCloud() {
+    this.car.vocApi.getVehicleStatusFromCloud(this.car.vin);
   }
   refreshVehiclePosition() {
     this.car.vocApi.getVehiclePosition(this.car.vin);

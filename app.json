@@ -132,12 +132,22 @@
           },
           "children": [
             {
-              "id": "refresh_status",
+              "id": "refresh_status_cloud",
               "type": "number",
               "label": {
-                "en": "Refresh status (minutes)"
+                "en": "Refresh from cloud (minutes)"
               },
-              "value": 10,
+              "value": 5,
+              "min": 1,
+              "max": 1440
+            },
+            {
+              "id": "refresh_status_car",
+              "type": "number",
+              "label": {
+                "en": "Refresh from car (minutes)"
+              },
+              "value": 120,
               "min": 1,
               "max": 1440
             },
@@ -147,7 +157,7 @@
               "label": {
                 "en": "Refresh position (minutes)"
               },
-              "value": 15,
+              "value": 5,
               "min": 1,
               "max": 1440
             },
