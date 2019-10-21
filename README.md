@@ -62,6 +62,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.4
+- Remove non relevant device capabilities, e.g. ICE cars wont see battery status.
+
 ## 1.0.3
 - Increased security by encrypting your Volvo On Call credentials before persisting them locally on your Homey. Existing credentials will be automatically encrypted after installation of this version.
 

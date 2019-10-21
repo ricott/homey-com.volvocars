@@ -1,7 +1,7 @@
 {
   "id": "com.volvocars",
-  "version": "1.0.3",
-  "compatibility": ">=1.5.4",
+  "version": "1.0.4",
+  "compatibility": ">=3.0.0",
   "sdk": 2,
   "name": {
     "en": "Volvo On Call"
@@ -121,6 +121,9 @@
         "small": "/drivers/voc/assets/images/voc_s.png"
       },
       "capabilities": ["distance", "location_human", "engine", "heater", "locked", "range", "measure_battery", "charge_cable_status"],
+      "energy": {
+        "batteries": [ "INTERNAL" ]
+      },
       "settings": [
         {
           "type": "group",

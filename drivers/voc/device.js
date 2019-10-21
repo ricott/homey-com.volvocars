@@ -151,24 +151,22 @@ class VOCDevice extends Homey.Device {
       //Only update battery status if car is a phev, e.g. highVoltageBatterySupported=true
       if (this.car.phev && vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
-      }
-      //Connection status means charge cable status
-      let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
-      if (vehicle.connectionStatus) {
-          if (vehicle.connectionStatus === 'Disconnected') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
-          } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
-          } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
-          } else {
-            chargeCableStatus = vehicle.connectionStatus;
-          }
-      }
-      if (this.hasCapability('charge_cable_status')) {
+
+        //Connection status means charge cable status
+        let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
+        if (vehicle.connectionStatus) {
+            if (vehicle.connectionStatus === 'Disconnected') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
+            } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
+            } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
+            } else {
+              chargeCableStatus = vehicle.connectionStatus;
+            }
+        }
         this._updateProperty('charge_cable_status', chargeCableStatus);
       }
-
     });
 
     //refreshVehiclePosition
@@ -208,6 +206,12 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.on('car_attributes_update', attributes => {
 
       this.car.phev = attributes.highVoltageBatterySupported;
+
+      if (!this.car.phev && this.hasCapability('measure_battery')) {
+        this.log(`ICE car, removing capabilities; 'measure_battery', 'charge_cable_status'`);
+        this.removeCapability('measure_battery');
+        this.removeCapability('charge_cable_status');
+      }
 
       this.car.attributes = attributes;
       let subscrEndDate = new Date(attributes.subscriptionEndDate)
@@ -388,6 +392,11 @@ class VOCDevice extends Homey.Device {
   }
 
   _updateProperty(key, value) {
+    //Check if device has the capability
+    if (!this.hasCapability(key)) {
+      return;
+    }
+
     let oldValue = this.getCapabilityValue(key);
     //If oldValue===null then it is a newly added device, lets not trigger flows on that
     if (oldValue !== null && oldValue != value) {
