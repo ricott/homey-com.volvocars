@@ -32,20 +32,18 @@ class VOCDevice extends Homey.Device {
       vocApi: null
     };
 
-    if (!Homey.ManagerSettings.get(`${this.getData().id}.username`)) {
+    if (!Homey.ManagerSettings.get(`${this.car.vin}.username`)) {
 			//This is a newly added device, lets copy login details to homey settings
-      this.log(`Storing credentials for user '${this.getData().username}'`);
-      this.storeCredentialsEncrypted(this.getData().username, this.getData().password);
-      //Remove password from device data
-      this.getData().password = null;
+      this.log(`Storing credentials for user '${this.getStoreValue('username')}'`);
+      this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
 		}
 
     //Check if settings are encrypted, if not encrypt them
     //Triggered on all existing devices
-    let userJson = Homey.ManagerSettings.get(`${this.getData().id}.username`);
+    let userJson = Homey.ManagerSettings.get(`${this.car.vin}.username`);
     if (!userJson.iv) {
       //Data is not encrypted, lets
-      this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.getData().id}.password`));
+      this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.car.vin}.password`));
     }
 
     //Clear last error on app restart
@@ -464,10 +462,10 @@ class VOCDevice extends Homey.Device {
   onDeleted() {
     this.log(`Deleting VOC car '${this.getName()}' from Homey.`);
     this._deleteTimers();
-    this.car = null;
 
-    Homey.ManagerSettings.unset(`${this.getData().id}.username`);
-    Homey.ManagerSettings.unset(`${this.getData().id}.password`);
+    Homey.ManagerSettings.unset(`${this.car.vin}.username`);
+    Homey.ManagerSettings.unset(`${this.car.vin}.password`);
+    this.car = null;
   }
 
   onRenamed (name) {
@@ -513,16 +511,20 @@ class VOCDevice extends Homey.Device {
 
   storeCredentialsEncrypted(plainUser, plainPassword) {
     this.log(`Encrypting credentials for user '${plainUser}'`);
-    Homey.ManagerSettings.set(`${this.getData().id}.username`, this.encryptText(plainUser));
-    Homey.ManagerSettings.set(`${this.getData().id}.password`, this.encryptText(plainPassword));
+    Homey.ManagerSettings.set(`${this.car.vin}.username`, this.encryptText(plainUser));
+    Homey.ManagerSettings.set(`${this.car.vin}.password`, this.encryptText(plainPassword));
+
+    //Remove unencrypted credentials passed from driver
+    this.unsetStoreValue('username');
+    this.unsetStoreValue('password');
   }
 
   getUsername() {
-    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.username`));
+    return this.decryptText(Homey.ManagerSettings.get(`${this.car.vin}.username`));
   }
 
   getPassword() {
-    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.password`));
+    return this.decryptText(Homey.ManagerSettings.get(`${this.car.vin}.password`));
   }
 
   encryptText(plainText) {
