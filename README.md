@@ -68,6 +68,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.5
+- Internal cleanup on how credentials are passed from driver to device during initial creation
+
 ## 1.0.4
 - Remove non relevant device capabilities, e.g. ICE cars wont see battery status.
 - Split refresh settings into two; one setting from car to cloud and one setting from cloud to homey. All in order to limit car battery impact.
