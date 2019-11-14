@@ -68,6 +68,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.6
+- New Homey app store adoption
+
 ## 1.0.5
 - Internal cleanup on how credentials are passed from driver to device during initial creation
 

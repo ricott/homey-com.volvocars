@@ -1,8 +1,9 @@
 {
   "id": "com.volvocars",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "compatibility": ">=3.0.0",
   "sdk": 2,
+  "brandColor": "#1a3547",
   "name": {
     "en": "Volvo On Call"
   },
@@ -24,6 +25,10 @@
       }
     }
   },
+  "bugs": {
+    "url": "https://github.com/ricott/homey-com.volvocars/issues"
+  },
+  "source": "https://github.com/ricott/homey-com.volvocars",
   "category": [
     "localization"
   ],
