@@ -1,6 +1,9 @@
 {
+  "1.0.7": {
+    "en": "Community link and readme cleanup"
+  },
   "1.0.6": {
-    "en": "New appstore adoption"
+    "en": "New app store adoption"
   },
   "1.0.5": {
     "en": "Internal cleanup on how credentials are passed from driver to device during initial creation."

@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "compatibility": ">=3.0.0",
   "sdk": 2,
   "brandColor": "#1a3547",
@@ -29,6 +29,7 @@
     "url": "https://github.com/ricott/homey-com.volvocars/issues"
   },
   "source": "https://github.com/ricott/homey-com.volvocars",
+  "homeyCommunityTopicId": 20828,
   "category": [
     "localization"
   ],

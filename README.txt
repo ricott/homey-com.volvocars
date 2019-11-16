@@ -1,6 +1,4 @@
-Control your Volvo car with Volvo On Call services.
-
-Before adding a car you need to go to app settings and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region in order to find your car.
+Before adding a car you need to go to app settings and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region to find your car.
 
 When adding a car you are prompted for your Volvo On Call username and password.
 
@@ -24,30 +22,15 @@ Conditions
 Actions
 - Heater on/off
 - Lock/Unlock car
-Unlock action will silently unlock the tailgate/trunk. If trunk is opened then all doors will unlock. For more details please visit https://www.volvocars.com/uk/support/article/89d8033fbc4235c8c0a801512a07f946
 - Engine remote start/stop
-There are lots of ifs and buts about this feature and one can question the real use of it. If you have started the engine twice remotely, then you need to start it with a key before you can start it remotely again. For more details please visit https://www.volvocars.com/uk/support/article/0d3df457bc7bd531c0a801512a956093. Duration setting for action is only relevant for engine start.
 - Honk horn
 - Blink lights
 - Honk horn and blink lights
 
-
-Settings
-- Refresh from car (minutes)
-How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status. The car seems to push status to Volvo On Call cloud by itself at least after a drive.
-Default refresh interval is 120 minutes. Please be aware that refreshing status too frequently consumes battery power in your vehicle.
-
-- Refresh from cloud (minutes)
-How frequently the status from the Volvo On Call cloud is refreshed in your Homey. Default value is 5 minutes.
-
-- Refresh position (minutes)
-How frequently the position is refreshed from Volvo On Call cloud. Default value 5 minutes.
-
-- Proximity of home (meters)
-Distance from Homey/home the car can be, and the condition will still state that car is at home.
+For more information about the app and the possibility to get support please visit the forum link below.
 
 Disclaimer
-Use this app at your own risk. The authors do not guaranteed the proper functioning of this app. This app attempts to use the same APIs used by the official Volvo On Call mobile app. However, it is possible that use of this app may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) starting the parking heater.
+Use this app at your own risk. The authors do not guaranteed the proper functioning of this app. This app attempts to use the same APIs used by the official Volvo On Call mobile app. However, use of this app may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) starting the parking heater and unlocking your car.
 
 Credits
 Icons from;
