@@ -1,6 +1,6 @@
 'use strict';
 
-const Homey	= require('homey');
+const Homey = require('homey');
 const uuidv4 = require('uuid/v4');
 const VOC = require('../../lib/voc.js');
 
@@ -21,7 +21,7 @@ class VOCDriver extends Homey.Driver {
 	}
 
 	_registerFlows() {
-    this.log('Registering flows');
+		this.log('Registering flows');
 
 		// Register device triggers
 		let triggers = [
@@ -43,15 +43,17 @@ class VOCDriver extends Homey.Driver {
 			'engineControl',
 			'blinkLightsControl',
 			'honkHornControl',
-			'honkHornAndBlinkLightsControl'
+			'honkHornAndBlinkLightsControl',
+			'startCharging',
+			'delayCharging'
 		];
 		this._registerFlow('action', triggers, Homey.FlowCardAction);
 
-		this.flowCards['action.heaterControl'].registerRunListener(( args, state ) => {
+		this.flowCards['action.heaterControl'].registerRunListener((args, state) => {
 			this.log('----- Heater action triggered');
 			this.log(`Action: '${args.heaterAction}'`);
 			if (args.device.car.attributes.remoteHeaterSupported ||
-					args.device.car.attributes.preclimatizationSupported) {
+				args.device.car.attributes.preclimatizationSupported) {
 				if (args.heaterAction === 'ON') {
 					return args.device.startHeater().then((result) => {
 						if (result) {
@@ -72,13 +74,13 @@ class VOCDriver extends Homey.Driver {
 				}
 			} else {
 				this.log('Heater not supported!');
-				let notification = new Homey.Notification({excerpt: Homey.__('error.noHeaterSupport')});
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noHeaterSupport') });
 				notification.register();
 				return Promise.reject(Homey.__('error.noHeaterSupport'));
 			}
 		});
 
-		this.flowCards['action.lockControl'].registerRunListener(( args, state ) => {
+		this.flowCards['action.lockControl'].registerRunListener((args, state) => {
 			this.log('----- Lock action triggered');
 			this.log(`Action: '${args.lockAction}'`);
 			if (args.lockAction === 'LOCK') {
@@ -94,7 +96,7 @@ class VOCDriver extends Homey.Driver {
 
 				} else {
 					this.log('Lock not supported!');
-					let notification = new Homey.Notification({excerpt: Homey.__('error.noLockSupport')});
+					let notification = new Homey.Notification({ excerpt: Homey.__('error.noLockSupport') });
 					notification.register();
 					return Promise.reject(Homey.__('error.noLockSupport'));
 				}
@@ -111,7 +113,7 @@ class VOCDriver extends Homey.Driver {
 
 				} else {
 					this.log('Unlock not supported!');
-					let notification = new Homey.Notification({excerpt: Homey.__('error.noUnlockSupport')});
+					let notification = new Homey.Notification({ excerpt: Homey.__('error.noUnlockSupport') });
 					notification.register();
 					return Promise.reject(Homey.__('error.noUnlockSupport'));
 				}
@@ -119,7 +121,7 @@ class VOCDriver extends Homey.Driver {
 			return true;
 		});
 
-		this.flowCards['action.blinkLightsControl'].registerRunListener(( args, state ) => {
+		this.flowCards['action.blinkLightsControl'].registerRunListener((args, state) => {
 			this.log('----- Blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -133,12 +135,13 @@ class VOCDriver extends Homey.Driver {
 
 			} else {
 				this.log('Honk and blink not supported!');
-				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noBlinkHonkSupport') });
 				notification.register();
 				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
-		this.flowCards['action.honkHornControl'].registerRunListener(( args, state ) => {
+
+		this.flowCards['action.honkHornControl'].registerRunListener((args, state) => {
 			this.log('----- Honk horn action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -152,12 +155,13 @@ class VOCDriver extends Homey.Driver {
 
 			} else {
 				this.log('Honk and blink not supported!');
-				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noBlinkHonkSupport') });
 				notification.register();
 				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
-		this.flowCards['action.honkHornAndBlinkLightsControl'].registerRunListener(( args, state ) => {
+
+		this.flowCards['action.honkHornAndBlinkLightsControl'].registerRunListener((args, state) => {
 			this.log('----- Honk horn and blink lights action triggered');
 			if (args.device.car.attributes.honkAndBlinkSupported) {
 
@@ -171,13 +175,13 @@ class VOCDriver extends Homey.Driver {
 
 			} else {
 				this.log('Honk and blink not supported!');
-				let notification = new Homey.Notification({excerpt: Homey.__('error.noBlinkHonkSupport')});
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noBlinkHonkSupport') });
 				notification.register();
 				return Promise.reject(Homey.__('error.noBlinkHonkSupport'));
 			}
 		});
 
-		this.flowCards['action.engineControl'].registerRunListener(( args, state ) => {
+		this.flowCards['action.engineControl'].registerRunListener((args, state) => {
 			this.log('----- Engine action triggered');
 			this.log(`Action: '${args.engineAction}' with param '${args.engineDuration}'`);
 
@@ -200,7 +204,7 @@ class VOCDriver extends Homey.Driver {
 					} else if (args.device.car.status.ERS.engineStartWarning !== 'None') {
 						this.log(`Can't remote start engine, warning: '${args.device.car.status.ERS.engineStartWarning}'`);
 						return Promise.reject(Homey.__('error.engineERSWarning',
-																						{ 'ERSwarning': args.device.car.status.ERS.engineStartWarning }));
+							{ 'ERSwarning': args.device.car.status.ERS.engineStartWarning }));
 					}
 
 					return args.device.startEngine(args.engineDuration).then((result) => {
@@ -229,12 +233,63 @@ class VOCDriver extends Homey.Driver {
 
 			} else {
 				this.log('Engine Remote Start (ERS) not supported!');
-				let notification = new Homey.Notification({excerpt: Homey.__('error.noERSSupport')});
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noERSSupport') });
 				notification.register();
 				return Promise.reject(Homey.__('error.noERSSupport'));
 			}
 
 		});
+
+		this.flowCards['action.startCharging'].registerRunListener((args, state) => {
+			this.log('----- Start charging action triggered');
+
+			if (args.device.car.phev) {
+				return args.device.startCharging().then((result) => {
+					if (result) {
+						return Promise.resolve(true);
+					} else {
+						return Promise.reject(Homey.__('error.failedStartCharging'));
+					}
+				});
+
+			} else {
+				this.log('This is an ICE car and doesnt support charging!');
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noCharging') });
+				notification.register();
+				return Promise.reject(Homey.__('error.noCharging'));
+			}
+		});
+
+		this.flowCards['action.delayCharging'].registerRunListener((args, state) => {
+			this.log('----- Delay charging action triggered');
+			this.log(`Charge location: '${args.chargeLocation.id}' - '${args.chargeLocation.name}'`);
+			this.log(`Delayed charging: '${args.delayedCharging}'`);
+			this.log(`Start time: '${args.startTime}'`);
+			this.log(`End time: '${args.endTime}'`);
+
+			if (args.device.car.phev) {
+				return args.device.delayCharging(args.chargeLocation.id, 
+													args.delayedCharging, 
+													args.startTime, 
+													args.endTime).then((result) => {
+					if (result) {
+						return Promise.resolve(true);
+					} else {
+						return Promise.reject(Homey.__('error.failedDelayCharging'));
+					}
+				});
+
+			} else {
+				this.log('This is an ICE car and doesnt support charging!');
+				let notification = new Homey.Notification({ excerpt: Homey.__('error.noCharging') });
+				notification.register();
+				return Promise.reject(Homey.__('error.noCharging'));
+			}
+		})
+			.getArgument('chargeLocation')
+			.registerAutocompleteListener((query, args) => {
+				return Promise.resolve(args.device.car.chargeLocations);
+			});
 
 		//Register conditions
 		triggers = [
@@ -249,40 +304,40 @@ class VOCDriver extends Homey.Driver {
 
 		this.flowCards['condition.heaterState']
 			.registerRunListener((args, state, callback) => {
-					this.log('Flow condition.heaterState');
-					this.log(`- car.heater: ${args.device.getCapabilityValue('heater')}`);
+				this.log('Flow condition.heaterState');
+				this.log(`- car.heater: ${args.device.getCapabilityValue('heater')}`);
 
-					if (args.device.getCapabilityValue('heater') === 'On') {
-						return true;
-					} else {
-						return false;
-					}
+				if (args.device.getCapabilityValue('heater') === 'On') {
+					return true;
+				} else {
+					return false;
+				}
 			});
 
 		this.flowCards['condition.engineState']
 			.registerRunListener((args, state, callback) => {
-					this.log('Flow condition.engineState');
-					this.log(`- car.engine: ${args.device.getCapabilityValue('engine')}`);
+				this.log('Flow condition.engineState');
+				this.log(`- car.engine: ${args.device.getCapabilityValue('engine')}`);
 
-					if (args.device.getCapabilityValue('engine')) {
-						return true;
-					} else {
-						return false;
-					}
+				if (args.device.getCapabilityValue('engine')) {
+					return true;
+				} else {
+					return false;
+				}
 			});
 
 		this.flowCards['condition.vehicleAtHome']
 			.registerRunListener((args, state, callback) => {
-					this.log('Flow condition.vehicleAtHome');
-					this.log(`- car.distance: ${args.device.car.distanceFromHome}`);
+				this.log('Flow condition.vehicleAtHome');
+				this.log(`- car.distance: ${args.device.car.distanceFromHome}`);
 
-					if (args.device.carAtHome()) {
-						this.log('Car is at home');
-						return true;
-					} else {
-						this.log('Car is not at home');
-						return false;
-					}
+				if (args.device.carAtHome()) {
+					this.log('Car is at home');
+					return true;
+				} else {
+					this.log('Car is not at home');
+					return false;
+				}
 			});
 
 		this.flowCards['condition.vehicleLocked']
@@ -328,8 +383,8 @@ class VOCDriver extends Homey.Driver {
 
 	_registerFlow(type, keys, cls) {
 		keys.forEach(key => {
-				this.log(`- flow '${type}.${key}'`);
-				this.flowCards[`${type}.${key}`] = new cls(key).register();
+			this.log(`- flow '${type}.${key}'`);
+			this.flowCards[`${type}.${key}`] = new cls(key).register();
 		});
 	}
 
@@ -337,43 +392,43 @@ class VOCDriver extends Homey.Driver {
 		this.log(`Triggering flow '${flow}' with tokens`, tokens);
 		// this.log(this.flowCards[flow])
 		if (this.flowCards[flow] instanceof Homey.FlowCardTriggerDevice) {
-				this.log('- device trigger for ', device.getName());
-				this.flowCards[flow].trigger(device, tokens);
+			this.log('- device trigger for ', device.getName());
+			this.flowCards[flow].trigger(device, tokens);
 		}
 		else if (this.flowCards[flow] instanceof Homey.FlowCardTrigger) {
-				this.log('- regular trigger');
-				this.flowCards[flow].trigger(tokens);
+			this.log('- regular trigger');
+			this.flowCards[flow].trigger(tokens);
 		}
 	}
 
-	onPair (socket) {
-    let vocSession;
-    let account;
-    socket.on('login', (data, callback) => {
-      if (data.username === '' || data.password === '') {
+	onPair(socket) {
+		let vocSession;
+		let account;
+		socket.on('login', (data, callback) => {
+			if (data.username === '' || data.password === '') {
 				return callback(null, false);
 			}
 
 			account = data;
 
 			vocSession = new VOC({
-			  username: account.username,
-			  password: account.password,
-			  region: Homey.ManagerSettings.get('region'),
+				username: account.username,
+				password: account.password,
+				region: Homey.ManagerSettings.get('region'),
 				uuid: this.deviceUUID
 			});
 
-      vocSession.login()
+			vocSession.login()
 				.then(function () {
-        	callback(null, true)
+					callback(null, true)
 				})
 				.catch(error => {
-        	console.log(error)
-        	callback(null, false)
-      	});
-    });
+					console.log(error)
+					callback(null, false)
+				});
+		});
 
-    socket.on('list_devices', (data, callback) => {
+		socket.on('list_devices', (data, callback) => {
 
 			let devices = vocSession.listVehiclesOnAccount();
 
@@ -381,9 +436,9 @@ class VOCDriver extends Homey.Driver {
 				callback(null, vehicles);
 			});
 
-    });
+		});
 
-  }
+	}
 
 }
 

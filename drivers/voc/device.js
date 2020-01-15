@@ -29,14 +29,15 @@ class VOCDevice extends Homey.Device {
       position: null,
       location: null,
       distanceFromHome: 0,
-      vocApi: null
+      vocApi: null,
+      chargeLocations: []
     };
 
     if (!Homey.ManagerSettings.get(`${this.car.vin}.username`)) {
-			//This is a newly added device, lets copy login details to homey settings
+      //This is a newly added device, lets copy login details to homey settings
       this.log(`Storing credentials for user '${this.getStoreValue('username')}'`);
       this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
-		}
+    }
 
     //Check if settings are encrypted, if not encrypt them
     //Triggered on all existing devices
@@ -47,15 +48,15 @@ class VOCDevice extends Homey.Device {
     }
 
     //Clear last error on app restart
-    this.setSettings({voc_last_error: ''})
+    this.setSettings({ voc_last_error: '' })
       .catch(err => {
         this.error('Failed to update settings', err);
       });
 
     this.car.vocApi = new VOC({
       username: this.getUsername(),
-		  password: this.getPassword(),
-		  region: Homey.ManagerSettings.get('region'),
+      password: this.getPassword(),
+      region: Homey.ManagerSettings.get('region'),
       uuid: this.getDriver().deviceUUID
     });
 
@@ -73,17 +74,17 @@ class VOCDevice extends Homey.Device {
     this.log('Adding timers');
     // Request car to push update to cloud
     this.pollIntervals.push(setInterval(() => {
-        this.refreshVehicleStatusFromCar();
+      this.refreshVehicleStatusFromCar();
     }, 60 * 1000 * this.refresh_status_car));
 
     //Get updates from cloud
     this.pollIntervals.push(setInterval(() => {
-        this.getVehicleStatusFromCloud();
+      this.getVehicleStatusFromCloud();
     }, 60 * 1000 * this.refresh_status_cloud));
 
     //Get position update from cloud
     this.pollIntervals.push(setInterval(() => {
-        this.refreshVehiclePosition();
+      this.refreshVehiclePosition();
     }, 60 * 1000 * this.refresh_position));
   }
 
@@ -91,7 +92,7 @@ class VOCDevice extends Homey.Device {
     //Kill interval object(s)
     this.log('Removing timers');
     this.pollIntervals.forEach(timer => {
-        clearInterval(timer);
+      clearInterval(timer);
     });
   }
 
@@ -112,10 +113,15 @@ class VOCDevice extends Homey.Device {
     });
 
     this.car.vocApi.on('car_action_status', response => {
-      this.log(`Action '${response.action}' with result '${response.result}'`);
+      if (typeof response.result === "boolean") {
+        this.log(`Action '${response.action}' with result '${response.result}'`);
+      } else {
+        this.log(`Action '${response.action}' with result:`);
+        this.log(response.result);
+      }
       //if (response.result)
       if (response.action !== 'blinkLights' && response.action !== 'honkHorn' &&
-            response.action !== 'honkHornAndBlinkLights') {
+        response.action !== 'honkHornAndBlinkLights') {
         //We successfully invoked and action, lets refresh status so it shows that
         this.refreshVehicleStatusFromCar();
       }
@@ -124,7 +130,7 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.on('car_status_update', vehicle => {
       this.log('Refreshing status from VOC');
       this.car.status = vehicle;
-      this.setSettings({voc_status: JSON.stringify(this.car.status, null, "  ")})
+      this.setSettings({ voc_status: JSON.stringify(this.car.status, null, "  ") })
         .catch(err => {
           this.error('Failed to update settings', err);
         });
@@ -159,15 +165,15 @@ class VOCDevice extends Homey.Device {
         //Connection status means charge cable status
         let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
         if (vehicle.connectionStatus) {
-            if (vehicle.connectionStatus === 'Disconnected') {
-              chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
-            } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
-              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
-            } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
-              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
-            } else {
-              chargeCableStatus = vehicle.connectionStatus;
-            }
+          if (vehicle.connectionStatus === 'Disconnected') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
+          } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
+          } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
+            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
+          } else {
+            chargeCableStatus = vehicle.connectionStatus;
+          }
         }
         this._updateProperty('charge_cable_status', chargeCableStatus);
       }
@@ -177,16 +183,16 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.on('car_position_update', position => {
       if (!this.car.position ||
         (Date.parse(position.timestamp) > Date.parse(this.car.position.timestamp) &&
-        this.car.position.latitude.toFixed(5) != position.latitude.toFixed(5) &&
-        this.car.position.longitude.toFixed(5) != position.longitude.toFixed(5))) {
+          this.car.position.latitude.toFixed(5) != position.latitude.toFixed(5) &&
+          this.car.position.longitude.toFixed(5) != position.longitude.toFixed(5))) {
 
         this.log('We got new position data');
         this.car.position = position;
 
         let distanceHomey = Osm.calculateDistance(position.latitude,
-                                                  position.longitude,
-                                                  Homey.ManagerGeolocation.getLatitude(),
-                                                  Homey.ManagerGeolocation.getLongitude()) || 0;
+          position.longitude,
+          Homey.ManagerGeolocation.getLatitude(),
+          Homey.ManagerGeolocation.getLongitude()) || 0;
         this.car.distanceFromHome = distanceHomey;
         distanceHomey = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
         this._updateProperty('distance', distanceHomey);
@@ -219,17 +225,46 @@ class VOCDevice extends Homey.Device {
 
       this.car.attributes = attributes;
       let subscrEndDate = new Date(attributes.subscriptionEndDate)
-              .toLocaleDateString('en-US', {day : 'numeric',month : 'short',year : 'numeric'});
+        .toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
       //Update Homey settings in advanced tab
-      this.setSettings({license_plate: attributes.registrationNumber,
-                        model: `${attributes.vehicleType}, ${attributes.modelYear}`,
-                        fuelType: `${attributes.fuelType}, ${attributes.fuelTankVolume}l`,
-                        subscriptionEndDate: subscrEndDate,
-                        voc_attributes: JSON.stringify(this.car.attributes, null, "  ")})
+      this.setSettings({
+        license_plate: attributes.registrationNumber,
+        model: `${attributes.vehicleType}, ${attributes.modelYear}`,
+        fuelType: `${attributes.fuelType}, ${attributes.fuelTankVolume}l`,
+        subscriptionEndDate: subscrEndDate,
+        voc_attributes: JSON.stringify(this.car.attributes, null, "  ")
+      })
         .catch(err => {
           this.error('Failed to update settings', err);
         });
+
+      if (this.car.phev) {
+        //We have a phev, lets get charge locations
+        this.log(`PHEV, fetching charging locations`);
+        this.getVehicleChargeLocations();
+      }
+    });
+
+    this.car.vocApi.on('car_charge_locations', locations => {
+      let chargeLocations = [];
+      if (locations != null && locations.length > 0) {
+        locations.forEach(location => {
+          let locationName = '';
+          if (!location.name) {
+            //No name for location
+            locationName = `${location.position.streetAddress}, ${location.position.postalCode} ${location.position.city}`
+          } else {
+            locationName = `${location.name}, ${location.position.streetAddress}`
+          }
+
+          chargeLocations.push({
+            id: location.chargeLocation.substring(location.chargeLocation.lastIndexOf('/') + 1),
+            name: locationName
+          });
+        });
+      }
+      this.car.chargeLocations = chargeLocations;
     });
 
     this.car.vocApi.on('voc_api_error', error => {
@@ -241,14 +276,14 @@ class VOCDevice extends Homey.Device {
       } else {
         try {
           message = JSON.stringify(error, null, "  ");
-        } catch(e) {
+        } catch (e) {
           this.log('Failed to stringify object', e);
           message = error.toString();
         }
       }
 
       let dateTime = new Date().toISOString();
-      this.setSettings({voc_last_error: dateTime + '\n' + message})
+      this.setSettings({ voc_last_error: dateTime + '\n' + message })
         .catch(err => {
           this.error('Failed to update settings', err);
         });
@@ -267,6 +302,9 @@ class VOCDevice extends Homey.Device {
   }
   refreshVehiclePosition() {
     this.car.vocApi.getVehiclePosition(this.car.vin);
+  }
+  getVehicleChargeLocations() {
+    this.car.vocApi.getVehicleChargeLocations(this.car.vin);
   }
   startHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
@@ -331,8 +369,8 @@ class VOCDevice extends Homey.Device {
   blinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
       return this.car.vocApi.blinkLights(this.car.vin,
-                                    this.car.position.latitude,
-                                    this.car.position.longitude);
+        this.car.position.latitude,
+        this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
       return false;
@@ -341,8 +379,8 @@ class VOCDevice extends Homey.Device {
   honkHorn() {
     if (this.car.attributes.honkAndBlinkSupported) {
       return this.car.vocApi.honkHorn(this.car.vin,
-                                    this.car.position.latitude,
-                                    this.car.position.longitude);
+        this.car.position.latitude,
+        this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
       return false;
@@ -351,10 +389,28 @@ class VOCDevice extends Homey.Device {
   honkHornAndBlinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
       return this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
-                                    this.car.position.latitude,
-                                    this.car.position.longitude);
+        this.car.position.latitude,
+        this.car.position.longitude);
     } else {
       this.log('Honk and blink not supported!');
+      return false;
+    }
+  }
+  startCharging() {
+    if (this.car.phev) {
+      return this.car.vocApi.startCharging(this.car.vin);
+    } else {
+      this.log('Start charging not supported on ICE vehicles!');
+      return false;
+    }
+  }
+  delayCharging(chargeLocationId, delayedCharging, startTime, endTime) {
+    if (this.car.phev) {
+      let json = `{"status": "Accepted", "delayCharging":{"enabled":${delayedCharging},"startTime":"${startTime}","stopTime":"${endTime}"}}`;
+      let jsonObj = JSON.parse(json);
+      return this.car.vocApi.delayCharging(this.car.vin, chargeLocationId, jsonObj);
+    } else {
+      this.log('Delay charging not supported on ICE vehicles!');
       return false;
     }
   }
@@ -370,11 +426,11 @@ class VOCDevice extends Homey.Device {
   isAnyDoorOpen() {
     if (this.car.status.doors) {
       if (this.car.status.doors.tailgateOpen ||
-          this.car.status.doors.hoodOpen ||
-          this.car.status.doors.rearRightDoorOpen ||
-          this.car.status.doors.rearLeftDoorOpen ||
-          this.car.status.doors.frontRightDoorOpen ||
-          this.car.status.doors.frontLeftDoorOpen) {
+        this.car.status.doors.hoodOpen ||
+        this.car.status.doors.rearRightDoorOpen ||
+        this.car.status.doors.rearLeftDoorOpen ||
+        this.car.status.doors.frontRightDoorOpen ||
+        this.car.status.doors.frontLeftDoorOpen) {
         return true;
       } else {
         return false;
@@ -407,50 +463,50 @@ class VOCDevice extends Homey.Device {
     let oldValue = this.getCapabilityValue(key);
     //If oldValue===null then it is a newly added device, lets not trigger flows on that
     if (oldValue !== null && oldValue != value) {
-        this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
-        this.setCapabilityValue(key, value);
+      this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
+      this.setCapabilityValue(key, value);
 
-        if (key === 'heater') {
-          if (value === 'On') {
-            this.getDriver().triggerFlow('trigger.heater_started', {}, this);
-          } else {
-            this.getDriver().triggerFlow('trigger.heater_stopped', {}, this);
-          }
-
-        } else if (key === 'engine') {
-          if (value) {
-            this.getDriver().triggerFlow('trigger.engine_started', {}, this);
-          } else {
-            this.getDriver().triggerFlow('trigger.engine_stopped', {}, this);
-          }
-
-        } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
-
-          this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
-          this.lastTriggerLocation = 'away';
-          this.getDriver().triggerFlow('trigger.car_left_home', {}, this);
-
-        } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
-
-          this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
-          this.lastTriggerLocation = 'home';
-          this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
-        } else if (key === 'charge_cable_status') {
-          let tokens = {
-            charge_cable_status: this.car.status.connectionStatus || 'n/a'
-          }
-          this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
-
-        } else if (key === 'location_human') {
-          let tokens = {
-            car_location_address: this.car.location.address || '',
-            car_location_city: this.car.location.city || '',
-            car_location_postcode: this.car.location.postcode || '',
-            car_location_county: this.car.location.county || '',
-            car_location_country: this.car.location.country || ''
-          }
-          this.getDriver().triggerFlow('trigger.location_human_changed', tokens, this);
+      if (key === 'heater') {
+        if (value === 'On') {
+          this.getDriver().triggerFlow('trigger.heater_started', {}, this);
+        } else {
+          this.getDriver().triggerFlow('trigger.heater_stopped', {}, this);
         }
+
+      } else if (key === 'engine') {
+        if (value) {
+          this.getDriver().triggerFlow('trigger.engine_started', {}, this);
+        } else {
+          this.getDriver().triggerFlow('trigger.engine_stopped', {}, this);
+        }
+
+      } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
+
+        this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
+        this.lastTriggerLocation = 'away';
+        this.getDriver().triggerFlow('trigger.car_left_home', {}, this);
+
+      } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
+
+        this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
+        this.lastTriggerLocation = 'home';
+        this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
+      } else if (key === 'charge_cable_status') {
+        let tokens = {
+          charge_cable_status: this.car.status.connectionStatus || 'n/a'
+        }
+        this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
+
+      } else if (key === 'location_human') {
+        let tokens = {
+          car_location_address: this.car.location.address || '',
+          car_location_city: this.car.location.city || '',
+          car_location_postcode: this.car.location.postcode || '',
+          car_location_county: this.car.location.county || '',
+          car_location_country: this.car.location.country || ''
+        }
+        this.getDriver().triggerFlow('trigger.location_human_changed', tokens, this);
+      }
 
     } else {
       //Update value to show we are doing it in app
@@ -468,40 +524,40 @@ class VOCDevice extends Homey.Device {
     this.car = null;
   }
 
-  onRenamed (name) {
+  onRenamed(name) {
     this.log(`Renaming car from '${this.car.name}' to '${name}'`)
     this.car.name = name;
   }
 
-	async onSettings(oldSettings, newSettings, changedKeysArr) {
+  async onSettings(oldSettings, newSettings, changedKeysArr) {
     let change = false;
-		if (changedKeysArr.indexOf("refresh_position") > -1) {
-			this.log('Refresh position value was change to:', newSettings.refresh_position);
+    if (changedKeysArr.indexOf("refresh_position") > -1) {
+      this.log('Refresh position value was change to:', newSettings.refresh_position);
       this.refresh_position = newSettings.refresh_position;
       change = true;
-		}
+    }
     if (changedKeysArr.indexOf("refresh_status") > -1) {
-			this.log('Refresh status value was change to:', newSettings.refresh_status);
+      this.log('Refresh status value was change to:', newSettings.refresh_status);
       this.refresh_status = newSettings.refresh_status;
       change = true;
-		}
+    }
     if (changedKeysArr.indexOf("proximity_home") > -1) {
-			this.log('Proximity home value was change to:', newSettings.proximity_home);
+      this.log('Proximity home value was change to:', newSettings.proximity_home);
       this.proximity_home = newSettings.proximity_home;
-		}
+    }
 
     if (change) {
       //We also need to re-initialize the timer
       this._reinitializeTimers();
     }
 
-	}
+  }
 
-  formatDistance (distance) {
+  formatDistance(distance) {
     if (distance < 1000) return this.formatValue(distance) + ' m'
     return this.formatValue(distance / 1000) + ' km'
   }
-  formatValue (t) {
+  formatValue(t) {
     return Math.round(t.toFixed(1) * 10) / 10
   }
 

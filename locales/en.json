@@ -9,6 +9,7 @@
     "noLockSupport": "Lock is not supported on your car.",
     "noUnlockSupport": "Unlock is not supported on your car.",
     "noHeaterSupport": "Heater is not supported on your car.",
+    "noCharging": "This is an ICE car and it doesnt support charging!",
     "failedStopERS": "Failed to stop engine (ERS)!",
     "failedStartERS": "Failed to start engine (ERS)!",
     "engineAlreadyRunning": "Engine is already running!",
@@ -20,8 +21,9 @@
     "failedUnLock": "Failed to unlock car!",
     "failedBlinkLights": "Failed to blink the lights!",
     "failedHonkHorn": "Failed to honk the horn!",
-    "failedHonkHornAndBlinkLights": "Failed to honk the horn and blink the lights!"
-
+    "failedHonkHornAndBlinkLights": "Failed to honk the horn and blink the lights!",
+    "failedStartCharging": "Failed to start charging!",
+    "failedDelayCharging": "Failed to delay charging!"
   },
   "device": {
     "chargeCableStatus_disabled": "n/a",

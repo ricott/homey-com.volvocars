@@ -1,6 +1,6 @@
 {
   "id": "com.volvocars",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "compatibility": ">=3.0.0",
   "sdk": 2,
   "brandColor": "#1a3547",
@@ -664,6 +664,64 @@
             "name": "device",
             "type": "device",
             "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"startCharging",
+        "title":{
+          "en":"Start charging"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          }
+        ]
+      },
+      {
+        "id":"delayCharging",
+        "title":{
+          "en":"Schedule charging"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter":"driver_id=voc"
+          },
+          {
+            "type": "autocomplete",
+            "name": "chargeLocation",
+            "title": {
+              "en": "Charge location"
+            }
+          },
+          {
+            "name": "delayedCharging",
+            "type": "dropdown",
+            "title": {
+                "en": "Active"
+            },
+            "values": [
+              {"id": "true", "label": {"en": "TRUE"}},
+              {"id": "false","label": {"en": "FALSE"}}
+            ]
+          },
+          {
+            "type": "time",
+            "name": "startTime",
+            "title": {
+              "en": "Start time"
+            }
+          },
+          {
+            "type": "time",
+            "name": "endTime",
+            "title": {
+              "en": "End time"
+            }
           }
         ]
       }

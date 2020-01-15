@@ -35,7 +35,8 @@ When adding a car you are prompted for your Volvo On Call username and password.
 - Honk horn
 - Blink lights
 - Honk horn and blink lights
-
+- Schedule charging (only for PHEVs)
+- Start charging / override scheduled charging (only for PHEVs)
 
 ## Settings
 - Refresh from car (minutes)
@@ -68,6 +69,13 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.8
+- Added action for scheduling charging
+- Added action for overriding scheduled charging
+
+## 1.0.7
+- Community link and readme cleanup
+
 ## 1.0.6
 - New Homey app store adoption
 

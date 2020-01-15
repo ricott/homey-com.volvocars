@@ -26,16 +26,10 @@ Actions
 - Honk horn
 - Blink lights
 - Honk horn and blink lights
+- Schedule charging (only for PHEVs)
+- Start charging / override scheduled charging (only for PHEVs)
 
 For more information about the app and the possibility to get support please visit the forum link below.
 
 Disclaimer
 Use this app at your own risk. The authors do not guaranteed the proper functioning of this app. This app attempts to use the same APIs used by the official Volvo On Call mobile app. However, use of this app may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) starting the parking heater and unlocking your car.
-
-Credits
-Icons from;
-- https://thenounproject.com/fandikur007/
-- https://thenounproject.com/ralfschmitzer/
-- https://thenounproject.com/LAFS/
-- https://thenounproject.com/iconproducer/
-- https://thenounproject.com/hrnico/
