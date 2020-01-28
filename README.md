@@ -69,6 +69,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.0.9
+- VOC status json available as a global token
+
 ## 1.0.8
 - Added action for scheduling charging
 - Added action for overriding scheduled charging

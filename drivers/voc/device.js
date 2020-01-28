@@ -65,9 +65,21 @@ class VOCDevice extends Homey.Device {
     this.initializeVehicleAttributes();
     this.refreshVehicleStatusFromCar();
     this.refreshVehiclePosition();
+    this.registerFlowTokens();
 
     this._initilializeTimers();
 
+  }
+
+  registerFlowTokens() {
+    this.vocStatusFlowToken = new Homey.FlowToken(`${this.car.vin}.statusToken`, {
+      type: 'string',
+      title: `${this.car.name} VOC Status`
+    });
+    this.vocStatusFlowToken.register()
+      .catch(err => {
+        this.log('Failed to register flow token', err);
+      });
   }
 
   _initilializeTimers() {
@@ -134,6 +146,9 @@ class VOCDevice extends Homey.Device {
         .catch(err => {
           this.error('Failed to update settings', err);
         });
+
+      //Make VOC status available in any flow
+      this.vocStatusFlowToken.setValue(JSON.stringify(this.car.status));
 
       this._updateProperty('range', vehicle.distanceToEmpty);
       this._updateProperty('locked', vehicle.carLocked);

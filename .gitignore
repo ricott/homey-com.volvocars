@@ -7,4 +7,5 @@
 #Secret environment variables
 /env.json
 
-/test/*
+#Credentials used for mocha tests
+/test/config.js
