@@ -1,6 +1,4 @@
-Before adding a car you need to go to app settings and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region to find your car.
-
-When adding a car you are prompted for your Volvo On Call username and password.
+Control your Volvo car using the Volvo On Call API via your Homey.
 
 Triggers
 - Car left home
@@ -29,7 +27,4 @@ Actions
 - Schedule charging (only for PHEVs)
 - Start charging / override scheduled charging (only for PHEVs)
 
-For more information about the app and the possibility to get support please visit the forum link below.
-
-Disclaimer
-Use this app at your own risk. The authors do not guaranteed the proper functioning of this app. This app attempts to use the same APIs used by the official Volvo On Call mobile app. However, use of this app may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) starting the parking heater and unlocking your car.
+For more information about the app and the possibility to get support please visit the forum link in section below.
