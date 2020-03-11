@@ -520,6 +520,11 @@ class VOCDevice extends Homey.Device {
           car_location_country: this.car.location.country || ''
         }
         this.getDriver().triggerFlow('trigger.location_human_changed', tokens, this);
+      } else if (key === 'range') {
+        let tokens = {
+          fuel_range: value
+        }
+        this.getDriver().triggerFlow('trigger.fuel_range_changed', tokens, this);
       }
 
     } else {

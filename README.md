@@ -70,7 +70,7 @@ Icons from;
 
 # Versions
 ## 1.1.0
-- Package updates
+- Fuel range changed trigger added
 
 ## 1.0.9
 - VOC status json available as a global token
