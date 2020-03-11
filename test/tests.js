@@ -52,7 +52,6 @@ describe('ChargeLocations', function () {
                 });
         });
     });
-    
 
 });
 

@@ -1,9 +1,8 @@
 'use strict';
 
 const Homey = require('homey');
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const VOC = require('../../lib/voc.js');
-
 
 class VOCDriver extends Homey.Driver {
 

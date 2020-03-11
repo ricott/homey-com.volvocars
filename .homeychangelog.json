@@ -1,4 +1,7 @@
 {
+  "1.1.0": {
+    "en": "Package updates"
+  },
   "1.0.9": {
     "en": "VOC status json available as a global token"
   },

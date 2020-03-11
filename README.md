@@ -69,6 +69,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.1.0
+- Package updates
+
 ## 1.0.9
 - VOC status json available as a global token
 

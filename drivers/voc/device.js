@@ -63,12 +63,11 @@ class VOCDevice extends Homey.Device {
     //Initialize static attributes
     this._initializeEventListeners();
     this.initializeVehicleAttributes();
-    this.refreshVehicleStatusFromCar();
+    this.getVehicleStatusFromCloud();
     this.refreshVehiclePosition();
     this.registerFlowTokens();
 
     this._initilializeTimers();
-
   }
 
   registerFlowTokens() {
