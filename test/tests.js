@@ -11,7 +11,7 @@ let vocSession = new VOC({
     uuid: '11111A11-A111-11A1-A1AA-1111AAA1111A'
 });
 
-describe('ChargeLocations', function () {
+describe('VOC', function () {
 
     describe('#getVehicleChargeLocations()', function () {
         it('should return 4 charge locations', function (done) {

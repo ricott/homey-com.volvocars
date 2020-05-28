@@ -1,4 +1,7 @@
 {
+  "1.1.1": {
+    "en": "Fixed bug related to status refresh"
+  },
   "1.1.0": {
     "en": "Fuel range changed trigger added"
   },

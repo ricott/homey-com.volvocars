@@ -71,6 +71,7 @@ class VOCDevice extends Homey.Device {
   }
 
   registerFlowTokens() {
+    this.log('Creating flow tokens');
     this.vocStatusFlowToken = new Homey.FlowToken(`${this.car.vin}.statusToken`, {
       type: 'string',
       title: `${this.car.name} VOC Status`
@@ -79,6 +80,16 @@ class VOCDevice extends Homey.Device {
       .catch(err => {
         this.log('Failed to register flow token', err);
       });
+  }
+
+  unregisterFlowTokens() {
+    this.log('Deleting flow tokens');
+    if (this.vocStatusFlowToken) {
+      this.vocStatusFlowToken.unregister()
+        .catch(err => {
+          this.log('Failed to un-register flow token', err);
+        });
+    }
   }
 
   _initilializeTimers() {
@@ -173,7 +184,7 @@ class VOCDevice extends Homey.Device {
       this._updateProperty('heater', heaterStatus);
 
       //Only update battery status if car is a phev, e.g. highVoltageBatterySupported=true
-      if (this.car.phev && vehicle.hvBattery) {
+      if (vehicle.hvBattery) {
         this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
 
         //Connection status means charge cable status
@@ -190,6 +201,8 @@ class VOCDevice extends Homey.Device {
           }
         }
         this._updateProperty('charge_cable_status', chargeCableStatus);
+      } else {
+        this.log('ICE car, no cable or hw battery');
       }
     });
 
@@ -228,7 +241,7 @@ class VOCDevice extends Homey.Device {
 
     //initializeVehicleAttributes
     this.car.vocApi.on('car_attributes_update', attributes => {
-
+      this.log('Refreshing vehicle attributes');
       this.car.phev = attributes.highVoltageBatterySupported;
 
       if (!this.car.phev && this.hasCapability('measure_battery')) {
@@ -537,6 +550,7 @@ class VOCDevice extends Homey.Device {
   onDeleted() {
     this.log(`Deleting VOC car '${this.getName()}' from Homey.`);
     this._deleteTimers();
+    this.unregisterFlowTokens();
 
     Homey.ManagerSettings.unset(`${this.car.vin}.username`);
     Homey.ManagerSettings.unset(`${this.car.vin}.password`);
