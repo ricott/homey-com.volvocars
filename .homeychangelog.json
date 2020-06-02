@@ -1,4 +1,7 @@
 {
+  "1.1.2": {
+    "en": "Average fuel consumption added to engine stop trigger"
+  },
   "1.1.1": {
     "en": "Fixed bug related to status refresh"
   },

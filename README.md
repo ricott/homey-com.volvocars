@@ -69,6 +69,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.1.2
+- Average fuel consumption added to engine stop trigger
+
 ## 1.1.1
 - Fixed status refresh bug, solved by adding missing Accept header
 
