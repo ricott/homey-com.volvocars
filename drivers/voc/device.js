@@ -504,7 +504,10 @@ class VOCDevice extends Homey.Device {
         if (value) {
           this.getDriver().triggerFlow('trigger.engine_started', {}, this);
         } else {
-          this.getDriver().triggerFlow('trigger.engine_stopped', {}, this);
+          let tokens = {
+            average_fuel_consumption: this.car.status.averageFuelConsumption || 'n/a'
+          }
+          this.getDriver().triggerFlow('trigger.engine_stopped', tokens, this);
         }
 
       } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {

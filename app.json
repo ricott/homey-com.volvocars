@@ -329,6 +329,18 @@
             "type": "device",
             "filter": "driver_id=voc"
           }
+        ],
+        "tokens": [
+          {
+            "name": "average_fuel_consumption",
+            "type": "number",
+            "title": {
+                "en": "Average fuel consumption"
+            },
+            "example": {
+                "en": "28"
+            }
+          }
         ]
       },
       {
