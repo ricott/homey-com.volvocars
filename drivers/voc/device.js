@@ -572,9 +572,14 @@ class VOCDevice extends Homey.Device {
       this.refresh_position = newSettings.refresh_position;
       change = true;
     }
-    if (changedKeysArr.indexOf("refresh_status") > -1) {
-      this.log('Refresh status value was change to:', newSettings.refresh_status);
-      this.refresh_status = newSettings.refresh_status;
+    if (changedKeysArr.indexOf("refresh_status_car") > -1) {
+      this.log('Refresh status car value was change to:', newSettings.refresh_status_car);
+      this.refresh_status_car = newSettings.refresh_status_car;
+      change = true;
+    }
+    if (changedKeysArr.indexOf("refresh_status_cloud") > -1) {
+      this.log('Refresh status cloud value was change to:', newSettings.refresh_status_cloud);
+      this.refresh_status_cloud = newSettings.refresh_status_cloud;
       change = true;
     }
     if (changedKeysArr.indexOf("proximity_home") > -1) {
