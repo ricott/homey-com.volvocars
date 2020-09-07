@@ -69,6 +69,9 @@ Icons from;
 - https://thenounproject.com/hrnico/
 
 # Versions
+## 1.1.3
+- VOC position API response stored in debug setting
+
 ## 1.1.2
 - Average fuel consumption added to engine stop trigger
 

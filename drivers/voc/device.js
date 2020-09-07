@@ -215,6 +215,10 @@ class VOCDevice extends Homey.Device {
 
         this.log('We got new position data');
         this.car.position = position;
+        this.setSettings({ voc_position: JSON.stringify(this.car.position, null, "  ") })
+        .catch(err => {
+          this.error('Failed to update settings', err);
+        });
 
         let distanceHomey = Osm.calculateDistance(position.latitude,
           position.longitude,
