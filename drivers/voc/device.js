@@ -216,9 +216,9 @@ class VOCDevice extends Homey.Device {
         this.log('We got new position data');
         this.car.position = position;
         this.setSettings({ voc_position: JSON.stringify(this.car.position, null, "  ") })
-        .catch(err => {
-          this.error('Failed to update settings', err);
-        });
+          .catch(err => {
+            this.error('Failed to update settings', err);
+          });
 
         let distanceHomey = Osm.calculateDistance(position.latitude,
           position.longitude,
@@ -525,12 +525,13 @@ class VOCDevice extends Homey.Device {
         this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
         this.lastTriggerLocation = 'home';
         this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
-      } else if (key === 'charge_cable_status') {
+/*      } else if (key === 'charge_cable_status') {
         let tokens = {
-          charge_cable_status: this.car.status.connectionStatus || 'n/a'
+          //charge_cable_status: this.car.status.connectionStatus || 'n/a'
+          charge_cable_status: value
         }
         this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
-
+*/
       } else if (key === 'location_human') {
         let tokens = {
           car_location_address: this.car.location.address || '',

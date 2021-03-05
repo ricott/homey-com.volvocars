@@ -1,4 +1,7 @@
 {
+  "1.1.4": {
+    "en": "Fixed bug with duplicate charge cable triggers"
+  },
   "1.1.3": {
     "en": "VOC position API response stored in debug setting"
   },
