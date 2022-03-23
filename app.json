@@ -232,6 +232,14 @@
                 "en": "VOC subscription end"
               },
               "value": ""
+            },
+            {
+              "id": "isPHEV",
+              "type": "label",
+              "label": {
+                "en": "PHEV"
+              },
+              "value": "false"
             }
           ]
         },

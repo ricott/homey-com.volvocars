@@ -14,17 +14,14 @@ class VOCDevice extends Homey.Device {
 
     this.homeyActions = {};
     this.pollIntervals = [];
-    this.refresh_position = this.getSettings().refresh_position || 5;
-    this.refresh_status_car = this.getSettings().refresh_status_car || 120;
-    this.refresh_status_cloud = this.getSettings().refresh_status_cloud || 5;
-    this.proximity_home = this.getSettings().proximity_home || 50;
+    this.refresh_position = this.getSetting('refresh_position') || 5;
+    this.refresh_status_car = this.getSetting('refresh_status_car') || 120;
+    this.refresh_status_cloud = this.getSetting('refresh_status_cloud') || 5;
+    this.proximity_home = this.getSetting('proximity_home') || 50;
     this.lastTriggerLocation = 'unknown';
 
     this.car = {
-      vin: this.getData().id,
-      name: this.getName(),
-      phev: false,
-      attributes: null,
+      //attributes: null,
       status: null,
       position: null,
       location: null,
@@ -33,7 +30,7 @@ class VOCDevice extends Homey.Device {
       chargeLocations: []
     };
 
-    if (!Homey.ManagerSettings.get(`${this.car.vin}.username`)) {
+    if (!Homey.ManagerSettings.get(`${this.getData().id}.username`)) {
       //This is a newly added device, lets copy login details to homey settings
       this.log(`Storing credentials for user '${this.getStoreValue('username')}'`);
       this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
@@ -41,10 +38,10 @@ class VOCDevice extends Homey.Device {
 
     //Check if settings are encrypted, if not encrypt them
     //Triggered on all existing devices
-    let userJson = Homey.ManagerSettings.get(`${this.car.vin}.username`);
+    let userJson = Homey.ManagerSettings.get(`${this.getData().id}.username`);
     if (!userJson.iv) {
       //Data is not encrypted, lets
-      this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.car.vin}.password`));
+      this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.getData().id}.password`));
     }
 
     //Clear last error on app restart
@@ -70,11 +67,16 @@ class VOCDevice extends Homey.Device {
     this._initilializeTimers();
   }
 
+  getVehicleAttributeValue(objectPath) {
+    const attributes = self.getStoreValue('attributes');
+    return getJSONValueSafely(objectPath, attributes);
+  }
+
   registerFlowTokens() {
     this.log('Creating flow tokens');
-    this.vocStatusFlowToken = new Homey.FlowToken(`${this.car.vin}.statusToken`, {
+    this.vocStatusFlowToken = new Homey.FlowToken(`${this.getData().id}.statusToken`, {
       type: 'string',
-      title: `${this.car.name} VOC Status`
+      title: `${this.getName()} VOC Status`
     });
     this.vocStatusFlowToken.register()
       .catch(err => {
@@ -141,7 +143,7 @@ class VOCDevice extends Homey.Device {
         this.log(`Action '${response.action}' with result:`);
         this.log(response.result);
       }
-      //if (response.result)
+
       if (response.action !== 'blinkLights' && response.action !== 'honkHorn' &&
         response.action !== 'honkHornAndBlinkLights') {
         //We successfully invoked and action, lets refresh status so it shows that
@@ -168,6 +170,7 @@ class VOCDevice extends Homey.Device {
       if (vehicle.engineRunning) {
         engineRunning = true;
       } else if (this.car.attributes && this.car.attributes.engineStartSupported) {
+      //} else if (this.getVehicleAttributeValue(['engineStartSupported'])) {
         if (vehicle.ERS) {
           let ersStatus = vehicle.ERS.status || 'off';
           if (ersStatus.indexOf('on') > -1) {
@@ -246,9 +249,9 @@ class VOCDevice extends Homey.Device {
     //initializeVehicleAttributes
     this.car.vocApi.on('car_attributes_update', attributes => {
       this.log('Refreshing vehicle attributes');
-      this.car.phev = attributes.highVoltageBatterySupported;
+      const phev = attributes.highVoltageBatterySupported;
 
-      if (!this.car.phev && this.hasCapability('measure_battery')) {
+      if (!phev && this.hasCapability('measure_battery')) {
         this.log(`ICE car, removing capabilities; 'measure_battery', 'charge_cable_status'`);
         this.removeCapability('measure_battery');
         this.removeCapability('charge_cable_status');
@@ -264,13 +267,14 @@ class VOCDevice extends Homey.Device {
         model: `${attributes.vehicleType}, ${attributes.modelYear}`,
         fuelType: `${attributes.fuelType}, ${attributes.fuelTankVolume}l`,
         subscriptionEndDate: subscrEndDate,
-        voc_attributes: JSON.stringify(this.car.attributes, null, "  ")
+        voc_attributes: JSON.stringify(this.car.attributes, null, "  "),
+        isPHEV: String(phev)
       })
         .catch(err => {
           this.error('Failed to update settings', err);
         });
 
-      if (this.car.phev) {
+      if (phev) {
         //We have a phev, lets get charge locations
         this.log(`PHEV, fetching charging locations`);
         this.getVehicleChargeLocations();
@@ -323,28 +327,28 @@ class VOCDevice extends Homey.Device {
   }
 
   initializeVehicleAttributes() {
-    this.car.vocApi.getVehicleAttributes(this.car.vin);
+    this.car.vocApi.getVehicleAttributes(this.getData().id);
   }
   refreshVehicleStatusFromCar() {
-    this.car.vocApi.refreshVehicleStatusFromCar(this.car.vin);
+    this.car.vocApi.refreshVehicleStatusFromCar(this.getData().id);
   }
   getVehicleStatusFromCloud() {
-    this.car.vocApi.getVehicleStatusFromCloud(this.car.vin);
+    this.car.vocApi.getVehicleStatusFromCloud(this.getData().id);
   }
   refreshVehiclePosition() {
-    this.car.vocApi.getVehiclePosition(this.car.vin);
+    this.car.vocApi.getVehiclePosition(this.getData().id);
   }
   getVehicleChargeLocations() {
-    this.car.vocApi.getVehicleChargeLocations(this.car.vin);
+    this.car.vocApi.getVehicleChargeLocations(this.getData().id);
   }
   startHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('Heater supported, using heater/start');
-      return this.car.vocApi.startHeater(this.car.vin);
+      return this.car.vocApi.startHeater(this.getData().id);
 
     } else if (this.car.attributes.preclimatizationSupported) {
       this.log('Pre climatization supported, using preclimatization/start');
-      return this.car.vocApi.startPreClimatization(this.car.vin);
+      return this.car.vocApi.startPreClimatization(this.getData().id);
 
     } else {
       this.log('No heater or preclimatization support.');
@@ -354,11 +358,11 @@ class VOCDevice extends Homey.Device {
   stopHeater() {
     if (this.car.attributes.remoteHeaterSupported) {
       this.log('heater/stop');
-      return this.car.vocApi.stopHeater(this.car.vin);
+      return this.car.vocApi.stopHeater(this.getData().id);
 
     } else if (this.car.attributes.preclimatizationSupported) {
       this.log('preclimatization/stop');
-      return this.car.vocApi.stopPreClimatization(this.car.vin);
+      return this.car.vocApi.stopPreClimatization(this.getData().id);
 
     } else {
       this.log('No heater or preclimatization support.');
@@ -367,7 +371,7 @@ class VOCDevice extends Homey.Device {
   }
   lock() {
     if (this.car.attributes.lockSupported) {
-      return this.car.vocApi.lock(this.car.vin);
+      return this.car.vocApi.lock(this.getData().id);
     } else {
       this.log('Lock not supported!');
       return false;
@@ -375,7 +379,7 @@ class VOCDevice extends Homey.Device {
   }
   unlock() {
     if (this.car.attributes.unlockSupported) {
-      return this.car.vocApi.unlock(this.car.vin);
+      return this.car.vocApi.unlock(this.getData().id);
     } else {
       this.log('Unlock not supported!');
       return false;
@@ -383,7 +387,7 @@ class VOCDevice extends Homey.Device {
   }
   startEngine(duration) {
     if (this.car.attributes.engineStartSupported) {
-      return this.car.vocApi.startEngine(this.car.vin, duration);
+      return this.car.vocApi.startEngine(this.getData().id, duration);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
       return false;
@@ -391,7 +395,7 @@ class VOCDevice extends Homey.Device {
   }
   stopEngine() {
     if (this.car.attributes.engineStartSupported) {
-      return this.car.vocApi.stopEngine(this.car.vin);
+      return this.car.vocApi.stopEngine(this.getData().id);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
       return false;
@@ -399,7 +403,7 @@ class VOCDevice extends Homey.Device {
   }
   blinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      return this.car.vocApi.blinkLights(this.car.vin,
+      return this.car.vocApi.blinkLights(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
     } else {
@@ -409,7 +413,7 @@ class VOCDevice extends Homey.Device {
   }
   honkHorn() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      return this.car.vocApi.honkHorn(this.car.vin,
+      return this.car.vocApi.honkHorn(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
     } else {
@@ -419,7 +423,7 @@ class VOCDevice extends Homey.Device {
   }
   honkHornAndBlinkLights() {
     if (this.car.attributes.honkAndBlinkSupported) {
-      return this.car.vocApi.honkHornAndBlinkLights(this.car.vin,
+      return this.car.vocApi.honkHornAndBlinkLights(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
     } else {
@@ -428,18 +432,18 @@ class VOCDevice extends Homey.Device {
     }
   }
   startCharging() {
-    if (this.car.phev) {
-      return this.car.vocApi.startCharging(this.car.vin);
+    if (this.getSetting('isPHEV') == 'true') {
+      return this.car.vocApi.startCharging(this.getData().id);
     } else {
       this.log('Start charging not supported on ICE vehicles!');
       return false;
     }
   }
   delayCharging(chargeLocationId, delayedCharging, startTime, endTime) {
-    if (this.car.phev) {
+    if (this.getSetting('isPHEV') == 'true') {
       let json = `{"status": "Accepted", "delayCharging":{"enabled":${delayedCharging},"startTime":"${startTime}","stopTime":"${endTime}"}}`;
       let jsonObj = JSON.parse(json);
-      return this.car.vocApi.delayCharging(this.car.vin, chargeLocationId, jsonObj);
+      return this.car.vocApi.delayCharging(this.getData().id, chargeLocationId, jsonObj);
     } else {
       this.log('Delay charging not supported on ICE vehicles!');
       return false;
@@ -525,13 +529,13 @@ class VOCDevice extends Homey.Device {
         this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
         this.lastTriggerLocation = 'home';
         this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
-/*      } else if (key === 'charge_cable_status') {
-        let tokens = {
-          //charge_cable_status: this.car.status.connectionStatus || 'n/a'
-          charge_cable_status: value
-        }
-        this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
-*/
+        /*      } else if (key === 'charge_cable_status') {
+                let tokens = {
+                  //charge_cable_status: this.car.status.connectionStatus || 'n/a'
+                  charge_cable_status: value
+                }
+                this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
+        */
       } else if (key === 'location_human') {
         let tokens = {
           car_location_address: this.car.location.address || '',
@@ -560,34 +564,29 @@ class VOCDevice extends Homey.Device {
     this._deleteTimers();
     this.unregisterFlowTokens();
 
-    Homey.ManagerSettings.unset(`${this.car.vin}.username`);
-    Homey.ManagerSettings.unset(`${this.car.vin}.password`);
+    Homey.ManagerSettings.unset(`${this.getData().id}.username`);
+    Homey.ManagerSettings.unset(`${this.getData().id}.password`);
     this.car = null;
   }
 
-  onRenamed(name) {
-    this.log(`Renaming car from '${this.car.name}' to '${name}'`)
-    this.car.name = name;
-  }
-
-  async onSettings(oldSettings, newSettings, changedKeysArr) {
+  async onSettings({ oldSettings, newSettings, changedKeys }) {
     let change = false;
-    if (changedKeysArr.indexOf("refresh_position") > -1) {
+    if (changedKeys.indexOf("refresh_position") > -1) {
       this.log('Refresh position value was change to:', newSettings.refresh_position);
       this.refresh_position = newSettings.refresh_position;
       change = true;
     }
-    if (changedKeysArr.indexOf("refresh_status_car") > -1) {
+    if (changedKeys.indexOf("refresh_status_car") > -1) {
       this.log('Refresh status car value was change to:', newSettings.refresh_status_car);
       this.refresh_status_car = newSettings.refresh_status_car;
       change = true;
     }
-    if (changedKeysArr.indexOf("refresh_status_cloud") > -1) {
+    if (changedKeys.indexOf("refresh_status_cloud") > -1) {
       this.log('Refresh status cloud value was change to:', newSettings.refresh_status_cloud);
       this.refresh_status_cloud = newSettings.refresh_status_cloud;
       change = true;
     }
-    if (changedKeysArr.indexOf("proximity_home") > -1) {
+    if (changedKeys.indexOf("proximity_home") > -1) {
       this.log('Proximity home value was change to:', newSettings.proximity_home);
       this.proximity_home = newSettings.proximity_home;
     }
@@ -613,8 +612,8 @@ class VOCDevice extends Homey.Device {
 
   storeCredentialsEncrypted(plainUser, plainPassword) {
     this.log(`Encrypting credentials for user '${plainUser}'`);
-    Homey.ManagerSettings.set(`${this.car.vin}.username`, this.encryptText(plainUser));
-    Homey.ManagerSettings.set(`${this.car.vin}.password`, this.encryptText(plainPassword));
+    Homey.ManagerSettings.set(`${this.getData().id}.username`, this.encryptText(plainUser));
+    Homey.ManagerSettings.set(`${this.getData().id}.password`, this.encryptText(plainPassword));
 
     //Remove unencrypted credentials passed from driver
     this.unsetStoreValue('username');
@@ -622,11 +621,11 @@ class VOCDevice extends Homey.Device {
   }
 
   getUsername() {
-    return this.decryptText(Homey.ManagerSettings.get(`${this.car.vin}.username`));
+    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.username`));
   }
 
   getPassword() {
-    return this.decryptText(Homey.ManagerSettings.get(`${this.car.vin}.password`));
+    return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.password`));
   }
 
   encryptText(plainText) {
@@ -657,5 +656,7 @@ class VOCDevice extends Homey.Device {
   }
 
 }
+
+const getJSONValueSafely = (p, o) => p.reduce((xs, x) => (xs && xs[x]) ? xs[x] : null, o);
 
 module.exports = VOCDevice;

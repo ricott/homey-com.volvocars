@@ -243,7 +243,7 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['action.startCharging'].registerRunListener((args, state) => {
 			this.log('----- Start charging action triggered');
 
-			if (args.device.car.phev) {
+			if (args.device.getSetting('isPHEV') == 'true') {
 				return args.device.startCharging().then((result) => {
 					if (result) {
 						return Promise.resolve(true);
@@ -267,7 +267,7 @@ class VOCDriver extends Homey.Driver {
 			this.log(`Start time: '${args.startTime}'`);
 			this.log(`End time: '${args.endTime}'`);
 
-			if (args.device.car.phev) {
+			if (args.device.getSetting('isPHEV') == 'true') {
 				return args.device.delayCharging(args.chargeLocation.id, 
 													args.delayedCharging, 
 													args.startTime, 

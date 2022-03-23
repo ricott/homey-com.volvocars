@@ -3,7 +3,7 @@
 const assert = require('assert');
 const VOC = require('../lib/voc.js');
 var config = require('./config')['phev'];
-//var config = require('./config')['ice'];
+//var config = require('./config')['phev2'];
 
 let vocSession = new VOC({
     username: config.credentials.user,
@@ -29,7 +29,6 @@ describe('VOC', function () {
         it('should return VIN', function (done) {
             vocSession.listVehiclesOnAccount()
                 .then(function (result) {
-                    //console.log(result);
                     assert.strictEqual(result[0].data.id, config.credentials.vin);
                     done();
                 });
@@ -37,20 +36,20 @@ describe('VOC', function () {
     });
 
     describe('#getVehicleChargeLocations()', function () {
-        it('should return 4 charge locations', function (done) {
+        it('should return more than 2 charge locations', function (done) {
             vocSession.getVehicleChargeLocations(config.credentials.vin)
                 .then(function (result) {
-                    assert.strictEqual(result.length, 4);
+                    assert.strictEqual(result.length > 2, true);
                     done();
                 });
         });
     });
 
     describe('#getVehicleAttributes()', function () {
-        it('should return 3521CF8B', function (done) {
+        it('should return 2441CF30', function (done) {
             vocSession.getVehicleAttributes(config.credentials.vin)
                 .then(function (result) {
-                    assert.strictEqual(result.engineCode, '3521CF8B');
+                    assert.strictEqual(result.engineCode, '2441CF30');
                     done();
                 });
         });
@@ -65,7 +64,7 @@ describe('VOC', function () {
                 });
         });
     });
-    
+
     describe('#getVehicleStatusFromCloud()', function () {
         it('should return a number', function (done) {
             vocSession.getVehicleStatusFromCloud(config.credentials.vin)
