@@ -52,8 +52,8 @@ class VOCDriver extends Homey.Driver {
 		this.flowCards['action.heaterControl'].registerRunListener((args, state) => {
 			this.log('----- Heater action triggered');
 			this.log(`Action: '${args.heaterAction}'`);
-			if (args.device.car.attributes.remoteHeaterSupported ||
-				args.device.car.attributes.preclimatizationSupported) {
+			if (args.device.car.getVehicleAttributeValue(['remoteHeaterSupported']) ||
+				args.device.car.getVehicleAttributeValue(['preclimatizationSupported'])) {
 				if (args.heaterAction === 'ON') {
 					return args.device.startHeater().then((result) => {
 						if (result) {
@@ -84,7 +84,7 @@ class VOCDriver extends Homey.Driver {
 			this.log('----- Lock action triggered');
 			this.log(`Action: '${args.lockAction}'`);
 			if (args.lockAction === 'LOCK') {
-				if (args.device.car.attributes.lockSupported) {
+				if (args.device.car.getVehicleAttributeValue(['lockSupported'])) {
 
 					return args.device.lock().then((result) => {
 						if (result) {
@@ -101,7 +101,7 @@ class VOCDriver extends Homey.Driver {
 					return Promise.reject(Homey.__('error.noLockSupport'));
 				}
 			} else if (args.lockAction === 'UNLOCK') {
-				if (args.device.car.attributes.unlockSupported) {
+				if (args.device.car.getVehicleAttributeValue(['unlockSupported'])) {
 
 					return args.device.unlock().then((result) => {
 						if (result) {
@@ -123,7 +123,7 @@ class VOCDriver extends Homey.Driver {
 
 		this.flowCards['action.blinkLightsControl'].registerRunListener((args, state) => {
 			this.log('----- Blink lights action triggered');
-			if (args.device.car.attributes.honkAndBlinkSupported) {
+			if (args.device.car.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
 
 				return args.device.blinkLights().then((result) => {
 					if (result) {
@@ -143,7 +143,7 @@ class VOCDriver extends Homey.Driver {
 
 		this.flowCards['action.honkHornControl'].registerRunListener((args, state) => {
 			this.log('----- Honk horn action triggered');
-			if (args.device.car.attributes.honkAndBlinkSupported) {
+			if (args.device.car.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
 
 				return args.device.honkHorn().then((result) => {
 					if (result) {
@@ -163,7 +163,7 @@ class VOCDriver extends Homey.Driver {
 
 		this.flowCards['action.honkHornAndBlinkLightsControl'].registerRunListener((args, state) => {
 			this.log('----- Honk horn and blink lights action triggered');
-			if (args.device.car.attributes.honkAndBlinkSupported) {
+			if (args.device.car.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
 
 				return args.device.honkHornAndBlinkLights().then((result) => {
 					if (result) {
@@ -186,7 +186,7 @@ class VOCDriver extends Homey.Driver {
 			this.log(`Action: '${args.engineAction}' with param '${args.engineDuration}'`);
 
 			//If Engine Remote Start (ERS) section is missing from status API - then no support for ERS
-			if (args.device.car.attributes.engineStartSupported && args.device.car.status.ERS) {
+			if (args.device.car.getVehicleAttributeValue(['engineStartSupported']) && args.device.car.status.ERS) {
 				this.log(`Current ERS state: '${args.device.car.status.ERS.status}'`);
 				this.log(`Current engine state: '${args.device.car.status.engineRunning}'`);
 				this.log(`Current warning: '${args.device.car.status.ERS.engineStartWarning}'`);

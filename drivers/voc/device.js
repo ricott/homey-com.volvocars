@@ -21,7 +21,6 @@ class VOCDevice extends Homey.Device {
     this.lastTriggerLocation = 'unknown';
 
     this.car = {
-      //attributes: null,
       status: null,
       position: null,
       location: null,
@@ -68,7 +67,7 @@ class VOCDevice extends Homey.Device {
   }
 
   getVehicleAttributeValue(objectPath) {
-    const attributes = self.getStoreValue('attributes');
+    const attributes = this.getStoreValue('attributes') || {};
     return getJSONValueSafely(objectPath, attributes);
   }
 
@@ -154,13 +153,13 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.on('car_status_update', vehicle => {
       this.log('Refreshing status from VOC');
       this.car.status = vehicle;
-      this.setSettings({ voc_status: JSON.stringify(this.car.status, null, "  ") })
+      this.setSettings({ voc_status: JSON.stringify(vehicle, null, "  ") })
         .catch(err => {
           this.error('Failed to update settings', err);
         });
 
       //Make VOC status available in any flow
-      this.vocStatusFlowToken.setValue(JSON.stringify(this.car.status));
+      this.vocStatusFlowToken.setValue(JSON.stringify(vehicle));
 
       this._updateProperty('range', vehicle.distanceToEmpty);
       this._updateProperty('locked', vehicle.carLocked);
@@ -169,8 +168,7 @@ class VOCDevice extends Homey.Device {
       //Either engine is running or ERS is running
       if (vehicle.engineRunning) {
         engineRunning = true;
-      } else if (this.car.attributes && this.car.attributes.engineStartSupported) {
-      //} else if (this.getVehicleAttributeValue(['engineStartSupported'])) {
+      } else if (this.getVehicleAttributeValue(['engineStartSupported'])) {
         if (vehicle.ERS) {
           let ersStatus = vehicle.ERS.status || 'off';
           if (ersStatus.indexOf('on') > -1) {
@@ -257,7 +255,9 @@ class VOCDevice extends Homey.Device {
         this.removeCapability('charge_cable_status');
       }
 
-      this.car.attributes = attributes;
+      //Store a copy of the json
+      this.setStoreValue('attributes', attributes);
+
       let subscrEndDate = new Date(attributes.subscriptionEndDate)
         .toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -267,7 +267,7 @@ class VOCDevice extends Homey.Device {
         model: `${attributes.vehicleType}, ${attributes.modelYear}`,
         fuelType: `${attributes.fuelType}, ${attributes.fuelTankVolume}l`,
         subscriptionEndDate: subscrEndDate,
-        voc_attributes: JSON.stringify(this.car.attributes, null, "  "),
+        voc_attributes: JSON.stringify(attributes, null, "  "),
         isPHEV: String(phev)
       })
         .catch(err => {
@@ -342,11 +342,11 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.getVehicleChargeLocations(this.getData().id);
   }
   startHeater() {
-    if (this.car.attributes.remoteHeaterSupported) {
+    if (this.getVehicleAttributeValue(['remoteHeaterSupported'])) {
       this.log('Heater supported, using heater/start');
       return this.car.vocApi.startHeater(this.getData().id);
 
-    } else if (this.car.attributes.preclimatizationSupported) {
+    } else if (this.getVehicleAttributeValue(['preclimatizationSupported'])) {
       this.log('Pre climatization supported, using preclimatization/start');
       return this.car.vocApi.startPreClimatization(this.getData().id);
 
@@ -356,11 +356,11 @@ class VOCDevice extends Homey.Device {
     }
   }
   stopHeater() {
-    if (this.car.attributes.remoteHeaterSupported) {
+    if (this.getVehicleAttributeValue(['remoteHeaterSupported'])) {
       this.log('heater/stop');
       return this.car.vocApi.stopHeater(this.getData().id);
 
-    } else if (this.car.attributes.preclimatizationSupported) {
+    } else if (this.getVehicleAttributeValue(['preclimatizationSupported'])) {
       this.log('preclimatization/stop');
       return this.car.vocApi.stopPreClimatization(this.getData().id);
 
@@ -370,7 +370,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   lock() {
-    if (this.car.attributes.lockSupported) {
+    if (this.getVehicleAttributeValue(['lockSupported'])) {
       return this.car.vocApi.lock(this.getData().id);
     } else {
       this.log('Lock not supported!');
@@ -378,7 +378,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   unlock() {
-    if (this.car.attributes.unlockSupported) {
+    if (this.getVehicleAttributeValue(['unlockSupported'])) {
       return this.car.vocApi.unlock(this.getData().id);
     } else {
       this.log('Unlock not supported!');
@@ -386,7 +386,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   startEngine(duration) {
-    if (this.car.attributes.engineStartSupported) {
+    if (this.getVehicleAttributeValue(['engineStartSupported'])) {
       return this.car.vocApi.startEngine(this.getData().id, duration);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
@@ -394,7 +394,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   stopEngine() {
-    if (this.car.attributes.engineStartSupported) {
+    if (this.getVehicleAttributeValue(['engineStartSupported'])) {
       return this.car.vocApi.stopEngine(this.getData().id);
     } else {
       this.log('Engine Remote Start (ERS) not supported!');
@@ -402,7 +402,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   blinkLights() {
-    if (this.car.attributes.honkAndBlinkSupported) {
+    if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
       return this.car.vocApi.blinkLights(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
@@ -412,7 +412,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   honkHorn() {
-    if (this.car.attributes.honkAndBlinkSupported) {
+    if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
       return this.car.vocApi.honkHorn(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
@@ -422,7 +422,7 @@ class VOCDevice extends Homey.Device {
     }
   }
   honkHornAndBlinkLights() {
-    if (this.car.attributes.honkAndBlinkSupported) {
+    if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
       return this.car.vocApi.honkHornAndBlinkLights(this.getData().id,
         this.car.position.latitude,
         this.car.position.longitude);
