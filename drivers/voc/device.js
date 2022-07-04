@@ -151,96 +151,103 @@ class VOCDevice extends Homey.Device {
     });
 
     this.car.vocApi.on('car_status_update', vehicle => {
-      this.log('Refreshing status from VOC');
-      this.car.status = vehicle;
-      this.setSettings({ voc_status: JSON.stringify(vehicle, null, "  ") })
-        .catch(err => {
-          this.error('Failed to update settings', err);
-        });
-
-      //Make VOC status available in any flow
-      this.vocStatusFlowToken.setValue(JSON.stringify(vehicle));
-
-      this._updateProperty('range', vehicle.distanceToEmpty);
-      this._updateProperty('locked', vehicle.carLocked);
-
-      let engineRunning = false;
-      //Either engine is running or ERS is running
-      if (vehicle.engineRunning) {
-        engineRunning = true;
-      } else if (this.getVehicleAttributeValue(['engineStartSupported'])) {
-        if (vehicle.ERS) {
-          let ersStatus = vehicle.ERS.status || 'off';
-          if (ersStatus.indexOf('on') > -1) {
-            engineRunning = true;
+      //Somehow we get invalid json at times, lets skip those events
+      if (vehicle.distanceToEmpty && vehicle.carLocked) {
+        this.log('Refreshing status from VOC');
+        this.car.status = vehicle;
+        this.setSettings({ voc_status: JSON.stringify(vehicle, null, "  ") })
+          .catch(err => {
+            this.error('Failed to update settings', err);
+          });
+  
+        //Make VOC status available in any flow
+        this.vocStatusFlowToken.setValue(JSON.stringify(vehicle));
+        
+        this._updateProperty('range', vehicle.distanceToEmpty);
+        this._updateProperty('locked', vehicle.carLocked);
+  
+        let engineRunning = false;
+        //Either engine is running or ERS is running
+        if (vehicle.engineRunning) {
+          engineRunning = true;
+        } else if (this.getVehicleAttributeValue(['engineStartSupported'])) {
+          if (vehicle.ERS) {
+            let ersStatus = vehicle.ERS.status || 'off';
+            if (ersStatus.indexOf('on') > -1) {
+              engineRunning = true;
+            }
           }
         }
-      }
-      this._updateProperty('engine', engineRunning);
-
-      let heaterStatus = 'Off';
-      if (vehicle.heater && vehicle.heater.status !== 'off') {
-        heaterStatus = 'On';
-      }
-      this._updateProperty('heater', heaterStatus);
-
-      //Only update battery status if car is a phev, e.g. highVoltageBatterySupported=true
-      if (vehicle.hvBattery) {
-        this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
-
-        //Connection status means charge cable status
-        let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
-        if (vehicle.connectionStatus) {
-          if (vehicle.connectionStatus === 'Disconnected') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
-          } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
-          } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
-            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
-          } else {
-            chargeCableStatus = vehicle.connectionStatus;
-          }
+        this._updateProperty('engine', engineRunning);
+  
+        let heaterStatus = 'Off';
+        if (vehicle.heater && vehicle.heater.status !== 'off') {
+          heaterStatus = 'On';
         }
-        this._updateProperty('charge_cable_status', chargeCableStatus);
-      } else {
-        this.log('ICE car, no cable or hw battery');
+        this._updateProperty('heater', heaterStatus);
+  
+        //Only update battery status if car is a phev, e.g. highVoltageBatterySupported=true
+        if (vehicle.hvBattery) {
+          this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
+  
+          //Connection status means charge cable status
+          let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
+          if (vehicle.connectionStatus) {
+            if (vehicle.connectionStatus === 'Disconnected') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
+            } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
+            } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
+              chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
+            } else {
+              chargeCableStatus = vehicle.connectionStatus;
+            }
+          }
+          this._updateProperty('charge_cable_status', chargeCableStatus);
+        } else {
+          this.log('ICE car, no cable or hw battery');
+        }
       }
     });
 
     //refreshVehiclePosition
     this.car.vocApi.on('car_position_update', position => {
-      if (!this.car.position ||
-        (Date.parse(position.timestamp) > Date.parse(this.car.position.timestamp) &&
-          this.car.position.latitude.toFixed(5) != position.latitude.toFixed(5) &&
-          this.car.position.longitude.toFixed(5) != position.longitude.toFixed(5))) {
 
-        this.log('We got new position data');
-        this.car.position = position;
-        this.setSettings({ voc_position: JSON.stringify(this.car.position, null, "  ") })
-          .catch(err => {
-            this.error('Failed to update settings', err);
-          });
-
-        let distanceHomey = Osm.calculateDistance(position.latitude,
-          position.longitude,
-          Homey.ManagerGeolocation.getLatitude(),
-          Homey.ManagerGeolocation.getLongitude()) || 0;
-        this.car.distanceFromHome = distanceHomey;
-        distanceHomey = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
-        this._updateProperty('distance', distanceHomey);
-
-        if (this.lastTriggerLocation === 'unknown') {
-          if (this.carAtHome()) {
-            this.lastTriggerLocation = 'home';
-          } else {
-            this.lastTriggerLocation = 'away';
+      //Somehow we get invalid json at times, lets skip those events
+      if (position.latitude && position.longitude && position.timestamp) {
+        if (!this.car.position ||
+            (Date.parse(position.timestamp) > Date.parse(this.car.position.timestamp) &&
+              this.car.position.latitude.toFixed(5) != position.latitude.toFixed(5) &&
+              this.car.position.longitude.toFixed(5) != position.longitude.toFixed(5))) {
+    
+            this.log('We got new position data');
+            this.car.position = position;
+            this.setSettings({ voc_position: JSON.stringify(this.car.position, null, "  ") })
+              .catch(err => {
+                this.error('Failed to update settings', err);
+              });
+    
+            let distanceHomey = Osm.calculateDistance(position.latitude,
+              position.longitude,
+              Homey.ManagerGeolocation.getLatitude(),
+              Homey.ManagerGeolocation.getLongitude()) || 0;
+            this.car.distanceFromHome = distanceHomey;
+            distanceHomey = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
+            this._updateProperty('distance', distanceHomey);
+    
+            if (this.lastTriggerLocation === 'unknown') {
+              if (this.carAtHome()) {
+                this.lastTriggerLocation = 'home';
+              } else {
+                this.lastTriggerLocation = 'away';
+              }
+            }
+    
+            Osm.geocodeLatLng(position.latitude, position.longitude).then((osm_location) => {
+              this.car.location = osm_location;
+              this._updateProperty('location_human', `${osm_location.address}, ${osm_location.city}`);
+            });
           }
-        }
-
-        Osm.geocodeLatLng(position.latitude, position.longitude).then((osm_location) => {
-          this.car.location = osm_location;
-          this._updateProperty('location_human', `${osm_location.address}, ${osm_location.city}`);
-        });
       }
     });
 
