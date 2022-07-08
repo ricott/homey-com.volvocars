@@ -152,7 +152,7 @@ class VOCDevice extends Homey.Device {
 
     this.car.vocApi.on('car_status_update', vehicle => {
       //Somehow we get invalid json at times, lets skip those events
-      if (vehicle.distanceToEmpty && vehicle.carLocked) {
+      if (vehicle && vehicle.distanceToEmpty && vehicle.carLocked) {
         this.log('Refreshing status from VOC');
         this.car.status = vehicle;
         this.setSettings({ voc_status: JSON.stringify(vehicle, null, "  ") })
@@ -214,7 +214,7 @@ class VOCDevice extends Homey.Device {
     this.car.vocApi.on('car_position_update', position => {
 
       //Somehow we get invalid json at times, lets skip those events
-      if (position.latitude && position.longitude && position.timestamp) {
+      if (position && position.latitude && position.longitude && position.timestamp) {
         if (!this.car.position ||
             (Date.parse(position.timestamp) > Date.parse(this.car.position.timestamp) &&
               this.car.position.latitude.toFixed(5) != position.latitude.toFixed(5) &&
