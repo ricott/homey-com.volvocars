@@ -4,4 +4,6 @@ Verify battery level and start charging your car if needed.
 
 [1] Please note that the delay for these events are dependent on how frequently your car pushes updates to the Volvo On Call cloud or optionally how frequently you have configured the app to refresh values from your car. Side effect of the latter is power consumption of your 12V battery.
 
+Please note that Volvo doesn't expose any APIs for cars equipped with Android Auto (model year 2022 and beyond). That means that this app doesn't support those cars.
+
 For more information about the app and the possibility to get support please visit the forum link in section below.

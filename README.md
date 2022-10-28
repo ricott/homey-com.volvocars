@@ -5,6 +5,8 @@ Before adding a car you need to go to app settings and select region. Different 
 
 When adding a car you are prompted for your Volvo On Call username and password.
 
+Please note that Volvo doesn't expose any APIs for cars equipped with Android Auto (model year 2022 and beyond). That means that this app doesn't support those cars.
+
 ## Triggers
 - Car left home
 - Car came home
@@ -68,54 +70,3 @@ Icons from;
 - https://thenounproject.com/iconproducer/
 - https://thenounproject.com/hrnico/
 
-# Versions
-## 1.1.3
-- VOC position API response stored in debug setting
-
-## 1.1.2
-- Average fuel consumption added to engine stop trigger
-
-## 1.1.1
-- Fixed status refresh bug, solved by adding missing Accept header
-
-## 1.1.0
-- Fuel range changed trigger added
-
-## 1.0.9
-- VOC status json available as a global token
-
-## 1.0.8
-- Added action for scheduling charging
-- Added action for overriding scheduled charging
-
-## 1.0.7
-- Community link and readme cleanup
-
-## 1.0.6
-- New Homey app store adoption
-
-## 1.0.5
-- Internal cleanup on how credentials are passed from driver to device during initial creation
-
-## 1.0.4
-- Remove non relevant device capabilities, e.g. ICE cars wont see battery status.
-- Split refresh settings into two; one setting from car to cloud and one setting from cloud to homey. All in order to limit car battery impact.
-
-## 1.0.3
-- Increased security by encrypting your Volvo On Call credentials before persisting them locally on your Homey. Existing credentials will be automatically encrypted after installation of this version.
-
-## 1.0.2
-- Added conditions for door(s) open. One condition for any door open and one for checking a specific door open.
-- Refresh status default value changed to 10 minutes and default refresh position changed to 15 minutes. This is possible to change in vehicle settings.
-
-## 1.0.1
-- Added location changed trigger. For instance to allow triggering a flow when the car parks at work, etc. Use condition logic to check if location tags match desired location.
-
-## 1.0.0
-- Triggers added; Engine stopped, Heater stopped
-
-## 0.9.9
-- Fixed bug related to start of parking climate
-
-## 0.9.8
-- Added debug information in device advanced settings. Last VOC API response for attributes, status and most recent VOC error received when invoking an action.
