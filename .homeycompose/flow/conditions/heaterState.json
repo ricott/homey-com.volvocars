@@ -1,0 +1,13 @@
+{
+    "id": "heaterState",
+    "title": {
+        "en": "Heater is !{{on|off}}"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

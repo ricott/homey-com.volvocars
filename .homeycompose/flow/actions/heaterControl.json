@@ -1,0 +1,37 @@
+{
+    "id": "heaterControl",
+    "title": {
+        "en": "Heater"
+    },
+    "titleFormatted": {
+        "en": "Turn the heater [[heaterAction]]"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        },
+        {
+            "name": "heaterAction",
+            "type": "dropdown",
+            "title": {
+                "en": "Heater action"
+            },
+            "values": [
+                {
+                    "id": "ON",
+                    "label": {
+                        "en": "On"
+                    }
+                },
+                {
+                    "id": "OFF",
+                    "label": {
+                        "en": "Off"
+                    }
+                }
+            ]
+        }
+    ]
+}

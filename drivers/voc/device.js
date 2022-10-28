@@ -1,5 +1,4 @@
 'use strict';
-
 const Homey = require('homey');
 const VOC = require('../../lib/voc.js');
 const Osm = require('../../lib/maps.js');
@@ -9,7 +8,7 @@ const crypto_algorithm = 'aes-256-ctr';
 
 class VOCDevice extends Homey.Device {
 
-    onInit() {
+    async onInit() {
         this.log('VOC car initiated', this.getName());
 
         this.homeyActions = {};
@@ -29,7 +28,7 @@ class VOCDevice extends Homey.Device {
             chargeLocations: []
         };
 
-        if (!Homey.ManagerSettings.get(`${this.getData().id}.username`)) {
+        if (!this.homey.settings.get(`${this.getData().id}.username`)) {
             //This is a newly added device, lets copy login details to homey settings
             this.log(`Storing credentials for user '${this.getStoreValue('username')}'`);
             this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
@@ -37,10 +36,10 @@ class VOCDevice extends Homey.Device {
 
         //Check if settings are encrypted, if not encrypt them
         //Triggered on all existing devices
-        let userJson = Homey.ManagerSettings.get(`${this.getData().id}.username`);
+        let userJson = this.homey.settings.get(`${this.getData().id}.username`);
         if (!userJson.iv) {
             //Data is not encrypted, lets
-            this.storeCredentialsEncrypted(userJson, Homey.ManagerSettings.get(`${this.getData().id}.password`));
+            this.storeCredentialsEncrypted(userJson, this.homey.settings.get(`${this.getData().id}.password`));
         }
 
         //Clear last error on app restart
@@ -52,8 +51,8 @@ class VOCDevice extends Homey.Device {
         this.car.vocApi = new VOC({
             username: this.getUsername(),
             password: this.getPassword(),
-            region: Homey.ManagerSettings.get('region'),
-            uuid: this.getDriver().deviceUUID
+            region: this.homey.settings.get('region'),
+            uuid: this.driver.deviceUUID
         });
 
         //Initialize static attributes
@@ -61,7 +60,7 @@ class VOCDevice extends Homey.Device {
         this.initializeVehicleAttributes();
         this.getVehicleStatusFromCloud();
         this.refreshVehiclePosition();
-        this.registerFlowTokens();
+        await this.registerFlowTokens();
 
         this._initilializeTimers();
     }
@@ -71,26 +70,18 @@ class VOCDevice extends Homey.Device {
         return getJSONValueSafely(objectPath, attributes);
     }
 
-    registerFlowTokens() {
+    async registerFlowTokens() {
         this.log('Creating flow tokens');
-        this.vocStatusFlowToken = new Homey.FlowToken(`${this.getData().id}.statusToken`, {
-            type: 'string',
-            title: `${this.getName()} VOC Status`
-        });
-        this.vocStatusFlowToken.register()
-            .catch(err => {
-                this.log('Failed to register flow token', err);
+        this.vocStatusFlowToken = await this.homey.flow.createToken(`${this.getData().id}.statusToken`,
+            {
+                type: 'string',
+                title: `${this.getName()} VOC Status`
             });
     }
 
     unregisterFlowTokens() {
         this.log('Deleting flow tokens');
-        if (this.vocStatusFlowToken) {
-            this.vocStatusFlowToken.unregister()
-                .catch(err => {
-                    this.log('Failed to un-register flow token', err);
-                });
-        }
+        this.homey.flow.unregisterToken(this.vocStatusFlowToken);
     }
 
     _initilializeTimers() {
@@ -195,14 +186,14 @@ class VOCDevice extends Homey.Device {
                     this._updateProperty('measure_battery', vehicle.hvBattery.hvBatteryLevel);
 
                     //Connection status means charge cable status
-                    let chargeCableStatus = Homey.__('device.chargeCableStatus_disabled');
+                    let chargeCableStatus = this.homey.__('device.chargeCableStatus_disabled');
                     if (vehicle.connectionStatus) {
                         if (vehicle.connectionStatus === 'Disconnected') {
-                            chargeCableStatus = Homey.__('device.chargeCableStatus_disconnected');
+                            chargeCableStatus = this.homey.__('device.chargeCableStatus_disconnected');
                         } else if (vehicle.connectionStatus === 'ConnectedWithoutPower') {
-                            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedNoPower');
+                            chargeCableStatus = this.homey.__('device.chargeCableStatus_ConnectedNoPower');
                         } else if (vehicle.connectionStatus === 'ConnectedWithPower') {
-                            chargeCableStatus = Homey.__('device.chargeCableStatus_ConnectedWithPower');
+                            chargeCableStatus = this.homey.__('device.chargeCableStatus_ConnectedWithPower');
                         } else {
                             chargeCableStatus = vehicle.connectionStatus;
                         }
@@ -233,8 +224,8 @@ class VOCDevice extends Homey.Device {
 
                     let distanceHomey = Osm.calculateDistance(position.latitude,
                         position.longitude,
-                        Homey.ManagerGeolocation.getLatitude(),
-                        Homey.ManagerGeolocation.getLongitude()) || 0;
+                        this.homey.geolocation.getLatitude(),
+                        this.homey.geolocation.getLongitude()) || 0;
                     this.car.distanceFromHome = distanceHomey;
                     distanceHomey = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
                     this._updateProperty('distance', distanceHomey);
@@ -514,38 +505,38 @@ class VOCDevice extends Homey.Device {
 
             if (key === 'heater') {
                 if (value === 'On') {
-                    this.getDriver().triggerFlow('trigger.heater_started', {}, this);
+                    this.driver.triggerDeviceFlow('heater_started', {}, this);
                 } else {
-                    this.getDriver().triggerFlow('trigger.heater_stopped', {}, this);
+                    this.driver.triggerDeviceFlow('heater_stopped', {}, this);
                 }
 
             } else if (key === 'engine') {
                 if (value) {
-                    this.getDriver().triggerFlow('trigger.engine_started', {}, this);
+                    this.driver.triggerDeviceFlow('engine_started', {}, this);
                 } else {
                     let tokens = {
                         average_fuel_consumption: this.car.status.averageFuelConsumption || 'n/a'
                     }
-                    this.getDriver().triggerFlow('trigger.engine_stopped', tokens, this);
+                    this.driver.triggerDeviceFlow('engine_stopped', tokens, this);
                 }
 
             } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
 
                 this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
                 this.lastTriggerLocation = 'away';
-                this.getDriver().triggerFlow('trigger.car_left_home', {}, this);
+                this.driver.triggerDeviceFlow('car_left_home', {}, this);
 
             } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
 
                 this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
                 this.lastTriggerLocation = 'home';
-                this.getDriver().triggerFlow('trigger.car_came_home', {}, this);
+                this.driver.triggerDeviceFlow('car_came_home', {}, this);
                 /*      } else if (key === 'charge_cable_status') {
                         let tokens = {
                           //charge_cable_status: this.car.status.connectionStatus || 'n/a'
                           charge_cable_status: value
                         }
-                        this.getDriver().triggerFlow('trigger.charge_cable_status_changed', tokens, this);
+                        this.driver.triggerDeviceFlow('charge_cable_status_changed', tokens, this);
                 */
             } else if (key === 'location_human') {
                 let tokens = {
@@ -555,12 +546,12 @@ class VOCDevice extends Homey.Device {
                     car_location_county: this.car.location.county || '',
                     car_location_country: this.car.location.country || ''
                 }
-                this.getDriver().triggerFlow('trigger.location_human_changed', tokens, this);
+                this.driver.triggerDeviceFlow('location_human_changed', tokens, this);
             } else if (key === 'range') {
                 let tokens = {
                     fuel_range: value
                 }
-                this.getDriver().triggerFlow('trigger.fuel_range_changed', tokens, this);
+                this.driver.triggerDeviceFlow('fuel_range_changed', tokens, this);
             }
 
         } else {
@@ -575,8 +566,8 @@ class VOCDevice extends Homey.Device {
         this._deleteTimers();
         this.unregisterFlowTokens();
 
-        Homey.ManagerSettings.unset(`${this.getData().id}.username`);
-        Homey.ManagerSettings.unset(`${this.getData().id}.password`);
+        this.homey.settings.unset(`${this.getData().id}.username`);
+        this.homey.settings.unset(`${this.getData().id}.password`);
         this.car = null;
     }
 
@@ -606,7 +597,6 @@ class VOCDevice extends Homey.Device {
             //We also need to re-initialize the timer
             this._reinitializeTimers();
         }
-
     }
 
     formatDistance(distance) {
@@ -623,8 +613,8 @@ class VOCDevice extends Homey.Device {
 
     storeCredentialsEncrypted(plainUser, plainPassword) {
         this.log(`Encrypting credentials for user '${plainUser}'`);
-        Homey.ManagerSettings.set(`${this.getData().id}.username`, this.encryptText(plainUser));
-        Homey.ManagerSettings.set(`${this.getData().id}.password`, this.encryptText(plainPassword));
+        this.homey.settings.set(`${this.getData().id}.username`, this.encryptText(plainUser));
+        this.homey.settings.set(`${this.getData().id}.password`, this.encryptText(plainPassword));
 
         //Remove unencrypted credentials passed from driver
         this.unsetStoreValue('username');
@@ -632,11 +622,11 @@ class VOCDevice extends Homey.Device {
     }
 
     getUsername() {
-        return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.username`));
+        return this.decryptText(this.homey.settings.get(`${this.getData().id}.username`));
     }
 
     getPassword() {
-        return this.decryptText(Homey.ManagerSettings.get(`${this.getData().id}.password`));
+        return this.decryptText(this.homey.settings.get(`${this.getData().id}.password`));
     }
 
     encryptText(plainText) {

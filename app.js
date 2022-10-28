@@ -1,13 +1,15 @@
 'use strict';
 
-const Homey = require('homey');
+const { App } = require('homey');
 
-class VOCApp extends Homey.App {
-
-	onInit() {
-		this.log('Volvo On Call App is running...');
+class VOCApp extends App {
+	async onInit() {
+		this.log(`Volvo on Call v${this.getAppVersion()} is running`);
 	}
 
+    getAppVersion() {
+        return this.homey.manifest.version;
+    }
 }
 
 module.exports = VOCApp;

@@ -1,0 +1,61 @@
+{
+    "id": "doorOpen",
+    "title": {
+        "en": "Door is !{{|not}} open"
+    },
+    "titleFormatted": {
+        "en": "The [[door]] is !{{|not}} open"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        },
+        {
+            "name": "door",
+            "type": "dropdown",
+            "title": {
+                "en": "Door"
+            },
+            "values": [
+                {
+                    "id": "tailgateOpen",
+                    "label": {
+                        "en": "Tailgate"
+                    }
+                },
+                {
+                    "id": "rearRightDoorOpen",
+                    "label": {
+                        "en": "Rear right door"
+                    }
+                },
+                {
+                    "id": "rearLeftDoorOpen",
+                    "label": {
+                        "en": "Rear left door"
+                    }
+                },
+                {
+                    "id": "frontRightDoorOpen",
+                    "label": {
+                        "en": "Front right door"
+                    }
+                },
+                {
+                    "id": "frontLeftDoorOpen",
+                    "label": {
+                        "en": "Front left door"
+                    }
+                },
+                {
+                    "id": "hoodOpen",
+                    "label": {
+                        "en": "Hood"
+                    }
+                }
+            ]
+        }
+    ]
+}

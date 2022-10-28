@@ -1,0 +1,13 @@
+{
+    "id": "vehicleAtHome",
+    "title": {
+        "en": "Car is !{{|not}} at home"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

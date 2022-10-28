@@ -1,0 +1,25 @@
+{
+    "id": "fuel_range_changed",
+    "title": {
+        "en": "Fuel range changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "fuel_range",
+            "type": "number",
+            "title": {
+                "en": "Fuel range"
+            },
+            "example": {
+                "en": "220"
+            }
+        }
+    ]
+}

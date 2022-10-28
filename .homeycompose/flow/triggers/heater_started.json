@@ -1,0 +1,13 @@
+{
+    "id": "heater_started",
+    "title": {
+        "en": "Heater started"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

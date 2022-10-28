@@ -1,0 +1,10 @@
+{
+    "type": "string",
+    "title": {
+        "en": "Parking heater"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/voc/assets/heater.svg"
+}
