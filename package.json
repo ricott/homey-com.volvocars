@@ -1,6 +1,5 @@
 {
   "name": "homey-com.volvocars",
-  "version": "1.0.8",
   "description": "Volvo On Call",
   "main": "app.js",
   "directories": {
@@ -23,7 +22,6 @@
     "volvo"
   ],
   "author": "Richard Barkestam",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ricott/homey-com.volvocars/issues"
   },

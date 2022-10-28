@@ -1,0 +1,138 @@
+[
+    {
+        "type": "group",
+        "label": {
+            "en": "App settings"
+        },
+        "children": [
+            {
+                "id": "refresh_status_cloud",
+                "type": "number",
+                "label": {
+                    "en": "Refresh from cloud (minutes)"
+                },
+                "value": 5,
+                "min": 1,
+                "max": 1440
+            },
+            {
+                "id": "refresh_status_car",
+                "type": "number",
+                "label": {
+                    "en": "Refresh from car (minutes)"
+                },
+                "value": 120,
+                "min": 1,
+                "max": 1440
+            },
+            {
+                "id": "refresh_position",
+                "type": "number",
+                "label": {
+                    "en": "Refresh position (minutes)"
+                },
+                "value": 5,
+                "min": 1,
+                "max": 1440
+            },
+            {
+                "id": "proximity_home",
+                "type": "number",
+                "label": {
+                    "en": "Proximity of home (meters)"
+                },
+                "value": 50,
+                "min": 1,
+                "max": 1000
+            }
+        ]
+    },
+    {
+        "type": "group",
+        "label": {
+            "en": "Information"
+        },
+        "children": [
+            {
+                "id": "model",
+                "type": "label",
+                "label": {
+                    "en": "Model"
+                },
+                "value": ""
+            },
+            {
+                "id": "license_plate",
+                "type": "label",
+                "label": {
+                    "en": "License plate"
+                },
+                "value": ""
+            },
+            {
+                "id": "fuelType",
+                "type": "label",
+                "label": {
+                    "en": "Fuel type and capacity"
+                },
+                "value": ""
+            },
+            {
+                "id": "subscriptionEndDate",
+                "type": "label",
+                "label": {
+                    "en": "VOC subscription end"
+                },
+                "value": ""
+            },
+            {
+                "id": "isPHEV",
+                "type": "label",
+                "label": {
+                    "en": "PHEV"
+                },
+                "value": "false"
+            }
+        ]
+    },
+    {
+        "type": "group",
+        "label": {
+            "en": "Debug"
+        },
+        "children": [
+            {
+                "id": "voc_status",
+                "type": "textarea",
+                "label": {
+                    "en": "VOC Status"
+                },
+                "value": ""
+            },
+            {
+                "id": "voc_attributes",
+                "type": "textarea",
+                "label": {
+                    "en": "VOC Attributes"
+                },
+                "value": ""
+            },
+            {
+                "id": "voc_position",
+                "type": "textarea",
+                "label": {
+                    "en": "VOC Position"
+                },
+                "value": ""
+            },
+            {
+                "id": "voc_last_error",
+                "type": "textarea",
+                "label": {
+                    "en": "Most recent VOC Error"
+                },
+                "value": ""
+            }
+        ]
+    }
+]

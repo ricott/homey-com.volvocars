@@ -1,0 +1,10 @@
+{
+    "type": "string",
+    "title": {
+        "en": "Charge Cable Status"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/voc/assets/cable.svg"
+}

@@ -1,0 +1,13 @@
+{
+    "id": "honkHornControl",
+    "title": {
+        "en": "Honk horn"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

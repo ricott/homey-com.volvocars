@@ -1,0 +1,10 @@
+{
+    "type": "string",
+    "title": {
+        "en": "Location"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/voc/assets/map.svg"
+}

@@ -1,0 +1,47 @@
+{
+    "id": "com.volvocars",
+    "version": "1.2.0",
+    "brandColor": "#1a3547",
+    "compatibility": ">=5.0.0",
+    "sdk": 3,
+    "name": {
+        "en": "Volvo On Call"
+    },
+    "tags": {
+        "en": [
+            "volvo",
+            "car",
+            "voc",
+            "volvo on call"
+        ]
+    },
+    "description": {
+        "en": "Connected technology that makes your life easier"    },
+    "author": {
+        "name": "Richard Barkestam",
+        "email": "richard@barkestam.se"
+    },
+    "contributing": {
+        "donate": {
+            "paypal": {
+                "username": "RBarkestam",
+                "currency": "EUR"
+            }
+        }
+    },
+    "bugs": {
+        "url": "https://github.com/ricott/homey-com.volvocars/issues"
+    },
+    "source": "https://github.com/ricott/homey-com.volvocars",
+    "homeyCommunityTopicId": 20828,
+    "category": [
+        "localization"
+    ],
+    "permissions": [
+        "homey:manager:geolocation"
+    ],
+    "images": {
+        "large": "/assets/images/large.png",
+        "small": "/assets/images/small.png"
+    }
+}

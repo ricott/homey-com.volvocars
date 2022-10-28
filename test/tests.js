@@ -22,7 +22,7 @@ describe('VOC', function () {
                     //console.log(result);
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
     describe('#listVehiclesOnAccount()', function () {
@@ -32,7 +32,7 @@ describe('VOC', function () {
                     assert.strictEqual(result[0].data.id, config.credentials.vin);
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
     describe('#getVehicleChargeLocations()', function () {
@@ -42,7 +42,7 @@ describe('VOC', function () {
                     assert.strictEqual(result.length > 2, true);
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
     describe('#getVehicleAttributes()', function () {
@@ -52,7 +52,7 @@ describe('VOC', function () {
                     assert.strictEqual(result.engineCode, '2441CF30');
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
     describe('#getVehiclePosition()', function () {
@@ -62,7 +62,7 @@ describe('VOC', function () {
                     assert.strictEqual(isNaN(result.longitude), false);
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
     describe('#getVehicleStatusFromCloud()', function () {
@@ -72,7 +72,7 @@ describe('VOC', function () {
                     assert.strictEqual(isNaN(result.odometer), false);
                     done();
                 });
-        });
+        }).timeout(5000);
     });
 
 });

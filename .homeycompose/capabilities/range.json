@@ -1,0 +1,13 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Fuel range"
+    },
+    "units": {
+        "en": "km"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/drivers/voc/assets/fuel.svg"
+}

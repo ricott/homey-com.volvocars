@@ -1,0 +1,13 @@
+{
+    "id": "car_left_home",
+    "title": {
+        "en": "Car left home"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

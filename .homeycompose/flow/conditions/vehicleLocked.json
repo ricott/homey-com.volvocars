@@ -1,0 +1,13 @@
+{
+    "id": "vehicleLocked",
+    "title": {
+        "en": "Car is !{{|not}} locked"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}

@@ -1,0 +1,13 @@
+{
+    "id": "anyDoorOpen",
+    "title": {
+        "en": "A door is !{{|not}} open"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=voc"
+        }
+    ]
+}
