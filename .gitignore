@@ -10,6 +10,7 @@
 #Credentials used for mocha tests
 /test/config.js
 
-
 # Added by Homey CLI
 /.homeybuild/
+
+node_modules
