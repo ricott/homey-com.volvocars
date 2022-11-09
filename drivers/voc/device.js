@@ -329,113 +329,209 @@ class VOCDevice extends Homey.Device {
     }
 
     initializeVehicleAttributes() {
-        this.car.vocApi.getVehicleAttributes(this.getData().id);
+        let self = this;
+        self.car.vocApi.getVehicleAttributes(self.getData().id)
+            .catch(reason => {
+                self.log(reason);
+            });
     }
     refreshVehicleStatusFromCar() {
-        this.car.vocApi.refreshVehicleStatusFromCar(this.getData().id);
+        let self = this;
+        self.car.vocApi.refreshVehicleStatusFromCar(self.getData().id)
+            .catch(reason => {
+                self.log(reason);
+            });
     }
     getVehicleStatusFromCloud() {
-        this.car.vocApi.getVehicleStatusFromCloud(this.getData().id);
+        let self = this;
+        self.car.vocApi.getVehicleStatusFromCloud(self.getData().id)
+            .catch(reason => {
+                self.log(reason);
+            });
     }
     refreshVehiclePosition() {
-        this.car.vocApi.getVehiclePosition(this.getData().id);
+        let self = this;
+        self.car.vocApi.getVehiclePosition(self.getData().id)
+            .catch(reason => {
+                self.log(reason);
+            });
     }
     getVehicleChargeLocations() {
-        this.car.vocApi.getVehicleChargeLocations(this.getData().id);
+        let self = this;
+        self.car.vocApi.getVehicleChargeLocations(self.getData().id)
+            .catch(reason => {
+                self.log(reason);
+            });
     }
+
     startHeater() {
         if (this.getVehicleAttributeValue(['remoteHeaterSupported'])) {
             this.log('Heater supported, using heater/start');
-            return this.car.vocApi.startHeater(this.getData().id);
+            return this.car.vocApi.startHeater(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
 
         } else if (this.getVehicleAttributeValue(['preclimatizationSupported'])) {
             this.log('Pre climatization supported, using preclimatization/start');
-            return this.car.vocApi.startPreClimatization(this.getData().id);
+            return this.car.vocApi.startPreClimatization(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
 
         } else {
             this.log('No heater or preclimatization support.');
             return false;
         }
     }
+
     stopHeater() {
         if (this.getVehicleAttributeValue(['remoteHeaterSupported'])) {
             this.log('heater/stop');
-            return this.car.vocApi.stopHeater(this.getData().id);
+            return this.car.vocApi.stopHeater(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
 
         } else if (this.getVehicleAttributeValue(['preclimatizationSupported'])) {
             this.log('preclimatization/stop');
-            return this.car.vocApi.stopPreClimatization(this.getData().id);
+            return this.car.vocApi.stopPreClimatization(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
 
         } else {
             this.log('No heater or preclimatization support.');
             return false;
         }
     }
+
     lock() {
         if (this.getVehicleAttributeValue(['lockSupported'])) {
-            return this.car.vocApi.lock(this.getData().id);
+            return this.car.vocApi.lock(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
         } else {
             this.log('Lock not supported!');
             return false;
         }
     }
+
     unlock() {
         if (this.getVehicleAttributeValue(['unlockSupported'])) {
-            return this.car.vocApi.unlock(this.getData().id);
+            return this.car.vocApi.unlock(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
         } else {
             this.log('Unlock not supported!');
             return false;
         }
     }
+
     startEngine(duration) {
         if (this.getVehicleAttributeValue(['engineStartSupported'])) {
-            return this.car.vocApi.startEngine(this.getData().id, duration);
+            return this.car.vocApi.startEngine(this.getData().id, duration)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Engine Remote Start (ERS) not supported!');
             return false;
         }
     }
+
     stopEngine() {
         if (this.getVehicleAttributeValue(['engineStartSupported'])) {
-            return this.car.vocApi.stopEngine(this.getData().id);
+            return this.car.vocApi.stopEngine(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Engine Remote Start (ERS) not supported!');
             return false;
         }
     }
+
     blinkLights() {
         if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
             return this.car.vocApi.blinkLights(this.getData().id,
                 this.car.position.latitude,
-                this.car.position.longitude);
+                this.car.position.longitude)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Honk and blink not supported!');
             return false;
         }
     }
+
     honkHorn() {
         if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
             return this.car.vocApi.honkHorn(this.getData().id,
                 this.car.position.latitude,
-                this.car.position.longitude);
+                this.car.position.longitude)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Honk and blink not supported!');
             return false;
         }
     }
+
     honkHornAndBlinkLights() {
         if (this.getVehicleAttributeValue(['honkAndBlinkSupported'])) {
             return this.car.vocApi.honkHornAndBlinkLights(this.getData().id,
                 this.car.position.latitude,
-                this.car.position.longitude);
+                this.car.position.longitude)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Honk and blink not supported!');
             return false;
         }
     }
+
     startCharging() {
         if (this.getSetting('isPHEV') == 'true') {
-            return this.car.vocApi.startCharging(this.getData().id);
+            return this.car.vocApi.startCharging(this.getData().id)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Start charging not supported on ICE vehicles!');
             return false;
@@ -445,7 +541,13 @@ class VOCDevice extends Homey.Device {
         if (this.getSetting('isPHEV') == 'true') {
             let json = `{"status": "Accepted", "delayCharging":{"enabled":${delayedCharging},"startTime":"${startTime}","stopTime":"${endTime}"}}`;
             let jsonObj = JSON.parse(json);
-            return this.car.vocApi.delayCharging(this.getData().id, chargeLocationId, jsonObj);
+            return this.car.vocApi.delayCharging(this.getData().id, chargeLocationId, jsonObj)
+                .then(function (result) {
+                    return Promise.resolve(result);
+                }).catch(reason => {
+                    return Promise.reject(reason);
+                });
+
         } else {
             this.log('Delay charging not supported on ICE vehicles!');
             return false;
