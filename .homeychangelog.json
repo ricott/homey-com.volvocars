@@ -1,4 +1,7 @@
 {
+    "1.2.2": {
+        "en": "Fixed bug with API calls which require position"
+    },
     "1.2.1": {
         "en": "SDK 3 upgrade"
     },
