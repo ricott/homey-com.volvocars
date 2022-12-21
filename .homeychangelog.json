@@ -1,4 +1,7 @@
 {
+    "1.2.3": {
+        "en": "Fixed bug related to average fuel consumption missing"
+    },
     "1.2.2": {
         "en": "Fixed bug with API calls which require position"
     },

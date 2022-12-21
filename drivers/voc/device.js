@@ -617,7 +617,7 @@ class VOCDevice extends Homey.Device {
                     this.driver.triggerDeviceFlow('engine_started', {}, this);
                 } else {
                     let tokens = {
-                        average_fuel_consumption: this.car.status.averageFuelConsumption || 'n/a'
+                        average_fuel_consumption: this.car.status.averageFuelConsumption || 0
                     }
                     this.driver.triggerDeviceFlow('engine_stopped', tokens, this);
                 }
