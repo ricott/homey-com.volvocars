@@ -56,11 +56,11 @@ class VOCDevice extends Homey.Device {
         });
 
         //Initialize static attributes
+        await this.registerFlowTokens();
         this._initializeEventListeners();
         this.initializeVehicleAttributes();
         this.getVehicleStatusFromCloud();
         this.refreshVehiclePosition();
-        await this.registerFlowTokens();
 
         this._initilializeTimers();
     }
@@ -72,11 +72,15 @@ class VOCDevice extends Homey.Device {
 
     async registerFlowTokens() {
         this.log('Creating flow tokens');
-        this.vocStatusFlowToken = await this.homey.flow.createToken(`${this.getData().id}.statusToken`,
-            {
-                type: 'string',
-                title: `${this.getName()} VOC Status`
-            });
+        try {
+            this.vocStatusFlowToken = await this.homey.flow.createToken(`${this.getData().id}.statusToken`,
+                {
+                    type: 'string',
+                    title: `${this.getName()} VOC Status`
+                });
+        } catch (error) {
+            this.error(error);
+        }
     }
 
     unregisterFlowTokens() {
@@ -152,11 +156,10 @@ class VOCDevice extends Homey.Device {
                     });
 
                 //Make VOC status available in any flow
-                try {
-                    this.vocStatusFlowToken.setValue(JSON.stringify(vehicle));
-                } catch (error) {
-                    this.error('Failed to set the status flow token', error);
-                }
+                this.vocStatusFlowToken.setValue(JSON.stringify(vehicle))
+                    .catch(err => {
+                        this.error('Failed to set the status flow token', err);
+                    });
 
                 this._updateProperty('range', vehicle.distanceToEmpty);
                 this._updateProperty('locked', vehicle.carLocked);
