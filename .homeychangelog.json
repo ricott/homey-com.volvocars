@@ -1,4 +1,7 @@
 {
+    "1.2.4": {
+        "en": "Converted the custom locked capability to the native locked capability"
+    },
     "1.2.3": {
         "en": "Fixed bug related to average fuel consumption missing"
     },

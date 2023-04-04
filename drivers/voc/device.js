@@ -11,6 +11,8 @@ class VOCDevice extends Homey.Device {
     async onInit() {
         this.log('VOC car initiated', this.getName());
 
+        await this.setupCapabilityListeners();
+
         this.homeyActions = {};
         this.pollIntervals = [];
         this.refresh_position = this.getSetting('refresh_position') || 5;
@@ -63,6 +65,23 @@ class VOCDevice extends Homey.Device {
         this.refreshVehiclePosition();
 
         this._initilializeTimers();
+    }
+
+    async setupCapabilityListeners() {
+        this.registerCapabilityListener('locked', async (value) => {
+            if (value) {
+                await this.lock()
+                    .catch(reason => {
+                        return Promise.reject(`${this.homey.__('error.failedLock')} Reason: ${reason.message}`);
+                    });
+
+            } else {
+                await this.unlock()
+                    .catch(reason => {
+                        return Promise.reject(`${this.homey.__('error.failedUnLock')} Reason: ${reason.message}`);
+                    });
+            }
+        });
     }
 
     getVehicleAttributeValue(objectPath) {
@@ -427,7 +446,7 @@ class VOCDevice extends Homey.Device {
                 });
         } else {
             this.log('Lock not supported!');
-            return false;
+            return Promise.reject(this.homey.__('error.noLockSupport'));
         }
     }
 
@@ -441,7 +460,7 @@ class VOCDevice extends Homey.Device {
                 });
         } else {
             this.log('Unlock not supported!');
-            return false;
+            return Promise.reject(this.homey.__('error.noUnlockSupport'));
         }
     }
 
