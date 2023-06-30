@@ -15,23 +15,11 @@ class VOCDriver extends Homey.Driver {
 
         this.deviceUUID = uuidv4().toUpperCase();
         this.log(`Generating device uuid '${this.deviceUUID}'`);
-        this.flowCards = {};
         this._registerFlows();
     }
 
     _registerFlows() {
         this.log('Registering flows');
-
-        // Register device triggers
-        this.flowCards['car_left_home'] = this.homey.flow.getDeviceTriggerCard('car_left_home');
-        this.flowCards['car_came_home'] = this.homey.flow.getDeviceTriggerCard('car_came_home');
-        this.flowCards['engine_started'] = this.homey.flow.getDeviceTriggerCard('engine_started');
-        this.flowCards['engine_stopped'] = this.homey.flow.getDeviceTriggerCard('engine_stopped');
-        this.flowCards['heater_started'] = this.homey.flow.getDeviceTriggerCard('heater_started');
-        this.flowCards['heater_stopped'] = this.homey.flow.getDeviceTriggerCard('heater_stopped');
-        this.flowCards['charge_cable_status_changed'] = this.homey.flow.getDeviceTriggerCard('charge_cable_status_changed');
-        this.flowCards['location_human_changed'] = this.homey.flow.getDeviceTriggerCard('location_human_changed');
-        this.flowCards['fuel_range_changed'] = this.homey.flow.getDeviceTriggerCard('fuel_range_changed');
 
         //Register actions
         const heaterControl = this.homey.flow.getActionCard('heaterControl');
@@ -376,16 +364,6 @@ class VOCDriver extends Homey.Driver {
                 return false;
             }
         });
-    }
-
-    triggerDeviceFlow(flow, tokens, device) {
-        this.log(`[${device.getName()}] Triggering device flow '${flow}' with tokens`, tokens);
-        try {
-            this.flowCards[flow].trigger(device, tokens);
-        } catch (error) {
-            this.log(`Failed to trigger flow '${flow}' for device '${device.getName()}'`);
-            this.log(error);
-        }
     }
 
     async onPair(session) {

@@ -11,6 +11,17 @@ class VOCDevice extends Homey.Device {
     async onInit() {
         this.log('VOC car initiated', this.getName());
 
+        // Register device triggers
+        this._car_left_home = this.homey.flow.getDeviceTriggerCard('car_left_home');
+        this._car_came_home = this.homey.flow.getDeviceTriggerCard('car_came_home');
+        this._engine_started = this.homey.flow.getDeviceTriggerCard('engine_started');
+        this._engine_stopped = this.homey.flow.getDeviceTriggerCard('engine_stopped');
+        this._heater_started = this.homey.flow.getDeviceTriggerCard('heater_started');
+        this._heater_stopped = this.homey.flow.getDeviceTriggerCard('heater_stopped');
+        //this._charge_cable_status_changed = this.homey.flow.getDeviceTriggerCard('charge_cable_status_changed');
+        this._location_human_changed = this.homey.flow.getDeviceTriggerCard('location_human_changed');
+        this._fuel_range_changed = this.homey.flow.getDeviceTriggerCard('fuel_range_changed');
+
         await this.setupCapabilityListeners();
 
         this.homeyActions = {};
@@ -629,38 +640,39 @@ class VOCDevice extends Homey.Device {
 
             if (key === 'heater') {
                 if (value === 'On') {
-                    this.driver.triggerDeviceFlow('heater_started', {}, this);
+                    this._heater_started.trigger(this, {}, {}).catch(error => { this.error(error) });
                 } else {
-                    this.driver.triggerDeviceFlow('heater_stopped', {}, this);
+                    this._heater_stopped.trigger(this, {}, {}).catch(error => { this.error(error) });
                 }
 
             } else if (key === 'engine') {
                 if (value) {
-                    this.driver.triggerDeviceFlow('engine_started', {}, this);
+                    this._engine_started.trigger(this, {}, {}).catch(error => { this.error(error) });
                 } else {
                     let tokens = {
                         average_fuel_consumption: this.car.status.averageFuelConsumption || 0
                     }
-                    this.driver.triggerDeviceFlow('engine_stopped', tokens, this);
+                    this._engine_stopped.trigger(this, tokens, {}).catch(error => { this.error(error) });
                 }
 
             } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
 
                 this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
                 this.lastTriggerLocation = 'away';
-                this.driver.triggerDeviceFlow('car_left_home', {}, this);
+                this._car_left_home.trigger(this, {}, {}).catch(error => { this.error(error) });
+
 
             } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
 
                 this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
                 this.lastTriggerLocation = 'home';
-                this.driver.triggerDeviceFlow('car_came_home', {}, this);
+                this._car_came_home.trigger(this, {}, {}).catch(error => { this.error(error) });
                 /*      } else if (key === 'charge_cable_status') {
                         let tokens = {
                           //charge_cable_status: this.car.status.connectionStatus || 'n/a'
                           charge_cable_status: value
                         }
-                        this.driver.triggerDeviceFlow('charge_cable_status_changed', tokens, this);
+                        this._charge_cable_status_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
                 */
             } else if (key === 'location_human') {
                 let tokens = {
@@ -670,12 +682,12 @@ class VOCDevice extends Homey.Device {
                     car_location_county: this.car.location.county || '',
                     car_location_country: this.car.location.country || ''
                 }
-                this.driver.triggerDeviceFlow('location_human_changed', tokens, this);
+                this._location_human_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
             } else if (key === 'range') {
                 let tokens = {
                     fuel_range: value
                 }
-                this.driver.triggerDeviceFlow('fuel_range_changed', tokens, this);
+                this._fuel_range_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
             }
 
         } else {
