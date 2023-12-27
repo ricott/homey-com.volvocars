@@ -8,9 +8,8 @@
   "dependencies": {
     "events": "^3.3.0",
     "http.min": "^2.1.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "mocha"
   },
@@ -25,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/ricott/homey-com.volvocars/issues"
   },
-  "homepage": "https://github.com/ricott/homey-com.volvocars#readme"
+  "homepage": "https://github.com/ricott/homey-com.volvocars#readme",
+  "devDependencies": {
+    "mocha": "^10.2.0"
+  }
 }

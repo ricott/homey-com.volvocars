@@ -627,73 +627,87 @@ class VOCDevice extends Homey.Device {
     }
 
     _updateProperty(key, value) {
-        //Check if device has the capability
-        if (!this.hasCapability(key)) {
-            return;
-        }
+        let self = this;
+        //Ignore unknown capabilities
+        if (self.hasCapability(key)) {
+            //All trigger logic only applies to changed values
+            if (self.isCapabilityValueChanged(key, value)) {
+                self.setCapabilityValue(key, value)
+                    .then(function () {
 
+                        if (key === 'heater') {
+                            if (value === 'On') {
+                                self._heater_started.trigger(self, {}, {}).catch(error => { self.error(error) });
+                            } else {
+                                self._heater_stopped.trigger(self, {}, {}).catch(error => { self.error(error) });
+                            }
+
+                        } else if (key === 'engine') {
+                            if (value) {
+                                self._engine_started.trigger(self, {}, {}).catch(error => { self.error(error) });
+                            } else {
+                                let tokens = {
+                                    average_fuel_consumption: self.car.status.averageFuelConsumption || 0
+                                }
+                                self._engine_stopped.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                            }
+
+                        } else if (key === 'distance' && !self.carAtHome() && self.lastTriggerLocation === 'home') {
+
+                            self.log(`'${key}' changed. At home: '${self.carAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.lastTriggerLocation = 'away';
+                            self._car_left_home.trigger(self, {}, {}).catch(error => { self.error(error) });
+
+
+                        } else if (key === 'distance' && self.carAtHome() && self.lastTriggerLocation === 'away') {
+
+                            self.log(`'${key}' changed. At home: '${self.carAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.lastTriggerLocation = 'home';
+                            self._car_came_home.trigger(self, {}, {}).catch(error => { self.error(error) });
+                            /*      } else if (key === 'charge_cable_status') {
+                                    let tokens = {
+                                      //charge_cable_status: self.car.status.connectionStatus || 'n/a'
+                                      charge_cable_status: value
+                                    }
+                                    self._charge_cable_status_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                            */
+                        } else if (key === 'location_human') {
+                            let tokens = {
+                                car_location_address: self.car.location.address || '',
+                                car_location_city: self.car.location.city || '',
+                                car_location_postcode: self.car.location.postcode || '',
+                                car_location_county: self.car.location.county || '',
+                                car_location_country: self.car.location.country || ''
+                            }
+                            self._location_human_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                        } else if (key === 'range') {
+                            let tokens = {
+                                fuel_range: value
+                            }
+                            self._fuel_range_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                        }
+
+                    }).catch(reason => {
+                        self.error(reason);
+                    });
+
+            } else {
+                //Update value to refresh timestamp in app
+                self.setCapabilityValue(key, value)
+                    .catch(reason => {
+                        self.error(reason);
+                    });
+            }
+        }
+    }
+
+    isCapabilityValueChanged(key, value) {
         let oldValue = this.getCapabilityValue(key);
         //If oldValue===null then it is a newly added device, lets not trigger flows on that
         if (oldValue !== null && oldValue != value) {
-            this.log(`[${this.getName()}] Updating capability '${key}' from '${oldValue}' to '${value}'`);
-            this.setCapabilityValue(key, value);
-
-            if (key === 'heater') {
-                if (value === 'On') {
-                    this._heater_started.trigger(this, {}, {}).catch(error => { this.error(error) });
-                } else {
-                    this._heater_stopped.trigger(this, {}, {}).catch(error => { this.error(error) });
-                }
-
-            } else if (key === 'engine') {
-                if (value) {
-                    this._engine_started.trigger(this, {}, {}).catch(error => { this.error(error) });
-                } else {
-                    let tokens = {
-                        average_fuel_consumption: this.car.status.averageFuelConsumption || 0
-                    }
-                    this._engine_stopped.trigger(this, tokens, {}).catch(error => { this.error(error) });
-                }
-
-            } else if (key === 'distance' && !this.carAtHome() && this.lastTriggerLocation === 'home') {
-
-                this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
-                this.lastTriggerLocation = 'away';
-                this._car_left_home.trigger(this, {}, {}).catch(error => { this.error(error) });
-
-
-            } else if (key === 'distance' && this.carAtHome() && this.lastTriggerLocation === 'away') {
-
-                this.log(`'${key}' changed. At home: '${this.carAtHome()}'. Last trigger location: '${this.lastTriggerLocation}'`);
-                this.lastTriggerLocation = 'home';
-                this._car_came_home.trigger(this, {}, {}).catch(error => { this.error(error) });
-                /*      } else if (key === 'charge_cable_status') {
-                        let tokens = {
-                          //charge_cable_status: this.car.status.connectionStatus || 'n/a'
-                          charge_cable_status: value
-                        }
-                        this._charge_cable_status_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
-                */
-            } else if (key === 'location_human') {
-                let tokens = {
-                    car_location_address: this.car.location.address || '',
-                    car_location_city: this.car.location.city || '',
-                    car_location_postcode: this.car.location.postcode || '',
-                    car_location_county: this.car.location.county || '',
-                    car_location_country: this.car.location.country || ''
-                }
-                this._location_human_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
-            } else if (key === 'range') {
-                let tokens = {
-                    fuel_range: value
-                }
-                this._fuel_range_changed.trigger(this, tokens, {}).catch(error => { this.error(error) });
-            }
-
+            return true;
         } else {
-            //Update value to show we are doing it in app
-            //this.log(`[${this.getName()}] (NoDiff) Updating capability '${key}' from '${oldValue}' to '${value}'`);
-            this.setCapabilityValue(key, value);
+            return false;
         }
     }
 

@@ -1,4 +1,7 @@
 {
+    "1.2.5": {
+        "en": "Stability improvement"
+    },
     "1.2.4": {
         "en": "Converted the custom locked capability to the native locked capability"
     },
