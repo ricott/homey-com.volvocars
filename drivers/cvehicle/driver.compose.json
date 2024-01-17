@@ -1,0 +1,41 @@
+{
+    "class": "other",
+    "name": {
+        "en": "Connected Vehicle"
+    },
+    "images": {
+        "large": "/drivers/voc/assets/images/voc_l.png",
+        "small": "/drivers/voc/assets/images/voc_s.png"
+    },
+    "capabilities": [
+        "distance",
+        "location_human",
+        "engine",
+        "locked",
+        "range",
+        "range_battery",
+        "charging_system_status",
+        "measure_battery"
+    ],
+    "energy": {
+        "batteries": [
+            "INTERNAL"
+        ]
+    },
+    "pair": [
+        {
+            "id": "settings"
+        },
+        {
+            "id": "list_devices",
+            "template": "list_devices",
+            "navigation": {
+                "next": "add_devices"
+            }
+        },
+        {
+            "id": "add_devices",
+            "template": "add_devices"
+        }
+    ]
+}

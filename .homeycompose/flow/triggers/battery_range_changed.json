@@ -1,24 +1,24 @@
 {
-    "id": "engine_stopped",
+    "id": "battery_range_changed",
     "title": {
-        "en": "Engine stopped"
+        "en": "Battery range changed"
     },
     "args": [
         {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc|cvehicle"
+            "filter": "driver_id=cvehicle"
         }
     ],
     "tokens": [
         {
-            "name": "average_fuel_consumption",
+            "name": "battery_range",
             "type": "number",
             "title": {
-                "en": "Average fuel consumption"
+                "en": "Battery range"
             },
             "example": {
-                "en": "28"
+                "en": "220"
             }
         }
     ]

@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.volvocars",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "brandColor": "#1a3547",
   "compatibility": ">=5.0.0",
   "sdk": 3,
@@ -13,7 +13,11 @@
       "volvo",
       "car",
       "voc",
-      "volvo on call"
+      "volvo on call",
+      "vehicle",
+      "connected",
+      "hybrid",
+      "electric"
     ]
   },
   "description": {
@@ -49,6 +53,31 @@
   "flow": {
     "triggers": [
       {
+        "id": "battery_range_changed",
+        "title": {
+          "en": "Battery range changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "battery_range",
+            "type": "number",
+            "title": {
+              "en": "Battery range"
+            },
+            "example": {
+              "en": "220"
+            }
+          }
+        ]
+      },
+      {
         "id": "car_came_home",
         "title": {
           "en": "Car came home"
@@ -57,7 +86,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ]
       },
@@ -70,7 +99,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ]
       },
@@ -100,6 +129,31 @@
         ]
       },
       {
+        "id": "charge_system_status_changed",
+        "title": {
+          "en": "Charge system status changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "status",
+            "type": "string",
+            "title": {
+              "en": "Status"
+            },
+            "example": {
+              "en": "DONE"
+            }
+          }
+        ]
+      },
+      {
         "id": "engine_started",
         "title": {
           "en": "Engine started"
@@ -108,7 +162,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ]
       },
@@ -121,7 +175,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ],
         "tokens": [
@@ -146,7 +200,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ],
         "tokens": [
@@ -197,7 +251,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ],
         "tokens": [
@@ -264,7 +318,30 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
+          }
+        ]
+      },
+      {
+        "id": "chargeSystemStatus",
+        "title": {
+          "en": "Charge system status is !{{|not}}"
+        },
+        "titleFormatted": {
+          "en": "Charge system status is !{{|not}} [[status]]"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          },
+          {
+            "type": "autocomplete",
+            "name": "status",
+            "title": {
+              "en": "Charge status"
+            }
           }
         ]
       },
@@ -280,7 +357,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           },
           {
             "name": "door",
@@ -338,7 +415,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ]
       },
@@ -364,7 +441,7 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
         ]
       },
@@ -377,9 +454,10 @@
           {
             "name": "device",
             "type": "device",
-            "filter": "driver_id=voc"
+            "filter": "driver_id=voc|cvehicle"
           }
-        ]
+        ],
+        "deprecated": true
       }
     ],
     "actions": [
@@ -504,6 +582,29 @@
         ]
       },
       {
+        "id": "executeCommand",
+        "title": {
+          "en": "Execute command"
+        },
+        "titleFormatted": {
+          "en": "Execute command [[command]]"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          },
+          {
+            "name": "command",
+            "type": "autocomplete",
+            "title": {
+              "en": "Command"
+            }
+          }
+        ]
+      },
+      {
         "id": "heaterControl",
         "title": {
           "en": "Heater"
@@ -620,6 +721,128 @@
     ]
   },
   "drivers": [
+    {
+      "class": "other",
+      "name": {
+        "en": "Connected Vehicle"
+      },
+      "images": {
+        "large": "/drivers/voc/assets/images/voc_l.png",
+        "small": "/drivers/voc/assets/images/voc_s.png"
+      },
+      "capabilities": [
+        "distance",
+        "location_human",
+        "engine",
+        "locked",
+        "range",
+        "range_battery",
+        "charging_system_status",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "INTERNAL"
+        ]
+      },
+      "pair": [
+        {
+          "id": "settings"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "cvehicle",
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "App settings"
+          },
+          "children": [
+            {
+              "id": "vccApiKey",
+              "type": "text",
+              "label": {
+                "en": "VCC API key"
+              },
+              "value": ""
+            },
+            {
+              "id": "refresh_status_cloud",
+              "type": "number",
+              "label": {
+                "en": "Refresh from cloud (minutes)"
+              },
+              "value": 5,
+              "min": 1,
+              "max": 1440
+            },
+            {
+              "id": "refresh_position",
+              "type": "number",
+              "label": {
+                "en": "Refresh position (minutes)"
+              },
+              "value": 5,
+              "min": 1,
+              "max": 1440
+            },
+            {
+              "id": "proximity_home",
+              "type": "number",
+              "label": {
+                "en": "Proximity of home (meters)"
+              },
+              "value": 50,
+              "min": 1,
+              "max": 10000
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Information"
+          },
+          "children": [
+            {
+              "id": "model",
+              "type": "label",
+              "label": {
+                "en": "Model"
+              },
+              "value": ""
+            },
+            {
+              "id": "fuelType",
+              "type": "label",
+              "label": {
+                "en": "Fuel type"
+              },
+              "value": ""
+            },
+            {
+              "id": "vehicleType",
+              "type": "label",
+              "label": {
+                "en": "Vehicle type"
+              },
+              "value": ""
+            }
+          ]
+        }
+      ]
+    },
     {
       "class": "other",
       "name": {
@@ -817,7 +1040,17 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/cable.svg"
+      "icon": "/assets/cable.svg"
+    },
+    "charging_system_status": {
+      "type": "string",
+      "title": {
+        "en": "Charging system status"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/status.svg"
     },
     "distance": {
       "type": "string",
@@ -827,7 +1060,7 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/home.svg"
+      "icon": "/assets/home.svg"
     },
     "engine": {
       "type": "boolean",
@@ -837,7 +1070,7 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/engine.svg"
+      "icon": "/assets/engine.svg"
     },
     "heater": {
       "type": "string",
@@ -847,7 +1080,7 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/heater.svg"
+      "icon": "/assets/heater.svg"
     },
     "location_human": {
       "type": "string",
@@ -857,7 +1090,7 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/map.svg"
+      "icon": "/assets/map.svg"
     },
     "range": {
       "type": "number",
@@ -870,7 +1103,20 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "icon": "/drivers/voc/assets/fuel.svg"
+      "icon": "/assets/fuel.svg"
+    },
+    "range_battery": {
+      "type": "number",
+      "title": {
+        "en": "Battery range"
+      },
+      "units": {
+        "en": "km"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/battery.svg"
     }
   }
 }

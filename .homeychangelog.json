@@ -1,4 +1,7 @@
 {
+    "1.2.6": {
+        "en": "New Connected Vehicle device type using the Volvo Connected Vehicle API"
+    },
     "1.2.5": {
         "en": "Stability improvement"
     },

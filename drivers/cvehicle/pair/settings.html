@@ -1,0 +1,95 @@
+<script type="text/javascript">
+    Homey.setTitle(__('pair.title'));
+    $(function () {
+        $('#login').click(function () {
+            $('.error').hide();
+            var inputusername = $('#username').val();
+            var inputpassword = $('#password').val();
+            var inputVccApiKey = $('#vcc_api_key').val();
+
+            if (inputusername != '' && inputpassword != '' && inputVccApiKey != '') {
+                const settings = {
+                    username: inputusername,
+                    password: inputpassword,
+                    vccApiKey: inputVccApiKey
+                };
+
+                Homey.emit('settings', settings)
+                    .then(function (result) {
+                        if (!result) {
+                            $('.error').show();
+                            $('.error-msg').html('Failed to login to the Volvo account');
+                        }
+                    });
+            } else {
+                $('.error').show();
+                $('.error-msg').html(__('pair.nosettings'));
+            }
+        });
+    })
+</script>
+
+<style type="text/css">
+    .form-group {
+        width: 100%;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .form-group label {
+        display: block;
+    }
+
+    .status,
+    .info {
+        display: none;
+    }
+
+    .info {
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    .info .info-label {
+        min-width: 150px;
+        font-weight: 700;
+    }
+
+    .buttons,
+    .messages {
+        padding-top: 14px;
+    }
+
+    .button:disabled {
+        color: #ccc;
+    }
+
+    .button:enabled {
+        background-color: #00c139 !important;
+        color: #fff;
+    }
+</style>
+
+<p data-i18n="pair.intro">Enter the details of your Volvo account</p>
+<div class="pairing">
+    <div class="form-group">
+        <label for="username" data-i18n="pair.username">Username</label>
+        <input type="text" class="form-control" id="username" placeholder="john.doe@gmail.com" required />
+
+        <label for="password" data-i18n="pair.password">Password</label>
+        <input type="password" class="form-control" id="password" required />
+
+        <label for="vcc_api_key" data-i18n="pair.vcc_api_key">vcc_api_key</label>
+        <input type="text" class="form-control" id="vcc_api_key" placeholder="32 character string from Volvo developer account" required />
+    </div>
+    <div class="form-group buttons">
+        <button id="login" class="button" data-i18n="pair.login">Login</button>
+    </div>
+</div>
+
+<div class="messages">
+    <p class="status error" style="color: #ff6300;">
+        <i class="fa fa-times"></i>
+        <span class="error-msg"></span>
+    </p>
+</div>

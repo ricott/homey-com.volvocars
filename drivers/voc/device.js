@@ -11,17 +11,6 @@ class VOCDevice extends Homey.Device {
     async onInit() {
         this.log('VOC car initiated', this.getName());
 
-        // Register device triggers
-        this._car_left_home = this.homey.flow.getDeviceTriggerCard('car_left_home');
-        this._car_came_home = this.homey.flow.getDeviceTriggerCard('car_came_home');
-        this._engine_started = this.homey.flow.getDeviceTriggerCard('engine_started');
-        this._engine_stopped = this.homey.flow.getDeviceTriggerCard('engine_stopped');
-        this._heater_started = this.homey.flow.getDeviceTriggerCard('heater_started');
-        this._heater_stopped = this.homey.flow.getDeviceTriggerCard('heater_stopped');
-        //this._charge_cable_status_changed = this.homey.flow.getDeviceTriggerCard('charge_cable_status_changed');
-        this._location_human_changed = this.homey.flow.getDeviceTriggerCard('location_human_changed');
-        this._fuel_range_changed = this.homey.flow.getDeviceTriggerCard('fuel_range_changed');
-
         await this.setupCapabilityListeners();
 
         this.homeyActions = {};
@@ -115,23 +104,26 @@ class VOCDevice extends Homey.Device {
 
     unregisterFlowTokens() {
         this.log('Deleting flow tokens');
-        this.homey.flow.unregisterToken(this.vocStatusFlowToken);
+        this.homey.flow.unregisterToken(this.vocStatusFlowToken)
+            .catch(err => {
+                this.error('Failed to unregister flow token', err);
+            });
     }
 
     _initilializeTimers() {
         this.log('Adding timers');
         // Request car to push update to cloud
-        this.pollIntervals.push(setInterval(() => {
+        this.pollIntervals.push(this.homey.setInterval(() => {
             this.refreshVehicleStatusFromCar();
         }, 60 * 1000 * this.refresh_status_car));
 
         //Get updates from cloud
-        this.pollIntervals.push(setInterval(() => {
+        this.pollIntervals.push(this.homey.setInterval(() => {
             this.getVehicleStatusFromCloud();
         }, 60 * 1000 * this.refresh_status_cloud));
 
         //Get position update from cloud
-        this.pollIntervals.push(setInterval(() => {
+        this.pollIntervals.push(this.homey.setInterval(() => {
             this.refreshVehiclePosition();
         }, 60 * 1000 * this.refresh_position));
     }
@@ -140,7 +132,7 @@ class VOCDevice extends Homey.Device {
         //Kill interval object(s)
         this.log('Removing timers');
         this.pollIntervals.forEach(timer => {
-            clearInterval(timer);
+            this.homey.clearInterval(timer);
         });
     }
 
@@ -264,7 +256,7 @@ class VOCDevice extends Homey.Device {
                     this._updateProperty('distance', distanceHomey);
 
                     if (this.lastTriggerLocation === 'unknown') {
-                        if (this.carAtHome()) {
+                        if (this.isCarAthome()) {
                             this.lastTriggerLocation = 'home';
                         } else {
                             this.lastTriggerLocation = 'away';
@@ -587,7 +579,7 @@ class VOCDevice extends Homey.Device {
         }
     }
 
-    carAtHome() {
+    isCarAthome() {
         if (this.car.distanceFromHome < this.proximity_home) {
             return true;
         } else {
@@ -633,44 +625,37 @@ class VOCDevice extends Homey.Device {
             //All trigger logic only applies to changed values
             if (self.isCapabilityValueChanged(key, value)) {
                 self.setCapabilityValue(key, value)
-                    .then(function () {
+                    .then(async () => {
 
                         if (key === 'heater') {
                             if (value === 'On') {
-                                self._heater_started.trigger(self, {}, {}).catch(error => { self.error(error) });
+                                await self.homey.app.triggerHeaterStarted(self);
                             } else {
-                                self._heater_stopped.trigger(self, {}, {}).catch(error => { self.error(error) });
+                                await self.homey.app.triggerHeaterStopped(self);
                             }
 
                         } else if (key === 'engine') {
                             if (value) {
-                                self._engine_started.trigger(self, {}, {}).catch(error => { self.error(error) });
+                                await self.homey.app.triggerEngineStarted(self);
                             } else {
                                 let tokens = {
                                     average_fuel_consumption: self.car.status.averageFuelConsumption || 0
                                 }
-                                self._engine_stopped.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                                await self.homey.app.triggerEngineStopped(self, tokens);
                             }
 
-                        } else if (key === 'distance' && !self.carAtHome() && self.lastTriggerLocation === 'home') {
+                        } else if (key === 'distance' && !self.isCarAthome() && self.lastTriggerLocation === 'home') {
 
-                            self.log(`'${key}' changed. At home: '${self.carAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.log(`'${key}' changed. At home: '${self.isCarAthome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
                             self.lastTriggerLocation = 'away';
-                            self._car_left_home.trigger(self, {}, {}).catch(error => { self.error(error) });
+                            await self.homey.app.triggerCarLeftHome(self);
 
+                        } else if (key === 'distance' && self.isCarAthome() && self.lastTriggerLocation === 'away') {
 
-                        } else if (key === 'distance' && self.carAtHome() && self.lastTriggerLocation === 'away') {
-
-                            self.log(`'${key}' changed. At home: '${self.carAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.log(`'${key}' changed. At home: '${self.isCarAthome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
                             self.lastTriggerLocation = 'home';
-                            self._car_came_home.trigger(self, {}, {}).catch(error => { self.error(error) });
-                            /*      } else if (key === 'charge_cable_status') {
-                                    let tokens = {
-                                      //charge_cable_status: self.car.status.connectionStatus || 'n/a'
-                                      charge_cable_status: value
-                                    }
-                                    self._charge_cable_status_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
-                            */
+                            await self.homey.app.triggerCarCameHome(self);
+
                         } else if (key === 'location_human') {
                             let tokens = {
                                 car_location_address: self.car.location.address || '',
@@ -679,12 +664,13 @@ class VOCDevice extends Homey.Device {
                                 car_location_county: self.car.location.county || '',
                                 car_location_country: self.car.location.country || ''
                             }
-                            self._location_human_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                            await self.homey.app.triggerLocationHumanChanged(self, tokens);
+
                         } else if (key === 'range') {
                             let tokens = {
                                 fuel_range: value
                             }
-                            self._fuel_range_changed.trigger(self, tokens, {}).catch(error => { self.error(error) });
+                            await self.homey.app.triggerFuelRangeChanged(self, tokens);
                         }
 
                     }).catch(reason => {

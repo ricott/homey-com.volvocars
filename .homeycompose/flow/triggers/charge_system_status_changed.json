@@ -1,0 +1,25 @@
+{
+    "id": "charge_system_status_changed",
+    "title": {
+        "en": "Charge system status changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "status",
+            "type": "string",
+            "title": {
+                "en": "Status"
+            },
+            "example": {
+                "en": "DONE"
+            }
+        }
+    ]
+}

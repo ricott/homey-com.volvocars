@@ -1,7 +1,7 @@
 {
     "type": "number",
     "title": {
-        "en": "Fuel range"
+        "en": "Battery range"
     },
     "units": {
         "en": "km"
@@ -9,5 +9,5 @@
     "getable": true,
     "setable": false,
     "uiComponent": "sensor",
-    "icon": "/assets/fuel.svg"
+    "icon": "/assets/battery.svg"
 }

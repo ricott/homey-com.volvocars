@@ -1,0 +1,80 @@
+[
+    {
+        "type": "group",
+        "label": {
+            "en": "App settings"
+        },
+        "children": [
+            {
+                "id": "vccApiKey",
+                "type": "text",
+                "label": {
+                    "en": "VCC API key"
+                },
+                "value": ""
+            },
+            {
+                "id": "refresh_status_cloud",
+                "type": "number",
+                "label": {
+                    "en": "Refresh from cloud (minutes)"
+                },
+                "value": 5,
+                "min": 1,
+                "max": 1440
+            },
+            {
+                "id": "refresh_position",
+                "type": "number",
+                "label": {
+                    "en": "Refresh position (minutes)"
+                },
+                "value": 5,
+                "min": 1,
+                "max": 1440
+            },
+            {
+                "id": "proximity_home",
+                "type": "number",
+                "label": {
+                    "en": "Proximity of home (meters)"
+                },
+                "value": 50,
+                "min": 1,
+                "max": 10000
+            }
+        ]
+    },
+    {
+        "type": "group",
+        "label": {
+            "en": "Information"
+        },
+        "children": [
+            {
+                "id": "model",
+                "type": "label",
+                "label": {
+                    "en": "Model"
+                },
+                "value": ""
+            },
+            {
+                "id": "fuelType",
+                "type": "label",
+                "label": {
+                    "en": "Fuel type"
+                },
+                "value": ""
+            },
+            {
+                "id": "vehicleType",
+                "type": "label",
+                "label": {
+                    "en": "Vehicle type"
+                },
+                "value": ""
+            }
+        ]
+    }
+]

@@ -9,6 +9,7 @@
 
 #Credentials used for mocha tests
 /test/config.js
+/test/responseData.json
 
 # Added by Homey CLI
 /.homeybuild/

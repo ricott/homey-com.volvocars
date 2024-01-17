@@ -1,6 +1,6 @@
 {
     "id": "com.volvocars",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "brandColor": "#1a3547",
     "compatibility": ">=5.0.0",
     "sdk": 3,
@@ -12,11 +12,16 @@
             "volvo",
             "car",
             "voc",
-            "volvo on call"
+            "volvo on call",
+            "vehicle",
+            "connected",
+            "hybrid",
+            "electric"
         ]
     },
     "description": {
-        "en": "Connected technology that makes your life easier"    },
+        "en": "Connected technology that makes your life easier"
+    },
     "author": {
         "name": "Richard Barkestam",
         "email": "richard@barkestam.se"

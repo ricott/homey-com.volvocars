@@ -1,4 +1,13 @@
 {
+  "pair": {
+    "title": "Add a Volvo Connected Vehicle",
+    "nosettings": "Please fill in all the required fields.",
+    "intro": "Enter the details of your Volvo account",
+    "username": "Username",
+    "password": "Password",
+    "vcc_api_key": "VCC API key",
+    "login": "Login"
+  },
   "settings": {
     "title": "Volvo On Call settings",
     "subtitle": "Please select region"

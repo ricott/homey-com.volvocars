@@ -1,0 +1,23 @@
+{
+    "id": "chargeSystemStatus",
+    "title": {
+        "en": "Charge system status is !{{|not}}"
+    },
+    "titleFormatted": {
+        "en": "Charge system status is !{{|not}} [[status]]"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        },
+        {
+            "type": "autocomplete",
+            "name": "status",
+            "title": {
+                "en": "Charge status"
+            }
+        }
+    ]
+}

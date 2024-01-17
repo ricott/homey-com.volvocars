@@ -6,6 +6,7 @@
     "lib": "lib"
   },
   "dependencies": {
+    "async-mutex": "^0.4.0",
     "events": "^3.3.0",
     "http.min": "^2.1.0",
     "uuid": "^9.0.1"

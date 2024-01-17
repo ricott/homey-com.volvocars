@@ -1,0 +1,23 @@
+{
+    "id": "executeCommand",
+    "title": {
+        "en": "Execute command"
+    },
+    "titleFormatted": {
+        "en": "Execute command [[command]]"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        },
+        {
+            "name": "command",
+            "type": "autocomplete",
+            "title": {
+                "en": "Command"
+            }
+        }
+    ]
+}

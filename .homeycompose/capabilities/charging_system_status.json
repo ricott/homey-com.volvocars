@@ -1,10 +1,10 @@
 {
     "type": "string",
     "title": {
-        "en": "Distance from Homey"
+        "en": "Charging system status"
     },
     "getable": true,
     "setable": false,
     "uiComponent": "sensor",
-    "icon": "/assets/home.svg"
+    "icon": "/assets/status.svg"
 }

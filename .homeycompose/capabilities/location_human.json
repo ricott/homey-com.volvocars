@@ -6,5 +6,5 @@
     "getable": true,
     "setable": false,
     "uiComponent": "sensor",
-    "icon": "/drivers/voc/assets/map.svg"
+    "icon": "/assets/map.svg"
 }
