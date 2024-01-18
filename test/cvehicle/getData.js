@@ -88,17 +88,17 @@ describe('#getData', function () {
         assert.strictEqual(response.data.rearRight.value, 'NO_WARNING');
     });
 
-    it('isEngineRunning', async () => {
+    it('getEngineState', async () => {
         let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
         const cVehicle = new ConnectedVehicle({
             accessToken: token.access_token,
             vccApiKey: config.vccApiKey
         });
 
-        const running = await cVehicle.isEngineRunning(config.credentials.vin);
+        const response = await cVehicle.getEngineState(config.credentials.vin);
         // console.log(response);
-        // assert.strictEqual(response.statusCode, 200);
-        assert.strictEqual(running, false);
+        assert.strictEqual(response.statusCode, 200);
+        assert.strictEqual(response.data.engineStatus.value, 'STOPPED');
     });
 
     it('getFuelBatteryState', async () => {
@@ -134,9 +134,9 @@ describe('#getData', function () {
             vccApiKey: config.vccApiKey
         });
 
-        const chargeLevel = await cVehicle.getBatteryChargeLevel(config.credentials.vin);
-        // console.log(chargeLevel);
-        assert.strictEqual((isNaN(chargeLevel) === false), true);
+        const response = await cVehicle.getBatteryChargeLevel(config.credentials.vin);
+        // console.log(response);
+        assert.strictEqual((isNaN(response.chargeLevel) === false), true);
     });
 
     it('getEngineDiagnostic', async () => {

@@ -30,7 +30,8 @@ class ConnectedVehicleDriver extends Homey.Driver {
 
             const cVehicle = new ConnectedVehicle({
                 accessToken: token.access_token,
-                vccApiKey: settings.vccApiKey
+                vccApiKey: settings.vccApiKey,
+                device: this
             });
 
             const vehicles = await cVehicle.getVehicles();

@@ -249,6 +249,9 @@ class ConnectedVehicleDevice extends Homey.Device {
                                 this.error(reason);
                             });
                     }
+
+                    // Update the location timestamp even if location is the same
+                    await this.updateTimestampSetting('locationTimestamp', locationResponse?.data?.properties?.timestamp);
                 }
             })
             .catch(reason => {
@@ -265,18 +268,22 @@ class ConnectedVehicleDevice extends Homey.Device {
                 if (type == config.vehicleType.HYBRID || type == config.vehicleType.ELECTRIC) {
                     // Hybrid or electric, get battery info
                     await client.getBatteryChargeLevel(this.getData().id)
-                        .then(chargeLevel => {
-                            this._updateProperty('measure_battery', chargeLevel || 0);
+                        .then(async (response) => {
+                            this._updateProperty('measure_battery', response.chargeLevel || 0);
+                            await this.updateTimestampSetting('batteryTimestamp', response.timestamp);
+
                             this._updateProperty('range_battery', vehicleStats?.data?.distanceToEmptyBattery?.value || 0);
+                            await this.updateTimestampSetting('rangeBatteryTimestamp', vehicleStats?.data?.distanceToEmptyBattery?.timestamp);
                         })
                         .catch(reason => {
                             this.error(`Failed to getBatteryChargeLevel`, reason);
                         });
 
                     await client.getChargingSystemStatus(this.getData().id)
-                        .then(chargingSystemStatus => {
-                            chargingSystemStatus = String(chargingSystemStatus || '').replace('CHARGING_SYSTEM_', '');
+                        .then(async (chargingSystemState) => {
+                            const chargingSystemStatus = String(chargingSystemState?.data?.chargingSystemStatus?.value || '').replace('CHARGING_SYSTEM_', '');
                             this._updateProperty('charging_system_status', chargingSystemStatus);
+                            await this.updateTimestampSetting('chargingSystemTimestamp', chargingSystemState?.data?.chargingSystemStatus?.timestamp);
                         })
                         .catch(reason => {
                             this.error(`Failed to getChargingSystemStatus`, reason);
@@ -285,6 +292,7 @@ class ConnectedVehicleDevice extends Homey.Device {
 
                 if (type == config.vehicleType.HYBRID || type == config.vehicleType.ICE) {
                     this._updateProperty('range', vehicleStats?.data?.distanceToEmptyTank?.value || 0);
+                    await this.updateTimestampSetting('rangeFuelTimestamp', vehicleStats?.data?.distanceToEmptyTank?.timestamp);
                 }
             })
             .catch(reason => {
@@ -299,18 +307,33 @@ class ConnectedVehicleDevice extends Homey.Device {
                     .catch(reason => {
                         this.error(reason);
                     });
+
+                await this.updateTimestampSetting('lockTimestamp', doorState?.data?.centralLock?.timestamp);
             })
             .catch(reason => {
                 this.error(`Failed to getDoorState`, reason);
             });
 
-        await client.isEngineRunning(this.getData().id)
-            .then(running => {
-                this._updateProperty('engine', running || false);
+        await client.getEngineState(this.getData().id)
+            .then(async (engineState) => {
+                this._updateProperty('engine', engineState?.data?.engineStatus?.value == 'RUNNING');
+                await this.updateTimestampSetting('engineTimestamp', engineState?.data?.engineStatus?.timestamp);
             })
             .catch(reason => {
-                this.error(`Failed to isEngineRunning`, reason);
+                this.error(`Failed to getEngineState`, reason);
             });
+    }
+
+    async updateTimestampSetting(settingKey, timestamp) {
+        if (timestamp) {
+            timestamp = new Date(timestamp).toLocaleString('sv-se', { timeZone: this.homey.clock.getTimezone() })
+            await this.setSettings({
+                [settingKey]: timestamp
+            })
+                .catch(reason => {
+                    this.error(reason);
+                });
+        }
     }
 
     refreshAccessToken() {
@@ -333,9 +356,30 @@ class ConnectedVehicleDevice extends Homey.Device {
     createVolvoClient() {
         let options = {
             accessToken: this.getToken().access_token,
-            vccApiKey: this.getSetting('vccApiKey')
+            vccApiKey: this.getSetting('vccApiKey'),
+            device: this
         };
-        return new ConnectedVehicle(options);
+        const cv = new ConnectedVehicle(options);
+
+        var self = this;
+        cv.on('error', (jsonError) => {
+            self.error(`[${self.getName()}] Houston we have a problem`, jsonError);
+            let message = '';
+            try {
+                message = JSON.stringify(jsonError, null, "  ");
+            } catch (e) {
+                self.log('Failed to stringify object', e);
+                // message = error.toString();
+            }
+
+            const dateTime = new Date().toLocaleString('sv-se', { timeZone: this.homey.clock.getTimezone() }); // new Date().toISOString();
+            self.setSettings({ last_error: dateTime + '\n' + message })
+                .catch(err => {
+                    self.error('Failed to update settings last_error', err);
+                });
+        });
+
+        return cv;
     }
 
     getToken() {

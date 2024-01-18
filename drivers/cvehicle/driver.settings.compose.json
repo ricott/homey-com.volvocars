@@ -76,5 +76,98 @@
                 "value": ""
             }
         ]
+    },
+    {
+        "type": "group",
+        "label": {
+            "en": "Debug"
+        },
+        "children": [
+            {
+                "id": "batteryTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Battery level timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "rangeBatteryTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Battery range timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "chargingSystemTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Charging system status timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "engineTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Engine state timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "rangeFuelTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Fuel range timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "lockTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Lock state timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "locationTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Location state timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
+                "id": "last_error",
+                "type": "textarea",
+                "label": {
+                    "en": "Most recent API Error"
+                },
+                "value": ""
+            }
+        ]
     }
 ]
