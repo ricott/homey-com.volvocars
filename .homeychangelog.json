@@ -1,6 +1,6 @@
 {
-    "1.2.8": {
-        "en": "New Connected Vehicle device type using the Volvo Connected Vehicle API"
+    "1.2.9": {
+        "en": "New Connected Vehicle device type that supports Android auto based cars"
     },
     "1.2.5": {
         "en": "Stability improvement"

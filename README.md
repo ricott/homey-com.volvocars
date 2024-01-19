@@ -1,68 +1,21 @@
 # Volvo On Call
 Control your Volvo car with Volvo On Call services.
 
-Before adding a car you need to go to app settings and select region. Different parts of the world use different APIs from Volvo On Call so it is important to select the correct region in order to find your car.
+There are two device types `Volvo On Call` and `Connected Vehicle`. 
+- `Volvo On Call`
+Supports cars model year 2021 and older. Uses an inofficial API that is reverse engineered from the old mobile app.
 
-When adding a car you are prompted for your Volvo On Call username and password.
+- `Connected Vehicle`
+The Connected vehicle is the device type that supports Android auto based cars. Model year 2022 and later. Use the official APIs listed on the developer portal.
 
-Please note that Volvo doesn't expose any APIs for cars equipped with Android Auto (model year 2022 and beyond). That means that this app doesn't support those cars.
+## Adding a vehicle
+When adding a car you are prompted for your Volvo account's username and password.
+The `Connected Vehicle` device also requires a VCC API key that you can get after registering for a developer account on the [Volvo Developer](https://developer.volvocars.com) site.
 
-## Triggers
-- Car left home
-- Car came home
-- Location changed
-- Engine started/stopped
-- Heater started/stopped
-- Battery level changed (only for PHEVs)
-- Charge cable status changed (only for PHEVs)
-
-## Conditions
-- Heater is on/off
-- Engine is on/off
-- Car is (not) at home
-- Car is (not) locked
-- A door is (not) open
-- Door is (not) open
-
-## Actions
-- Heater on/off
-- Lock/Unlock car
-
-   Unlock action will silently unlock the tailgate/trunk. If trunk is opened then all doors will unlock. For more details please visit [Volvo On Call app: Lock/unlock your car](https://www.volvocars.com/uk/support/article/89d8033fbc4235c8c0a801512a07f946)
-
-- Engine remote start/stop
-
-   There are lots of ifs and buts about this feature and one can question the real use of it. If you have started the engine twice remotely, then you need to start it with a key before you can start it remotely again. For more details please visit [Volvo On Call app: Operating remote start of the car](https://www.volvocars.com/uk/support/article/0d3df457bc7bd531c0a801512a956093). Duration setting for action is only relevant for engine start.
-
-- Honk horn
-- Blink lights
-- Honk horn and blink lights
-- Schedule charging (only for PHEVs)
-- Start charging / override scheduled charging (only for PHEVs)
-
-## Settings
-- Refresh from car (minutes)
-
-   How frequently Volvo On Call cloud is told to update status from the car. After each status refresh the status in Homey is also refreshed. Each action invocation will automatically trigger a refresh afterwards, in order to show correct status. The car seems to push status to Volvo On Call cloud by itself at least after a drive.
-
-   Default refresh interval is 120 minutes. Please be aware that refreshing status too frequently consumes battery power in your vehicle.
-
-- Refresh from cloud (minutes)
-
-   How frequently the status from the Volvo On Call cloud is refreshed in your Homey. Default value is 5 minutes.
-
-- Refresh position (minutes)
-
-   How frequently the position is refreshed from Volvo On Call cloud. Default value 5 minutes.
-
-- Proximity of home (meters)
-
-   Distance from Homey/home the car can be, and the condition will still state that car is at home.
-
-# Disclaimer
+## Disclaimer
 Use this app at your own risk. The authors do not guaranteed the proper functioning of this app. This app attempts to use the same APIs used by the official Volvo On Call mobile app. However, it is possible that use of this app may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) starting the parking heater.
 
-# Credits
+## Credits
 Icons from;
 - https://thenounproject.com/fandikur007/
 - https://thenounproject.com/ralfschmitzer/
