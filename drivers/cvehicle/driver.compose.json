@@ -4,9 +4,9 @@
         "en": "Connected Vehicle"
     },
     "images": {
-        "xlarge": "/drivers/voc/assets/images/xlarge.png",
-        "large": "/drivers/voc/assets/images/large.png",
-        "small": "/drivers/voc/assets/images/small.png"
+        "xlarge": "/drivers/cvehicle/assets/images/xlarge.png",
+        "large": "/drivers/cvehicle/assets/images/large.png",
+        "small": "/drivers/cvehicle/assets/images/small.png"
     },
     "capabilities": [
         "distance",
