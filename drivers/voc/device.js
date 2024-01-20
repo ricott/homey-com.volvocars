@@ -256,7 +256,7 @@ class VOCDevice extends Homey.Device {
                     this._updateProperty('distance', distanceHomey);
 
                     if (this.lastTriggerLocation === 'unknown') {
-                        if (this.isCarAthome()) {
+                        if (this.isCarAtHome()) {
                             this.lastTriggerLocation = 'home';
                         } else {
                             this.lastTriggerLocation = 'away';
@@ -579,7 +579,7 @@ class VOCDevice extends Homey.Device {
         }
     }
 
-    isCarAthome() {
+    isCarAtHome() {
         if (this.car.distanceFromHome < this.proximity_home) {
             return true;
         } else {
@@ -644,15 +644,15 @@ class VOCDevice extends Homey.Device {
                                 await self.homey.app.triggerEngineStopped(self, tokens);
                             }
 
-                        } else if (key === 'distance' && !self.isCarAthome() && self.lastTriggerLocation === 'home') {
+                        } else if (key === 'distance' && !self.isCarAtHome() && self.lastTriggerLocation === 'home') {
 
-                            self.log(`'${key}' changed. At home: '${self.isCarAthome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.log(`'${key}' changed. At home: '${self.isCarAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
                             self.lastTriggerLocation = 'away';
                             await self.homey.app.triggerCarLeftHome(self);
 
-                        } else if (key === 'distance' && self.isCarAthome() && self.lastTriggerLocation === 'away') {
+                        } else if (key === 'distance' && self.isCarAtHome() && self.lastTriggerLocation === 'away') {
 
-                            self.log(`'${key}' changed. At home: '${self.isCarAthome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
+                            self.log(`'${key}' changed. At home: '${self.isCarAtHome()}'. Last trigger location: '${self.lastTriggerLocation}'`);
                             self.lastTriggerLocation = 'home';
                             await self.homey.app.triggerCarCameHome(self);
 
