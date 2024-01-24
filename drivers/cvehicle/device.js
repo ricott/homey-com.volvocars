@@ -91,13 +91,13 @@ class ConnectedVehicleDevice extends Homey.Device {
             if (value) {
                 this.createVolvoClient().lock(this.getData().id)
                     .catch(reason => {
-                        return Promise.reject(`${this.homey.__('error.failedLock')} Reason: ${reason.message}`);
+                        return Promise.reject(new Error(`${this.homey.__('error.failedLock')} Reason: ${reason.message}`));
                     });
 
             } else {
                 this.createVolvoClient().unlock(this.getData().id)
                     .catch(reason => {
-                        return Promise.reject(`${this.homey.__('error.failedUnLock')} Reason: ${reason.message}`);
+                        return Promise.reject(new Error(`${this.homey.__('error.failedUnLock')} Reason: ${reason.message}`));
                     });
             }
         });
