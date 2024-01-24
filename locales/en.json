@@ -1,4 +1,7 @@
 {
+  "repair": {
+    "title": "Login using your new credentials to repair the device"
+  },
   "pair": {
     "title": "Add a Volvo Connected Vehicle",
     "nosettings": "Please fill in all the required fields.",
