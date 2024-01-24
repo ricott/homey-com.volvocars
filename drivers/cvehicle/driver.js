@@ -26,7 +26,10 @@ class ConnectedVehicleDriver extends Homey.Driver {
                 Homey.env.VCC_LOGIN_TOKEN,
                 settings.username,
                 settings.password
-            );
+            )
+                .catch(reason => {
+                    return Promise.reject(reason);
+                });
 
             const cVehicle = new ConnectedVehicle({
                 accessToken: token.access_token,
@@ -34,7 +37,11 @@ class ConnectedVehicleDriver extends Homey.Driver {
                 device: this
             });
 
-            const vehicles = await cVehicle.getVehicles();
+            const vehicles = await cVehicle.getVehicles()
+                .catch(reason => {
+                    return Promise.reject(reason);
+                });
+
             const devicesData = vehicles.data.map(async (vehicle) => {
                 const vehicleInfo = await cVehicle.getVehicleInfo(vehicle.vin);
                 return {
@@ -52,6 +59,7 @@ class ConnectedVehicleDriver extends Homey.Driver {
                 };
             });
             devices = await Promise.all(devicesData);
+
             try {
                 session.nextView();
                 return true;

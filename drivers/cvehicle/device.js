@@ -26,7 +26,6 @@ class ConnectedVehicleDevice extends Homey.Device {
 
         if (!this.homey.settings.get(this._usernameSettingsKey)) {
             // This is a newly added device, lets copy login details to homey settings
-            this.logMessage(`Storing credentials for user '${this.getStoreValue('username')}'`);
             this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
         }
 
@@ -394,7 +393,7 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     storeCredentialsEncrypted(plainUser, plainPassword) {
-        this.logMessage(`Encrypting credentials for user '${plainUser}'`);
+        this.logMessage(`Storing encrypted credentials for user '${plainUser}'`);
         this.homey.settings.set(this._usernameSettingsKey, this.encryptText(plainUser));
         this.homey.settings.set(this._passwordSettingsKey, this.encryptText(plainPassword));
 

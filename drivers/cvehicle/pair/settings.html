@@ -20,6 +20,9 @@
                             $('.error').show();
                             $('.error-msg').html('Failed to login to the Volvo account');
                         }
+                    })
+                    .catch(reason => {
+                        Homey.alert(reason);
                     });
             } else {
                 $('.error').show();
@@ -80,7 +83,8 @@
         <input type="password" class="form-control" id="password" required />
 
         <label for="vcc_api_key" data-i18n="pair.vcc_api_key">vcc_api_key</label>
-        <input type="text" class="form-control" id="vcc_api_key" placeholder="32 character string from Volvo developer account" required />
+        <input type="text" class="form-control" id="vcc_api_key"
+            placeholder="32 character string from Volvo developer account" required />
     </div>
     <div class="form-group buttons">
         <button id="login" class="button" data-i18n="pair.login">Login</button>
