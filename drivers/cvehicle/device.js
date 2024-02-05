@@ -86,18 +86,16 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     async setupCapabilityListeners() {
-        this.registerCapabilityListener('locked', async (value) => {
-            if (value) {
-                this.createVolvoClient().lock(this.getData().id)
-                    .catch(reason => {
-                        return Promise.reject(new Error(`${this.homey.__('error.failedLock')} Reason: ${reason.message}`));
-                    });
-
-            } else {
-                this.createVolvoClient().unlock(this.getData().id)
-                    .catch(reason => {
-                        return Promise.reject(new Error(`${this.homey.__('error.failedUnLock')} Reason: ${reason.message}`));
-                    });
+        this.registerCapabilityListener('locked', async (lock) => {
+            try {
+                if (lock) {
+                    await this.createVolvoClient().lock(this.getData().id);
+                } else {
+                    await this.createVolvoClient().unlock(this.getData().id);
+                }
+            } catch (error) {
+                this.error(error);
+                return Promise.reject(error);
             }
         });
     }
