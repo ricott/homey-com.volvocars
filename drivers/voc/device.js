@@ -662,7 +662,9 @@ class VOCDevice extends Homey.Device {
                                 car_location_city: self.car.location.city || '',
                                 car_location_postcode: self.car.location.postcode || '',
                                 car_location_county: self.car.location.county || '',
-                                car_location_country: self.car.location.country || ''
+                                car_location_country: self.car.location.country || '',
+                                car_location_longitude: this.car.position.longitude || 0,
+                                car_location_latitude: this.car.position.latitude || 0
                             }
                             await self.homey.app.triggerLocationHumanChanged(self, tokens);
 
