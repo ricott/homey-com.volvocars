@@ -563,12 +563,20 @@ class ConnectedVehicleDevice extends Homey.Device {
 
                         } else if (key === 'location_human') {
                             const location = self.getStoreValue(_LOCATION_ADDRESS);
+                            const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
+                            let longitude = 0, latitude = 0;
+                            if (Array.isArray(coordinatesArray) && coordinatesArray.length >= 2) {
+                                longitude = coordinatesArray[0];
+                                latitude = coordinatesArray[1];
+                            }
                             const tokens = {
                                 car_location_address: location?.address || '',
                                 car_location_city: location?.city || '',
                                 car_location_postcode: location?.postcode || '',
                                 car_location_county: location?.county || '',
-                                car_location_country: location?.country || ''
+                                car_location_country: location?.country || '',
+                                car_location_longitude: longitude,
+                                car_location_latitude: latitude
                             }
                             await self.homey.app.triggerLocationHumanChanged(self, tokens);
 
