@@ -754,6 +754,8 @@
       "capabilities": [
         "distance",
         "location_human",
+        "location_longitude",
+        "location_latitude",
         "engine",
         "locked",
         "range",
@@ -1210,6 +1212,26 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/map.svg"
+    },
+    "location_latitude": {
+      "type": "number",
+      "title": {
+        "en": "Location Latitude"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": null,
+      "insights": false
+    },
+    "location_longitude": {
+      "type": "number",
+      "title": {
+        "en": "Location Longitude"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": null,
+      "insights": false
     },
     "range": {
       "type": "number",

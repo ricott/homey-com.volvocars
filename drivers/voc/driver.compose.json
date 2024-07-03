@@ -10,6 +10,8 @@
     "capabilities": [
         "distance",
         "location_human",
+        "location_longitude",
+        "location_latitude",
         "engine",
         "heater",
         "locked",

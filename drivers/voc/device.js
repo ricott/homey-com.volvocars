@@ -247,6 +247,9 @@ class VOCDevice extends Homey.Device {
                             this.error('Failed to update settings', err);
                         });
 
+                    this._updateProperty('location_latitude', position.latitude);
+                    this._updateProperty('location_longitude', position.longitude);
+                    
                     let distanceHomey = Osm.calculateDistance(position.latitude,
                         position.longitude,
                         this.homey.geolocation.getLatitude(),
@@ -656,7 +659,7 @@ class VOCDevice extends Homey.Device {
                             self.lastTriggerLocation = 'home';
                             await self.homey.app.triggerCarCameHome(self);
 
-                        } else if (key === 'location_human') {
+                        } else if (['location_human', 'location_longitude', 'location_latitude'].includes(key)) {
                             let tokens = {
                                 car_location_address: self.car.location.address || '',
                                 car_location_city: self.car.location.city || '',

@@ -220,6 +220,9 @@ class ConnectedVehicleDevice extends Homey.Device {
                                 this.error(reason);
                             });
 
+                        this._updateProperty('location_longitude', newLongitude)
+                        this._updateProperty('location_latitude', newLatitude)
+
                         let distanceHomey = Osm.calculateDistance(
                             newLatitude,
                             newLongitude,
@@ -561,7 +564,7 @@ class ConnectedVehicleDevice extends Homey.Device {
                             await self.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME).catch(reason => { self.error(reason); });
                             await self.homey.app.triggerCarCameHome(self);
 
-                        } else if (key === 'location_human') {
+                        } else if (['location_human', 'location_longitude', 'location_latitude'].includes(key)) {
                             const location = self.getStoreValue(_LOCATION_ADDRESS);
                             const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
                             let longitude = 0, latitude = 0;
