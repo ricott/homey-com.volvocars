@@ -102,7 +102,8 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async setupCapabilities() {
         this.logMessage('Setting up capabilities');
-        const type = this.getSetting('vehicleType');
+        const settings = this.getSettings();
+        const type = settings.vehicleType;
 
         if (type == config.vehicleType.ICE) {
             this.logMessage(`ICE car, removing capabilities; 'measure_battery', 'range_battery', 'charge_cable_status'`);
@@ -113,6 +114,31 @@ class ConnectedVehicleDevice extends Homey.Device {
         } else if (type == config.vehicleType.ELECTRIC) {
             this.logMessage(`ELECTRIC car, removing capabilities; 'range'`);
             await this.removeCapabilityHelper('range');
+        }
+
+        await this.setupSensors();
+    }
+
+    async setupSensors(settings = this.getSettings()) {
+        if (settings.odometerSensor === true) {
+            await this.addCapabilityHelper('odometer');
+        } else {
+            await this.removeCapabilityHelper('odometer');
+        }
+
+        const warningSensors = [
+            settings.tireWarningsSensor,
+            settings.lightWarningsSensor,
+            settings.serviceWarningsSensor,
+            settings.engineWarningsSensor,
+            settings.brakeWarningsSensor
+        ].some(setting => setting === true);
+        if (warningSensors === true) {
+            await this.addCapabilityHelper('warnings_text');
+            await this.addCapabilityHelper('alarm_warnings');
+        } else {
+            await this.removeCapabilityHelper('warnings_text');
+            await this.removeCapabilityHelper('alarm_warnings');
         }
     }
 
@@ -258,7 +284,8 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async refreshInformation() {
         const client = this.createVolvoClient();
-        const type = this.getSetting('vehicleType');
+        const settings = this.getSettings();
+        const type = settings.vehicleType;
 
         await client.getVehicleStatistics(this.getData().id)
             .then(async (vehicleStats) => {
@@ -319,6 +346,54 @@ class ConnectedVehicleDevice extends Homey.Device {
             .catch(reason => {
                 this.error(`Failed to getEngineState`, reason);
             });
+
+        if(settings.odometerSensor === true){
+            await client.getOdometerState(this.getData().id)
+                .then(async (odometerState) => {
+                    this._updateProperty('odometer', odometerState?.data?.odometer?.value)
+                    await this.updateTimestampSetting('odometerTimestamp', odometerState?.data?.odometer?.timestamp);
+                })
+                .catch(reason => {
+                    this.error(`Failed to getOdometerState`, reason);
+                });
+        }
+
+        const warningPromises = [];
+        if (settings.lightWarningsSensor === true) {
+            warningPromises.push(client.getVehicleWarnings(this.getData().id));
+        }
+        if (settings.tireWarningsSensor === true) {
+            warningPromises.push(client.getTyreState(this.getData().id));
+        }
+        if (settings.serviceWarningsSensor === true) {
+            warningPromises.push(client.getVehicleDiagnostic(this.getData().id));
+        }
+        if (settings.engineWarningsSensor === true) {
+            warningPromises.push(client.getEngineDiagnostic(this.getData().id));
+        }
+        if (settings.brakeWarningsSensor === true) {
+            warningPromises.push(client.getBrakeDiagnostic(this.getData().id));
+        }
+        if(warningPromises.length > 1){
+            await Promise.all(warningPromises)
+            .then(async (data) => {
+                let alarm = false;
+                const mergedData = Object.assign({}, ...data.map(obj => obj?.data || {}));
+
+                let warnings = Object.entries(mergedData)
+                    .filter(([key, val]) => config.warningValues.includes(val.value))
+                    .map(([key, val]) => `${key.replace('Warning', '').split(/(?=[A-Z])/).join(' ')}: ${val.value.replace('_',  ' ').toLowerCase()}`)
+
+                if(warnings.length == 0) warnings.push('OK');
+                else if(warnings.length > 0) alarm = true;
+
+                this._updateProperty('warnings_text', warnings.join(', '));
+                this._updateProperty('alarm_warnings', alarm);
+            })
+            .catch(reason => {
+                this.error(`Failed to getVehicleWarnings or getTyreState`, reason);
+            });
+        }
     }
 
     async updateTimestampSetting(settingKey, timestamp) {
@@ -540,7 +615,7 @@ class ConnectedVehicleDevice extends Homey.Device {
                                 await self.homey.app.triggerEngineStarted(self);
                             } else {
                                 const tokens = {
-                                    average_fuel_consumption: 0 // self.car.status.averageFuelConsumption || 0
+                                    average_fuel_consumption: self.car.status.averageFuelConsumption || 0
                                 }
                                 await self.homey.app.triggerEngineStopped(self, tokens);
                             }
@@ -589,6 +664,28 @@ class ConnectedVehicleDevice extends Homey.Device {
                                 status: newValue
                             }
                             await self.homey.app.triggerChargeSystemStatusChanged(self, tokens);
+
+                        } else if (key === 'odometer') {
+                            const tokens = {
+                                odometer: newValue
+                            }
+                            await self.homey.app.triggerOdometerChanged(self, tokens);
+
+                        } else if (key == 'alarm_warnings') {
+                            if(newValue ==  true){
+                                self.updateCapabilityOptions('warnings_text', { uiComponent: 'sensor' })
+                            }
+                            else {
+                                self.updateCapabilityOptions('warnings_text', { uiComponent: null })
+                            }
+
+                        } else if (key == 'warnings_text') {
+                            const tokens = {
+                                alarm_warnings: self.getCapabilityValue('alarm_warnings'),
+                                warnings_text: newValue 
+                            }
+                            await self.homey.app.triggerCarWarningsChanged(self, tokens);
+
                         }
 
                     }).catch(reason => {
@@ -626,6 +723,7 @@ class ConnectedVehicleDevice extends Homey.Device {
         let change = false;
         let refresh_status_cloud = oldSettings.refresh_status_cloud;
         let refresh_position = oldSettings.refresh_position;
+        const changedSensorSettings = changedKeys.filter(key => key.includes('Sensor'))
 
         if (changedKeys.indexOf("refresh_status_cloud") > -1) {
             this.log('Refresh status cloud value was change to:', newSettings.refresh_status_cloud);
@@ -644,6 +742,13 @@ class ConnectedVehicleDevice extends Homey.Device {
 
         if (changedKeys.indexOf("vccApiKey") > -1) {
             this.log('VCC API key value was change to:', newSettings.vccApiKey);
+        }
+
+        if(changedSensorSettings.length > 0) {
+            for(const sensor of changedSensorSettings){
+                this.log(`${sensor} setting was changed to: ${newSettings[sensor]}`)
+            }
+            await this.setupSensors(newSettings);
         }
 
         if (change) {
