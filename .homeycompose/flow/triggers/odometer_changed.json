@@ -1,0 +1,25 @@
+{
+    "id": "odometer_changed",
+    "title": {
+        "en": "Odometer changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "odometer",
+            "type": "number",
+            "title": {
+                "en": "Odometer"
+            },
+            "example": {
+                "en": "220"
+            }
+        }
+    ]
+}

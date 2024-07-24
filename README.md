@@ -22,4 +22,4 @@ Icons from;
 - https://thenounproject.com/LAFS/
 - https://thenounproject.com/iconproducer/
 - https://thenounproject.com/hrnico/
-
+- https://fontawesome.com
