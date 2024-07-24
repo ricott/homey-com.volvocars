@@ -48,62 +48,6 @@
     {
         "type": "group",
         "label": {
-            "en": "Optional Sensors"
-        },
-        "children": [
-            {
-                "id": "odometerSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Odometer"
-                },
-                "value": false
-            },
-            {
-                "id": "tireWarningsSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Tire Warnings"
-                },
-                "value": false
-            },
-            {
-                "id": "lightWarningsSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Light Warnings"
-                },
-                "value": false
-            },
-            {
-                "id": "serviceWarningsSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Service Warnings"
-                },
-                "value": false
-            },
-            {
-                "id": "engineWarningsSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Engine Warnings"
-                },
-                "value": false
-            },
-            {
-                "id": "brakeWarningsSensor",
-                "type": "checkbox",
-                "label": {
-                    "en": "Brake Warnings"
-                },
-                "value": false
-            }
-        ]
-    },
-    {
-        "type": "group",
-        "label": {
             "en": "Information"
         },
         "children": [
@@ -210,17 +154,6 @@
                 "type": "label",
                 "label": {
                     "en": "Location state timestamp"
-                },
-                "hint": {
-                    "en": "When the Volvo API last got an update from the vehicle for this object"
-                },
-                "value": ""
-            },
-            {
-                "id": "odometerTimestamp",
-                "type": "label",
-                "label": {
-                    "en": "Odometer state timestamp"
                 },
                 "hint": {
                     "en": "When the Volvo API last got an update from the vehicle for this object"

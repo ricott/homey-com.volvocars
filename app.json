@@ -104,38 +104,6 @@
         ]
       },
       {
-        "id": "car_warnings_changed",
-        "title": {
-          "en": "Car warnings changed"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "filter": "driver_id=cvehicle"
-          }
-        ],
-        "tokens": [
-          {
-            "name": "alarm_warnings",
-            "type": "boolean",
-            "title": {
-              "en": "Has warnings?"
-            }
-          },
-          {
-            "name": "warnings_text",
-            "type": "boolean",
-            "title": {
-              "en": "Warnings Text"
-            },
-            "example": {
-              "en": "Front Right: LOW PRESSURE"
-            }
-          }
-        ]
-      },
-      {
         "id": "charge_cable_status_changed",
         "title": {
           "en": "Charge cable status changed"
@@ -355,31 +323,6 @@
             },
             "example": {
               "en": "57.68877828654959"
-            }
-          }
-        ]
-      },
-      {
-        "id": "odometer_changed",
-        "title": {
-          "en": "Odometer changed"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "filter": "driver_id=cvehicle"
-          }
-        ],
-        "tokens": [
-          {
-            "name": "odometer",
-            "type": "number",
-            "title": {
-              "en": "Odometer"
-            },
-            "example": {
-              "en": "220"
             }
           }
         ]
@@ -897,62 +840,6 @@
         {
           "type": "group",
           "label": {
-            "en": "Optional Sensors"
-          },
-          "children": [
-            {
-              "id": "odometerSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Odometer"
-              },
-              "value": false
-            },
-            {
-              "id": "tireWarningsSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Tire Warnings"
-              },
-              "value": false
-            },
-            {
-              "id": "lightWarningsSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Light Warnings"
-              },
-              "value": false
-            },
-            {
-              "id": "serviceWarningsSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Service Warnings"
-              },
-              "value": false
-            },
-            {
-              "id": "engineWarningsSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Engine Warnings"
-              },
-              "value": false
-            },
-            {
-              "id": "brakeWarningsSensor",
-              "type": "checkbox",
-              "label": {
-                "en": "Brake Warnings"
-              },
-              "value": false
-            }
-          ]
-        },
-        {
-          "type": "group",
-          "label": {
             "en": "Information"
           },
           "children": [
@@ -1059,17 +946,6 @@
               "type": "label",
               "label": {
                 "en": "Location state timestamp"
-              },
-              "hint": {
-                "en": "When the Volvo API last got an update from the vehicle for this object"
-              },
-              "value": ""
-            },
-            {
-              "id": "odometerTimestamp",
-              "type": "label",
-              "label": {
-                "en": "Odometer state timestamp"
               },
               "hint": {
                 "en": "When the Volvo API last got an update from the vehicle for this object"
@@ -1279,16 +1155,6 @@
     }
   ],
   "capabilities": {
-    "alarm_warnings": {
-      "type": "boolean",
-      "title": {
-        "en": "Warnings"
-      },
-      "getable": true,
-      "setable": false,
-      "uiComponent": "sensor",
-      "icon": "/assets/car_burst.svg"
-    },
     "charge_cable_status": {
       "type": "string",
       "title": {
@@ -1369,19 +1235,6 @@
       "uiComponent": null,
       "insights": false
     },
-    "odometer": {
-      "type": "number",
-      "title": {
-        "en": "Odometer"
-      },
-      "units": {
-        "en": "km"
-      },
-      "getable": true,
-      "setable": false,
-      "uiComponent": "sensor",
-      "icon": "/assets/speedometer.svg"
-    },
     "range": {
       "type": "number",
       "title": {
@@ -1407,16 +1260,6 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/battery.svg"
-    },
-    "warnings_text": {
-      "type": "string",
-      "title": {
-        "en": "Warnings Text"
-      },
-      "getable": true,
-      "setable": false,
-      "uiComponent": null,
-      "icon": "/assets/car_burst.svg"
     }
   }
 }
