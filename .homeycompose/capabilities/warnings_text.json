@@ -1,0 +1,10 @@
+{
+    "type": "string",
+    "title": {
+        "en": "Warnings Text"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": null,
+    "icon": "/assets/car_burst.svg"
+}
