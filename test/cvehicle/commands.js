@@ -21,6 +21,30 @@ describe('#commands', function () {
         assert.strictEqual(availableForCommands, true);
     });
 
+    it('listAvailableCommands', async () => {
+        let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
+        const cVehicle = new ConnectedVehicle({
+            accessToken: token.access_token,
+            vccApiKey: config.vccApiKey
+        });
+
+        const response = await cVehicle.listAvailableCommands(config.credentials.vin);
+        console.log(JSON.stringify(response));
+
+    });
+
+    it('lock', async () => {
+        let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
+        const cVehicle = new ConnectedVehicle({
+            accessToken: token.access_token,
+            vccApiKey: config.vccApiKey
+        });
+
+        const result = await cVehicle.lock(config.credentials.vin);
+        console.log(result);
+        //assert.strictEqual(availableForCommands, true);
+    });
+
 });
 
 

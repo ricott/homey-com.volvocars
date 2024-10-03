@@ -178,7 +178,9 @@ class ConnectedVehicleDevice extends Homey.Device {
                 let vehicleType = config.vehicleType.ICE;
                 if (vehicleInfo.data.fuelType == 'PETROL/ELECTRIC') {
                     vehicleType = config.vehicleType.HYBRID;
-                } else if (vehicleInfo.data.fuelType == 'ELECTRIC') {
+                } else if (vehicleInfo.data.fuelType == 'ELECTRIC' ||
+                           // EX30 for some reason has fuelType=NONE
+                           vehicleInfo.data.fuelType == 'NONE') {
                     vehicleType = config.vehicleType.ELECTRIC;
                 }
 

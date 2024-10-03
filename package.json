@@ -6,10 +6,9 @@
     "lib": "lib"
   },
   "dependencies": {
-    "async-mutex": "^0.4.1",
-    "events": "^3.3.0",
+    "async-mutex": "^0.5.0",
     "http.min": "^2.1.0",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "scripts": {
     "test": "mocha"
@@ -27,6 +26,6 @@
   },
   "homepage": "https://github.com/ricott/homey-com.volvocars#readme",
   "devDependencies": {
-    "mocha": "^10.2.0"
+    "mocha": "^10.7.3"
   }
 }
