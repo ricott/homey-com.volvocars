@@ -179,15 +179,31 @@ class ConnectedVehicleDevice extends Homey.Device {
                 if (vehicleInfo.data.fuelType == 'PETROL/ELECTRIC') {
                     vehicleType = config.vehicleType.HYBRID;
                 } else if (vehicleInfo.data.fuelType == 'ELECTRIC' ||
-                           // EX30 for some reason has fuelType=NONE
-                           vehicleInfo.data.fuelType == 'NONE') {
+                    // EX30 for some reason has fuelType=NONE
+                    vehicleInfo.data.fuelType == 'NONE') {
                     vehicleType = config.vehicleType.ELECTRIC;
+                }
+
+                let supportsEnergyAPI = '';
+                if (vehicleType == config.vehicleType.HYBRID || vehicleType == config.vehicleType.ELECTRIC) {
+                    // Hybrid or electric, try and get battery info
+                    await client.getBatteryChargeLevel(this.getData().id)
+                        .then(response => {
+                            supportsEnergyAPI = 'Yes';
+                        })
+                        .catch(reason => {
+                            if (reason.message.indexOf('404') > -1) {
+                                //This vehicly doesnt support the Energy API
+                                supportsEnergyAPI = 'No';
+                            }
+                        });
                 }
 
                 await this.setSettings({
                     model: `${vehicleInfo.data.descriptions.model} / ${vehicleInfo.data.modelYear}`,
                     fuelType: vehicleInfo.data.fuelType,
-                    vehicleType: vehicleType
+                    vehicleType: vehicleType,
+                    supportsEnergyAPI: supportsEnergyAPI
                 })
                     .catch(err => {
                         this.error(`Failed to update settings`, err);
@@ -264,7 +280,8 @@ class ConnectedVehicleDevice extends Homey.Device {
 
         await client.getVehicleStatistics(this.getData().id)
             .then(async (vehicleStats) => {
-                if (type == config.vehicleType.HYBRID || type == config.vehicleType.ELECTRIC) {
+                if ((type == config.vehicleType.HYBRID || type == config.vehicleType.ELECTRIC) &&
+                    this.getSetting('supportsEnergyAPI') == 'Yes') {
                     // Hybrid or electric, get battery info
                     await client.getBatteryChargeLevel(this.getData().id)
                         .then(async (response) => {

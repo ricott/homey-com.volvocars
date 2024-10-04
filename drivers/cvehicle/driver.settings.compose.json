@@ -74,6 +74,14 @@
                     "en": "Vehicle type"
                 },
                 "value": ""
+            },
+            {
+                "id": "supportsEnergyAPI",
+                "type": "label",
+                "label": {
+                    "en": "Supports Energy API"
+                },
+                "value": "Yes"
             }
         ]
     },
