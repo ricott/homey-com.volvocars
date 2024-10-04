@@ -1,0 +1,10 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Location Latitude"
+    },
+    "getable": true,
+    "setable": false,
+    "uiComponent": null,
+    "insights": false
+}

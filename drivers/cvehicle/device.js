@@ -238,6 +238,9 @@ class ConnectedVehicleDevice extends Homey.Device {
                                 this.error(reason);
                             });
 
+                        this._updateProperty('location_longitude', newLongitude)
+                        this._updateProperty('location_latitude', newLatitude)
+
                         let distanceHomey = Osm.calculateDistance(
                             newLatitude,
                             newLongitude,
@@ -580,14 +583,22 @@ class ConnectedVehicleDevice extends Homey.Device {
                             await self.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME).catch(reason => { self.error(reason); });
                             await self.homey.app.triggerCarCameHome(self);
 
-                        } else if (key === 'location_human') {
+                        } else if (['location_human', 'location_longitude', 'location_latitude'].includes(key)) {
                             const location = self.getStoreValue(_LOCATION_ADDRESS);
+                            const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
+                            let longitude = 0, latitude = 0;
+                            if (Array.isArray(coordinatesArray) && coordinatesArray.length >= 2) {
+                                longitude = coordinatesArray[0];
+                                latitude = coordinatesArray[1];
+                            }
                             const tokens = {
                                 car_location_address: location?.address || '',
                                 car_location_city: location?.city || '',
                                 car_location_postcode: location?.postcode || '',
                                 car_location_county: location?.county || '',
-                                car_location_country: location?.country || ''
+                                car_location_country: location?.country || '',
+                                car_location_longitude: longitude,
+                                car_location_latitude: latitude
                             }
                             await self.homey.app.triggerLocationHumanChanged(self, tokens);
 

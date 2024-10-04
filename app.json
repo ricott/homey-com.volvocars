@@ -304,6 +304,26 @@
             "example": {
               "en": "Sweden"
             }
+          },
+          {
+            "name": "car_location_longitude",
+            "type": "number",
+            "title": {
+              "en": "Car, longitude"
+            },
+            "example": {
+              "en": "11.968305241889837"
+            }
+          },
+          {
+            "name": "car_location_latitude",
+            "type": "number",
+            "title": {
+              "en": "Car, latitude"
+            },
+            "example": {
+              "en": "57.68877828654959"
+            }
           }
         ]
       }
@@ -734,6 +754,8 @@
       "capabilities": [
         "distance",
         "location_human",
+        "location_longitude",
+        "location_latitude",
         "engine",
         "locked",
         "range",
@@ -962,6 +984,8 @@
       "capabilities": [
         "distance",
         "location_human",
+        "location_longitude",
+        "location_latitude",
         "engine",
         "heater",
         "locked",
@@ -1198,6 +1222,26 @@
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/map.svg"
+    },
+    "location_latitude": {
+      "type": "number",
+      "title": {
+        "en": "Location Latitude"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": null,
+      "insights": false
+    },
+    "location_longitude": {
+      "type": "number",
+      "title": {
+        "en": "Location Longitude"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": null,
+      "insights": false
     },
     "range": {
       "type": "number",
