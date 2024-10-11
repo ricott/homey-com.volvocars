@@ -104,15 +104,26 @@ class ConnectedVehicleDevice extends Homey.Device {
         this.logMessage('Setting up capabilities');
         const type = this.getSetting('vehicleType');
 
+        this.logMessage(`${type} car, checking that we have correct capabilities defined ...`);
         if (type == config.vehicleType.ICE) {
-            this.logMessage(`ICE car, removing capabilities; 'measure_battery', 'range_battery', 'charge_cable_status'`);
             await this.removeCapabilityHelper('measure_battery');
             await this.removeCapabilityHelper('range_battery');
-            await this.removeCapabilityHelper('charge_cable_status');
+            await this.removeCapabilityHelper('charging_system_status');
+            // Make sure range is there
+            await this.addCapabilityHelper('range');
 
         } else if (type == config.vehicleType.ELECTRIC) {
-            this.logMessage(`ELECTRIC car, removing capabilities; 'range'`);
             await this.removeCapabilityHelper('range');
+            // Make sure electric capabilites are there
+            await this.addCapabilityHelper('measure_battery');
+            await this.addCapabilityHelper('range_battery');
+            await this.addCapabilityHelper('charging_system_status');
+
+        } else if (type == config.vehicleType.HYBRID) {
+            await this.addCapabilityHelper('range');
+            await this.addCapabilityHelper('measure_battery');
+            await this.addCapabilityHelper('range_battery');
+            await this.addCapabilityHelper('charging_system_status');
         }
     }
 

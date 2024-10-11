@@ -110,6 +110,55 @@ class VOCDevice extends Homey.Device {
             });
     }
 
+    async removeCapabilityHelper(capability) {
+        if (this.hasCapability(capability)) {
+            try {
+                this.logMessage(`Remove existing capability '${capability}'`);
+                await this.removeCapability(capability);
+            } catch (reason) {
+                this.error(`Failed to removed capability '${capability}'`);
+                this.error(reason);
+            }
+        }
+    }
+    async addCapabilityHelper(capability) {
+        if (!this.hasCapability(capability)) {
+            try {
+                this.logMessage(`Adding missing capability '${capability}'`);
+                await this.addCapability(capability);
+            } catch (reason) {
+                this.error(`Failed to add capability '${capability}'`);
+                this.error(reason);
+            }
+        }
+    }
+
+    async updateCapabilityOptions(capability, options) {
+        if (this.hasCapability(capability)) {
+            try {
+                this.logMessage(`Updating capability options '${capability}'`);
+                await this.setCapabilityOptions(capability, options);
+            } catch (reason) {
+                this.error(`Failed to update capability options for '${capability}'`);
+                this.error(reason);
+            }
+        }
+    }
+
+    fetchCapabilityOptions(capability) {
+        let options = {};
+        if (this.hasCapability(capability)) {
+            try {
+                //this.logMessage(`Trying to fetch capability options for '${capability}'`);
+                options = this.getCapabilityOptions(capability);
+            } catch (reason) {
+                this.logError(`Failed to fetch capability options for '${capability}', even if it exists!!!`);
+                this.logError(reason);
+            }
+        }
+        return options;
+    }
+
     _initilializeTimers() {
         this.log('Adding timers');
         // Request car to push update to cloud
@@ -249,7 +298,7 @@ class VOCDevice extends Homey.Device {
 
                     this._updateProperty('location_latitude', position.latitude);
                     this._updateProperty('location_longitude', position.longitude);
-                    
+
                     let distanceHomey = Osm.calculateDistance(position.latitude,
                         position.longitude,
                         this.homey.geolocation.getLatitude(),
@@ -275,18 +324,24 @@ class VOCDevice extends Homey.Device {
         });
 
         //initializeVehicleAttributes
-        this.car.vocApi.on('car_attributes_update', attributes => {
+        this.car.vocApi.on('car_attributes_update', async (attributes) => {
             this.log('Refreshing vehicle attributes');
             const phev = attributes.highVoltageBatterySupported;
 
-            if (!phev && this.hasCapability('measure_battery')) {
-                this.log(`ICE car, removing capabilities; 'measure_battery', 'charge_cable_status'`);
-                this.removeCapability('measure_battery');
-                this.removeCapability('charge_cable_status');
+            this.log(`PHEV=${phev}, checking that we have correct capabilities defined ...`);
+            if (phev) {
+                await this.addCapabilityHelper('measure_battery');
+                await this.addCapabilityHelper('charge_cable_status');
+            } else {
+                await this.removeCapabilityHelper('measure_battery');
+                await this.removeCapabilityHelper('charge_cable_status');
             }
 
             //Store a copy of the json
-            this.setStoreValue('attributes', attributes);
+            this.setStoreValue('attributes', attributes)
+                .catch(reason => {
+                    this.logError(reason);
+                });
 
             let subscrEndDate = new Date(attributes.subscriptionEndDate)
                 .toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
