@@ -6,19 +6,21 @@
             var inputusername = $('#username').val();
             var inputpassword = $('#password').val();
             var inputVccApiKey = $('#vcc_api_key').val();
+            var inputOtp = $('#otp').val();
 
             if (inputusername != '' && inputpassword != '' && inputVccApiKey != '') {
                 const settings = {
                     username: inputusername,
                     password: inputpassword,
-                    vccApiKey: inputVccApiKey
+                    vccApiKey: inputVccApiKey,
+                    otp: inputOtp
                 };
 
                 Homey.emit('settings', settings)
-                    .then(function (result) {
-                        if (!result) {
-                            $('.error').show();
-                            $('.error-msg').html('Failed to login to the Volvo account');
+                    .then(function (response) {
+
+                        if (response == 'OTP_REQUIRED') {
+                            $('.otp').show();
                         }
                     })
                     .catch(reason => {
@@ -44,7 +46,8 @@
     }
 
     .status,
-    .info {
+    .info,
+    .otp {
         display: none;
     }
 
@@ -73,7 +76,12 @@
     }
 </style>
 
-<p data-i18n="pair.intro">Enter the details of your Volvo account</p>
+<p data-i18n="pair.intro">Enter the details of your Volvo account.</p>
+<p>The VCC API key you need to get from your volvo developer account.</p>
+<p>
+    After clicking login a new field will be visable at the bottom, verification code.
+    This code you will find in the email sent to you by Volvo.
+</p>
 <div class="pairing">
     <div class="form-group">
         <label for="username" data-i18n="pair.username">Username</label>
@@ -85,6 +93,11 @@
         <label for="vcc_api_key" data-i18n="pair.vcc_api_key">vcc_api_key</label>
         <input type="text" class="form-control" id="vcc_api_key"
             placeholder="32 character string from Volvo developer account" required />
+
+        <div class="otp">
+            <label for="otp" data-i18n="pair.otp">Fill in verification code (otp) from email</label>
+            <input type="text" class="form-control" id="otp" placeholder="111111" required />
+        </div>
     </div>
     <div class="form-group buttons">
         <button id="login" class="button" data-i18n="pair.login">Login</button>

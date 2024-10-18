@@ -34,7 +34,7 @@ class ConnectedVehicleDevice extends Homey.Device {
             Homey.env.VCC_LOGIN_TOKEN,
             this.getUsername(),
             this.getPassword(),
-            true
+            this.getToken()
         );
         this.setToken(token);
 
@@ -371,7 +371,7 @@ class ConnectedVehicleDevice extends Homey.Device {
             Homey.env.VCC_LOGIN_TOKEN,
             this.getUsername(),
             this.getPassword(),
-            false
+            this.getToken()
         )
             .then(token => {
                 if (this.getToken().access_token != token.access_token) {
@@ -402,7 +402,7 @@ class ConnectedVehicleDevice extends Homey.Device {
                 // message = error.toString();
             }
 
-            const dateTime = new Date().toLocaleString('sv-se', { timeZone: this.homey.clock.getTimezone() }); // new Date().toISOString();
+            const dateTime = new Date().toLocaleString('sv-se', { timeZone: this.homey.clock.getTimezone() });
             self.setSettings({ last_error: dateTime + '\n' + message })
                 .catch(err => {
                     self.error('Failed to update settings last_error', err);

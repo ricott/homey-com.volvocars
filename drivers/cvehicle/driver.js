@@ -1,7 +1,6 @@
 'use strict';
-
 const Homey = require('homey');
-const TokenManager = require('../../lib/tokenManager');
+const AuthHandler = require('../../lib/auth.js');
 const ConnectedVehicle = require('../../lib/cVehicle.js');
 const config = require('../../lib/const.js');
 
@@ -9,12 +8,10 @@ class ConnectedVehicleDriver extends Homey.Driver {
 
     async onInit() {
         this.log('Connected Vehicle driver has been initialized');
-        this.tokenManager = TokenManager;
     }
 
     async onPair(session) {
-        let devices = [];
-        let settings;
+        let settings, cookie, otpUrl, token;
 
         session.setHandler('settings', async (data) => {
             settings = data;
@@ -22,14 +19,32 @@ class ConnectedVehicleDriver extends Homey.Driver {
                 throw new Error('Username, password and vcc api key are mandatory!');
             }
 
-            const token = await this.tokenManager.getToken(
-                Homey.env.VCC_LOGIN_TOKEN,
-                settings.username,
-                settings.password
-            )
-                .catch(reason => {
-                    return Promise.reject(reason);
-                });
+            const auth = new AuthHandler(Homey.env.VCC_LOGIN_TOKEN);
+
+            if (settings.otp && otpUrl && cookie) {
+                // Second time around, OTP is filled out
+                token = await auth.verifyOtp(otpUrl, cookie, settings.otp);
+
+                try {
+                    session.nextView();
+                    return true;
+                } catch (ignore) { }
+
+            } else {
+                // First time around, no OTP present
+                const response = await auth.authorize(settings.username, settings.password);
+                if (response.authState == config.authState.OTP_REQUIRED) {
+                    this.log('OTP email sent, check...');
+                    cookie = response.response.cookie;
+                    otpUrl = response.response.data._links.checkOtp.href;
+                    return config.authState.OTP_REQUIRED;
+                } else {
+                    throw new Error(`Auth state not implemented '${response.authState}'`);
+                }
+            }
+        });
+
+        session.setHandler('list_devices', async (data) => {
 
             const cVehicle = new ConnectedVehicle({
                 accessToken: token.access_token,
@@ -52,80 +67,79 @@ class ConnectedVehicleDriver extends Homey.Driver {
                     store: {
                         username: settings.username,
                         password: settings.password,
+                        token: token
                     },
                     settings: {
                         vccApiKey: settings.vccApiKey
                     }
                 };
             });
-            devices = await Promise.all(devicesData);
-
-            try {
-                session.nextView();
-                return true;
-            } catch (ignore) { }
-        });
-
-        session.setHandler('list_devices', async (data) => {
+            let devices = await Promise.all(devicesData);
             return devices;
         });
     }
 
     onRepair(session, device) {
-        let self = this;
+        let cookie, otpUrl, token;
 
-        session.setHandler('settings', async (data) => {
-            if (data.username === '' || data.password === '' || data.vccApiKey === '') {
+        session.setHandler('settings', async (settings) => {
+            if (settings.username === '' || settings.password === '' || settings.vccApiKey === '') {
                 throw new Error('Username, password and vcc api key are mandatory!');
             }
 
-            const token = await this.tokenManager.getToken(
-                Homey.env.VCC_LOGIN_TOKEN,
-                data.username,
-                data.password
-            )
-                .catch(reason => {
-                    return Promise.reject(reason);
+            const auth = new AuthHandler(Homey.env.VCC_LOGIN_TOKEN);
+
+            if (settings.otp && otpUrl && cookie) {
+                // Second time around, OTP is filled out
+                token = await auth.verifyOtp(otpUrl, cookie, settings.otp);
+
+                const cVehicle = new ConnectedVehicle({
+                    accessToken: token.access_token,
+                    vccApiKey: settings.vccApiKey,
+                    device: this
                 });
 
-            const cVehicle = new ConnectedVehicle({
-                accessToken: token.access_token,
-                vccApiKey: data.vccApiKey,
-                device: this
-            });
+                const vehicles = await cVehicle.getVehicles()
+                    .catch(reason => {
+                        return Promise.reject(reason);
+                    });
 
-            return cVehicle.getVehicles()
-                .then(async function (vehicles) {
-                    const msg = `Vehicle '${device.getName()}' is not connected to the Volvo account '${data.username}'`;
-                    if (!Array.isArray(vehicles?.data)) {
-                        // The account doesnt have any linked vehicles
-                        self.error(msg);
-                        throw new Error(msg);
-                    }
+                const msg = `Vehicle '${device.getName()}' is not connected to the Volvo account '${settings.username}'`;
+                if (!Array.isArray(vehicles?.data)) {
+                    // The account doesnt have any linked vehicles
+                    this.error(msg);
+                    return Promise.reject(new Error(msg));
+                }
 
-                    // Verify the new account has access to the vehicle being repaired
-                    const vehicle = vehicles.data.find(vehicle => vehicle.vin == device.getData().id);
-                    if (vehicle) {
-                        self.log(`Found vehicle with id '${vehicle.vin}'`);
-                        device.storeCredentialsEncrypted(data.username, data.password);
-                        await device.setSettings({
-                            vccApiKey: data.vccApiKey
-                        })
-                            .catch(err => {
-                                this.error(`Failed to update settings`, err);
-                            });
+                // Verify the new account has access to the vehicle being repaired
+                const vehicle = vehicles.data.find(vehicle => vehicle.vin == device.getData().id);
+                if (vehicle) {
+                    this.log(`Found vehicle with id '${vehicle.vin}'`);
+                    device.storeCredentialsEncrypted(settings.username, settings.password);
+                    device.setToken(token);
 
-                        session.done();
-                    } else {
-                        self.error(msg);
-                        throw new Error(msg);
-                    }
-                })
-                .catch(reason => {
-                    self.error(reason);
-                    return Promise.reject(reason);
-                });
+                    await device.setSettings({
+                        vccApiKey: settings.vccApiKey
+                    })
+                        .catch(err => {
+                            this.error(`Failed to update settings`, err);
+                        });
 
+                    session.done();
+                }
+
+            } else {
+                // First time around, no OTP present
+                const response = await auth.authorize(settings.username, settings.password);
+                if (response.authState == config.authState.OTP_REQUIRED) {
+                    this.log('OTP email sent, check...');
+                    cookie = response.response.cookie;
+                    otpUrl = response.response.data._links.checkOtp.href;
+                    return config.authState.OTP_REQUIRED;
+                } else {
+                    throw new Error(`Auth state not implemented '${response.authState}'`);
+                }
+            }
         });
     }
 }

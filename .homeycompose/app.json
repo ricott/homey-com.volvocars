@@ -1,6 +1,6 @@
 {
     "id": "com.volvocars",
-    "version": "1.3.6",
+    "version": "1.3.7",
     "brandColor": "#1a3547",
     "compatibility": ">=12.0.1",
     "sdk": 3,
