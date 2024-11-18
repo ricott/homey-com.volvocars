@@ -1,4 +1,7 @@
 {
+    "1.3.8": {
+        "en": "Maintenance"
+    },
     "1.3.7": {
         "en": "Solved the unauthorized_client problem for the Connected Vehicle device type"
     },

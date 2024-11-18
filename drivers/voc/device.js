@@ -113,7 +113,7 @@ class VOCDevice extends Homey.Device {
     async removeCapabilityHelper(capability) {
         if (this.hasCapability(capability)) {
             try {
-                this.logMessage(`Remove existing capability '${capability}'`);
+                this.log(`Remove existing capability '${capability}'`);
                 await this.removeCapability(capability);
             } catch (reason) {
                 this.error(`Failed to removed capability '${capability}'`);
@@ -124,7 +124,7 @@ class VOCDevice extends Homey.Device {
     async addCapabilityHelper(capability) {
         if (!this.hasCapability(capability)) {
             try {
-                this.logMessage(`Adding missing capability '${capability}'`);
+                this.log(`Adding missing capability '${capability}'`);
                 await this.addCapability(capability);
             } catch (reason) {
                 this.error(`Failed to add capability '${capability}'`);
@@ -136,7 +136,7 @@ class VOCDevice extends Homey.Device {
     async updateCapabilityOptions(capability, options) {
         if (this.hasCapability(capability)) {
             try {
-                this.logMessage(`Updating capability options '${capability}'`);
+                this.log(`Updating capability options '${capability}'`);
                 await this.setCapabilityOptions(capability, options);
             } catch (reason) {
                 this.error(`Failed to update capability options for '${capability}'`);
