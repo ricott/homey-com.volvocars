@@ -14,11 +14,18 @@ const _LOCATION_ADDRESS = 'locationAddress';
 const _LAST_TRIGGER_LOCATION = 'lastTriggerLocation';
 const _RAW_DISTANCE_HOMEY = 'rawDistanceHomey';
 const _DOOR_STATE = 'doorState';
+const _DEVICE_CLASS = 'car';
 
 class ConnectedVehicleDevice extends Homey.Device {
 
     async onInit() {
         this.logMessage('Connected Vehicle device initiated');
+
+        // Change device class to car if not already
+        if (this.getClass() !== _DEVICE_CLASS) {
+            await this.setClass(_DEVICE_CLASS);
+        }
+
         this.pollIntervals = [];
         this.tokenManager = TokenManager;
         this._usernameSettingsKey = `cv.${this.getData().id}.username`;

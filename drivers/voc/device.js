@@ -6,10 +6,17 @@ const Osm = require('../../lib/maps.js');
 const crypto = require('crypto');
 const crypto_algorithm = 'aes-256-ctr';
 
+const _DEVICE_CLASS = 'car';
+
 class VOCDevice extends Homey.Device {
 
     async onInit() {
         this.log('VOC car initiated', this.getName());
+
+        // Change device class to car if not already
+        if (this.getClass() !== _DEVICE_CLASS) {
+            await this.setClass(_DEVICE_CLASS);
+        }
 
         await this.setupCapabilityListeners();
 
