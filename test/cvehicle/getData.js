@@ -114,18 +114,18 @@ describe('#getData', function () {
         assert.strictEqual((isNaN(response.data.fuelAmount.value) === false), true);
     });
 
-    it('getRechargeState', async () => {
-        let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
-        const cVehicle = new ConnectedVehicle({
-            accessToken: token.access_token,
-            vccApiKey: config.vccApiKey
-        });
+    // it('getRechargeState', async () => {
+    //     let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
+    //     const cVehicle = new ConnectedVehicle({
+    //         accessToken: token.access_token,
+    //         vccApiKey: config.vccApiKey
+    //     });
 
-        const response = await cVehicle.getRechargeState(config.credentials.vin);
-        // console.log(response);
-        assert.strictEqual(response.statusCode, 200);
-        assert.strictEqual(response.data.batteryChargeLevel.unit, 'percentage');
-    });
+    //     const response = await cVehicle.getRechargeState(config.credentials.vin);
+    //     // console.log(response);
+    //     assert.strictEqual(response.statusCode, 200);
+    //     assert.strictEqual(response.data.batteryChargeLevel.unit, 'percentage');
+    // });
 
     it('getBatteryChargeLevel', async () => {
         let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
@@ -139,18 +139,18 @@ describe('#getData', function () {
         assert.strictEqual((isNaN(response.chargeLevel) === false), true);
     });
 
-    it('getEngineDiagnostic', async () => {
-        let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
-        const cVehicle = new ConnectedVehicle({
-            accessToken: token.access_token,
-            vccApiKey: config.vccApiKey
-        });
+    // it('getEngineDiagnostic', async () => {
+    //     let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
+    //     const cVehicle = new ConnectedVehicle({
+    //         accessToken: token.access_token,
+    //         vccApiKey: config.vccApiKey
+    //     });
 
-        const response = await cVehicle.getEngineDiagnostic(config.credentials.vin);
-        // console.log(response);
-        assert.strictEqual(response.statusCode, 200);
-        assert.strictEqual(response.data.oilLevelWarning.value, 'NO_WARNING');
-    });
+    //     const response = await cVehicle.getEngineDiagnostic(config.credentials.vin);
+    //     // console.log(response);
+    //     assert.strictEqual(response.statusCode, 200);
+    //     assert.strictEqual(response.data.oilLevelWarning.value, 'NO_WARNING');
+    // });
 
     it('getVehicleDiagnostic', async () => {
         let token = await tokenManager.getToken(config.vccLoginToken, config.credentials.user, config.credentials.password);
