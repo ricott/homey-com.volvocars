@@ -1,4 +1,7 @@
 {
+    "1.4.0": {
+        "en": "Maintenance"
+    },
     "1.3.9": {
         "en": "Changed device type to car",
         "sv": "Ändrade enhetstyp till bil"

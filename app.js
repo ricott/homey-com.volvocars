@@ -6,6 +6,8 @@ class VOCApp extends App {
     async onInit() {
         this.log(`Volvo on Call v${this.getAppVersion()} is running`);
 
+        this.setupGlobalFetch();
+
         // Register common triggers
         this._car_left_home = this.homey.flow.getDeviceTriggerCard('car_left_home');
         this._car_came_home = this.homey.flow.getDeviceTriggerCard('car_came_home');
@@ -23,6 +25,21 @@ class VOCApp extends App {
         this._registerConditionFlows();
         this._registerVocOnlyActions();
         this._registerCVehicleOnlyActions();
+    }
+
+    setupGlobalFetch() {
+        if (!global.fetch) {
+            global.fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+        }
+        if (!global.AbortSignal.timeout) {
+            global.AbortSignal.timeout = timeout => {
+                const controller = new AbortController();
+                const abort = setTimeout(() => {
+                    controller.abort();
+                }, timeout);
+                return controller.signal;
+            }
+        }
     }
 
     getAppVersion() {
