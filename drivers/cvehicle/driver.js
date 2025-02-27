@@ -23,7 +23,7 @@ class ConnectedVehicleDriver extends Homey.Driver {
 
             if (settings.otp && otpUrl && cookie) {
                 // Second time around, OTP is filled out
-                token = await auth.verifyOtp(otpUrl, cookie, settings.otp);
+                token = await auth.verifyOtp(otpUrl, cookie, settings.otp, settings.username);
 
                 try {
                     session.nextView();
@@ -91,7 +91,7 @@ class ConnectedVehicleDriver extends Homey.Driver {
 
             if (settings.otp && otpUrl && cookie) {
                 // Second time around, OTP is filled out
-                token = await auth.verifyOtp(otpUrl, cookie, settings.otp);
+                token = await auth.verifyOtp(otpUrl, cookie, settings.otp, settings.username);
 
                 const cVehicle = new ConnectedVehicle({
                     accessToken: token.access_token,

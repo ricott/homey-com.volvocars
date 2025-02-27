@@ -14,8 +14,9 @@ const auth = new AuthHandler(testData.vccLoginToken);
         'PF.PERSISTENT=b9dxyjxeJGGlgpDpShTXsaR54; Path=/; Expires=Thu, 16-Jan-2025 12:30:44 GMT; Max-Age=7776000; Secure; HttpOnly; SameSite=None'
       ];
     const otp = '173781';
+    const username = 'test-user';
 
-    const response = await auth.verifyOtp(path, cookie, otp);
+    const response = await auth.verifyOtp(path, cookie, otp, username);
     console.log(response);
 
 })().catch(reason => {
