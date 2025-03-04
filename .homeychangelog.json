@@ -1,4 +1,7 @@
 {
+    "1.4.3": {
+        "en": "Deprecated the Volvo On Call device type. Volvo has closed down the inofficial API and the device is no longer functional."
+    },
     "1.4.2": {
         "en": "Maintenance"
     },

@@ -13,6 +13,9 @@ class VOCDevice extends Homey.Device {
     async onInit() {
         this.log('VOC car initiated', this.getName());
 
+        // Set warning about retired API
+        await this.setWarning('The inofficial Volvo On Call API has been retired. This device will no longer be able to communicate with your vehicle.');
+
         // Change device class to car if not already
         if (this.getClass() !== _DEVICE_CLASS) {
             await this.setClass(_DEVICE_CLASS);

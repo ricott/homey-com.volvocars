@@ -1,5 +1,6 @@
 {
     "class": "car",
+    "deprecated": true,
     "name": {
         "en": "Volvo On Call"
     },
