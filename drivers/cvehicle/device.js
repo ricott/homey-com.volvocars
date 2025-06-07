@@ -116,6 +116,7 @@ class ConnectedVehicleDevice extends Homey.Device {
             await this.removeCapabilityHelper('measure_battery');
             await this.removeCapabilityHelper('range_battery');
             await this.removeCapabilityHelper('charging_system_status');
+            await this.removeCapabilityHelper('ev_charging_state');
             // Make sure range is there
             await this.addCapabilityHelper('range');
 
@@ -327,6 +328,8 @@ class ConnectedVehicleDevice extends Homey.Device {
                             const chargingSystemStatus = String(chargingSystemState?.data?.chargingSystemStatus?.value || '').replace('CHARGING_SYSTEM_', '');
                             this._updateProperty('charging_system_status', chargingSystemStatus);
                             await this.updateTimestampSetting('chargingSystemTimestamp', chargingSystemState?.data?.chargingSystemStatus?.timestamp);
+
+                            this._updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus));
                         })
                         .catch(reason => {
                             this.error(`Failed to getChargingSystemStatus`, reason);
@@ -713,6 +716,22 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     formatValue(t) {
         return Math.round(t.toFixed(1) * 10) / 10
+    }
+
+    mapChargingSystemStatus(chargingSystemStatus) {
+        switch (chargingSystemStatus) {
+            case 'CHARGING':
+                return 'plugged_in_charging';
+            case 'IDLE':
+            case 'SCHEDULED':
+                return 'plugged_in';
+            // case 'DONE':
+            // case 'FAULT':
+            // case 'UNSPECIFIED':
+            //     return 'plugged_out';
+            default:
+                return 'plugged_out';
+        }
     }
 }
 module.exports = ConnectedVehicleDevice;
