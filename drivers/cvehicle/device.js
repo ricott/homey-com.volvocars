@@ -1,6 +1,6 @@
 'use strict';
 const Homey = require('homey');
-const ConnectedVehicle = require('../../lib/cVehicle.js');
+const ConnectedVehicle = require('../../lib/connectedVehicle.js');
 const TokenManager = require('../../lib/tokenManager');
 const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
@@ -125,12 +125,18 @@ class ConnectedVehicleDevice extends Homey.Device {
             await this.addCapabilityHelper('measure_battery');
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
+            await this.addCapabilityHelper('ev_charging_state');
+
+            await this.setEnergy({ electricCar: true });
 
         } else if (type == config.vehicleType.HYBRID) {
             await this.addCapabilityHelper('range');
             await this.addCapabilityHelper('measure_battery');
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
+            await this.addCapabilityHelper('ev_charging_state');
+
+            await this.setEnergy({ electricCar: true });
         }
     }
 

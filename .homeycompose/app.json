@@ -1,8 +1,8 @@
 {
     "id": "com.volvocars",
-    "version": "1.4.3",
+    "version": "1.4.4",
     "brandColor": "#1a3547",
-    "compatibility": ">=12.1.2",
+    "compatibility": ">=12.4.5",
     "sdk": 3,
     "name": {
         "en": "Volvo On Call"

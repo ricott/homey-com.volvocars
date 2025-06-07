@@ -18,7 +18,8 @@
         "range",
         "range_battery",
         "charging_system_status",
-        "measure_battery"
+        "measure_battery",
+        "ev_charging_state"
     ],
     "energy": {
         "batteries": [

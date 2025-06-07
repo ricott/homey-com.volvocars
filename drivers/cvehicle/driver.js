@@ -1,7 +1,7 @@
 'use strict';
 const Homey = require('homey');
 const AuthHandler = require('../../lib/auth.js');
-const ConnectedVehicle = require('../../lib/cVehicle.js');
+const ConnectedVehicle = require('../../lib/connectedVehicle.js');
 const config = require('../../lib/const.js');
 
 class ConnectedVehicleDriver extends Homey.Driver {

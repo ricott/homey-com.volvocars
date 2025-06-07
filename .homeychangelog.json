@@ -1,4 +1,7 @@
 {
+    "1.4.4": {
+        "en": "Removed the Volvo On Call device type. Volvo has closed down the inofficial API and the device is no longer functional. Added support for Homey Energy for electric cars."
+    },
     "1.4.3": {
         "en": "Deprecated the Volvo On Call device type. Volvo has closed down the inofficial API and the device is no longer functional."
     },
