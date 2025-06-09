@@ -37,13 +37,7 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
 
         // Force renewal of token, if a user restarts the app a new token should be generated
-        const token = await this.tokenManager.getToken(
-            Homey.env.VCC_LOGIN_TOKEN,
-            this.getUsername(),
-            this.getPassword(),
-            this.getToken()
-        );
-        this.setToken(token);
+        await this.refreshAccessToken();
 
         await this.setupCapabilityListeners();
         // Load static vehicle info
@@ -74,8 +68,12 @@ class ConnectedVehicleDevice extends Homey.Device {
         }, 60 * 1000 * Number(refreshPosition)));
 
         // Refresh access token, each 1 mins from tokenManager
-        this.pollIntervals.push(this.homey.setInterval(() => {
-            this.refreshAccessToken();
+        this.pollIntervals.push(this.homey.setInterval(async () => {
+            try {
+                await this.refreshAccessToken();
+            } catch (error) {
+                this.error(error);
+            }
         }, 60 * 1000 * 1));
     }
 
@@ -382,47 +380,57 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    refreshAccessToken() {
-        this.tokenManager.getToken(
-            Homey.env.VCC_LOGIN_TOKEN,
-            this.getUsername(),
-            this.getPassword(),
-            this.getToken()
-        )
-            .then(token => {
-                if (this.getToken().access_token != token.access_token) {
-                    this.logMessage('We have a new access token from TokenManager');
-                }
-                this.setToken(token);
-            }).catch(reason => {
-                this.error(reason);
-            });
+    async refreshAccessToken() {
+        try {
+            const token = await this.tokenManager.getToken(
+                Homey.env.VCC_LOGIN_TOKEN,
+                this.getUsername(),
+                this.getPassword(),
+                this.getToken(),
+                this
+            );
+            
+            if (this.getToken().access_token !== token.access_token) {
+                this.logMessage('We have a new access token from TokenManager');
+            }
+            
+            this.setToken(token);
+        } catch (error) {
+            this.error('Failed to refresh access token:', error);
+        }
     }
 
     createVolvoClient() {
-        let options = {
+        const options = {
             accessToken: this.getToken().access_token,
             vccApiKey: this.getSetting('vccApiKey'),
             device: this
         };
+        
         const cv = new ConnectedVehicle(options);
 
-        var self = this;
-        cv.on('error', (jsonError) => {
-            self.error(`[${self.getName()}] Houston we have a problem`, jsonError);
+        cv.on('error', async (jsonError) => {
+            this.error(`[${this.getName()}] Houston we have a problem`, jsonError);
+            
             let message = '';
             try {
-                message = JSON.stringify(jsonError, null, "  ");
-            } catch (e) {
-                self.log('Failed to stringify object', e);
-                // message = error.toString();
+                message = JSON.stringify(jsonError, null, 2);
+            } catch (error) {
+                this.log('Failed to stringify error object', error);
+                message = 'Error could not be serialized';
             }
 
-            const dateTime = new Date().toLocaleString('sv-se', { timeZone: this.homey.clock.getTimezone() });
-            self.setSettings({ last_error: dateTime + '\n' + message })
-                .catch(err => {
-                    self.error('Failed to update settings last_error', err);
+            const dateTime = new Date().toLocaleString('sv-se', { 
+                timeZone: this.homey.clock.getTimezone() 
+            });
+            
+            try {
+                await this.setSettings({ 
+                    last_error: `${dateTime}\n${message}` 
                 });
+            } catch (error) {
+                this.error('Failed to update settings last_error', error);
+            }
         });
 
         return cv;
@@ -538,127 +546,141 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     isAnyDoorOpen() {
         const doorState = this.getStoreValue(_DOOR_STATE);
-        if (doorState) {
-            if (doorState?.data?.frontLeftDoor?.value == 'OPEN' ||
-                doorState?.data?.frontRightDoor?.value == 'OPEN' ||
-                doorState?.data?.rearLeftDoor?.value == 'OPEN' ||
-                doorState?.data?.rearRightDoor?.value == 'OPEN' ||
-                doorState?.data?.tailgate?.value == 'OPEN' ||
-                doorState?.data?.hood?.value == 'OPEN') {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+        if (!doorState) {
             return false;
         }
+
+        const doorProperties = [
+            'frontLeftDoor',
+            'frontRightDoor', 
+            'rearLeftDoor',
+            'rearRightDoor',
+            'tailgate',
+            'hood'
+        ];
+
+        return doorProperties.some(door => 
+            doorState?.data?.[door]?.value === 'OPEN'
+        );
     }
 
     isDoorOpen(doorName) {
         const doorState = this.getStoreValue(_DOOR_STATE);
-        if (doorState) {
-            switch (doorName) {
-                case 'tailgateOpen':
-                    return doorState?.data?.tailgate?.value == 'OPEN';
-                case 'rearRightDoorOpen':
-                    return doorState?.data?.rearRightDoor?.value == 'OPEN';
-                case 'rearLeftDoorOpen':
-                    return doorState?.data?.rearLeftDoor?.value == 'OPEN';
-                case 'frontRightDoorOpen':
-                    return doorState?.data?.frontRightDoor?.value == 'OPEN';
-                case 'frontLeftDoorOpen':
-                    return doorState?.data?.frontLeftDoor?.value == 'OPEN';
-                case 'hoodOpen':
-                    return doorState?.data?.hood?.value == 'OPEN';
-                default:
-                    return false;
-            }
-        } else {
+        if (!doorState) {
             return false;
+        }
+
+        const doorMappings = {
+            'tailgateOpen': 'tailgate',
+            'rearRightDoorOpen': 'rearRightDoor',
+            'rearLeftDoorOpen': 'rearLeftDoor',
+            'frontRightDoorOpen': 'frontRightDoor',
+            'frontLeftDoorOpen': 'frontLeftDoor',
+            'hoodOpen': 'hood'
+        };
+
+        const doorProperty = doorMappings[doorName];
+        return doorProperty ? doorState?.data?.[doorProperty]?.value === 'OPEN' : false;
+    }
+
+    async _updateProperty(key, newValue) {
+        if (!this.hasCapability(key)) {
+            return;
+        }
+
+        const hasValueChanged = this.isCapabilityValueChanged(key, newValue);
+
+        try {
+            await this.setCapabilityValue(key, newValue);
+
+            if (hasValueChanged) {
+                await this._handlePropertyChangeEvents(key, newValue);
+            }
+        } catch (error) {
+            this.error(`Failed to update property ${key}:`, error);
         }
     }
 
-    _updateProperty(key, newValue) {
-        let self = this;
-        if (self.hasCapability(key)) {
-            if (self.isCapabilityValueChanged(key, newValue)) {
-                self.setCapabilityValue(key, newValue)
-                    .then(async () => {
-                        if (key === 'engine') {
-                            if (newValue) {
-                                await self.homey.app.triggerEngineStarted(self);
-                            } else {
-                                const tokens = {
-                                    average_fuel_consumption: 0 // self.car.status.averageFuelConsumption || 0
-                                }
-                                await self.homey.app.triggerEngineStopped(self, tokens);
-                            }
+    async _handlePropertyChangeEvents(key, newValue) {
+        const propertyHandlers = {
+            engine: () => this._handleEngineChange(newValue),
+            distance: () => this._handleDistanceChange(),
+            location_human: () => this._handleLocationChange(),
+            location_longitude: () => this._handleLocationChange(),
+            location_latitude: () => this._handleLocationChange(),
+            range: () => this._handleFuelRangeChange(newValue),
+            range_battery: () => this._handleBatteryRangeChange(newValue),
+            charging_system_status: () => this._handleChargingStatusChange(newValue)
+        };
 
-                        } else if (key === 'distance'
-                            && !self.isCarAtHome()
-                            && (!self.getStoreValue(_LAST_TRIGGER_LOCATION) || self.getStoreValue(_LAST_TRIGGER_LOCATION) == config.location.HOME)) {
-
-                            self.logMessage(`'${key}' changed. At home: '${self.isCarAtHome()}'. Last trigger location: '${self.getStoreValue(_LAST_TRIGGER_LOCATION)}'`);
-                            await self.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.AWAY).catch(reason => { self.error(reason); });
-                            await self.homey.app.triggerCarLeftHome(self);
-
-                        } else if (key === 'distance'
-                            && self.isCarAtHome()
-                            && (!self.getStoreValue(_LAST_TRIGGER_LOCATION) || self.getStoreValue(_LAST_TRIGGER_LOCATION) == config.location.AWAY)) {
-
-                            self.logMessage(`'${key}' changed. At home: '${self.isCarAtHome()}'. Last trigger location: '${self.getStoreValue(_LAST_TRIGGER_LOCATION)}'`);
-                            await self.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME).catch(reason => { self.error(reason); });
-                            await self.homey.app.triggerCarCameHome(self);
-
-                        } else if (['location_human', 'location_longitude', 'location_latitude'].includes(key)) {
-                            const location = self.getStoreValue(_LOCATION_ADDRESS);
-                            const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
-                            let longitude = 0, latitude = 0;
-                            if (Array.isArray(coordinatesArray) && coordinatesArray.length >= 2) {
-                                longitude = coordinatesArray[0];
-                                latitude = coordinatesArray[1];
-                            }
-                            const tokens = {
-                                car_location_address: location?.address || '',
-                                car_location_city: location?.city || '',
-                                car_location_postcode: location?.postcode || '',
-                                car_location_county: location?.county || '',
-                                car_location_country: location?.country || '',
-                                car_location_longitude: longitude,
-                                car_location_latitude: latitude
-                            }
-                            await self.homey.app.triggerLocationHumanChanged(self, tokens);
-
-                        } else if (key === 'range') {
-                            const tokens = {
-                                fuel_range: newValue
-                            }
-                            await self.homey.app.triggerFuelRangeChanged(self, tokens);
-
-                        } else if (key === 'battery_range') {
-                            const tokens = {
-                                battery_range: newValue
-                            }
-                            await self.homey.app.triggerBatteryRangeChanged(self, tokens);
-
-                        } else if (key === 'charging_system_status') {
-                            const tokens = {
-                                status: newValue
-                            }
-                            await self.homey.app.triggerChargeSystemStatusChanged(self, tokens);
-                        }
-
-                    }).catch(reason => {
-                        self.error(reason);
-                    });
-            } else {
-                self.setCapabilityValue(key, newValue)
-                    .catch(reason => {
-                        self.error(reason);
-                    });
-            }
-
+        const handler = propertyHandlers[key];
+        if (handler) {
+            await handler();
         }
+    }
+
+    async _handleEngineChange(isRunning) {
+        if (isRunning) {
+            await this.homey.app.triggerEngineStarted(this);
+        } else {
+            const tokens = {
+                average_fuel_consumption: 0
+            };
+            await this.homey.app.triggerEngineStopped(this, tokens);
+        }
+    }
+
+    async _handleDistanceChange() {
+        const isAtHome = this.isCarAtHome();
+        const lastTriggerLocation = this.getStoreValue(_LAST_TRIGGER_LOCATION);
+
+        if (!isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.HOME)) {
+            this.logMessage(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
+            await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.AWAY)
+                .catch(error => this.error(error));
+            await this.homey.app.triggerCarLeftHome(this);
+        } else if (isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.AWAY)) {
+            this.logMessage(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
+            await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME)
+                .catch(error => this.error(error));
+            await this.homey.app.triggerCarCameHome(this);
+        }
+    }
+
+    async _handleLocationChange() {
+        const location = this.getStoreValue(_LOCATION_ADDRESS);
+        const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
+
+        const [longitude = 0, latitude = 0] = Array.isArray(coordinatesArray) && coordinatesArray.length >= 2
+            ? coordinatesArray
+            : [0, 0];
+
+        const tokens = {
+            car_location_address: location?.address || '',
+            car_location_city: location?.city || '',
+            car_location_postcode: location?.postcode || '',
+            car_location_county: location?.county || '',
+            car_location_country: location?.country || '',
+            car_location_longitude: longitude,
+            car_location_latitude: latitude
+        };
+
+        await this.homey.app.triggerLocationHumanChanged(this, tokens);
+    }
+
+    async _handleFuelRangeChange(range) {
+        const tokens = { fuel_range: range };
+        await this.homey.app.triggerFuelRangeChanged(this, tokens);
+    }
+
+    async _handleBatteryRangeChange(range) {
+        const tokens = { battery_range: range };
+        await this.homey.app.triggerBatteryRangeChanged(this, tokens);
+    }
+
+    async _handleChargingStatusChange(status) {
+        const tokens = { status };
+        await this.homey.app.triggerChargeSystemStatusChanged(this, tokens);
     }
 
     isCapabilityValueChanged(key, newValue) {
@@ -710,12 +732,12 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     formatDistance(distance) {
-        if (distance < 1000) return this.formatValue(distance) + ' m'
-        return this.formatValue(distance / 1000) + ' km'
+        if (distance < 1000) return this.formatValue(distance) + ' m';
+        return this.formatValue(distance / 1000) + ' km';
     }
 
     formatValue(t) {
-        return Math.round(t.toFixed(1) * 10) / 10
+        return Math.round(t.toFixed(1) * 10) / 10;
     }
 
     mapChargingSystemStatus(chargingSystemStatus) {
