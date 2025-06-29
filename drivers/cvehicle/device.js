@@ -13,7 +13,6 @@ const _LOCATION_DATA = 'location';
 const _LOCATION_ADDRESS = 'locationAddress';
 const _LAST_TRIGGER_LOCATION = 'lastTriggerLocation';
 const _RAW_DISTANCE_HOMEY = 'rawDistanceHomey';
-const _DOOR_STATE = 'doorState';
 const _DEVICE_CLASS = 'car';
 
 class ConnectedVehicleDevice extends Homey.Device {
@@ -214,6 +213,7 @@ class ConnectedVehicleDevice extends Homey.Device {
         } else if (fuelType === 'ELECTRIC' || fuelType === 'NONE') {
             return config.vehicleType.ELECTRIC;
         }
+        // PETROL, DIESEL
         return config.vehicleType.ICE;
     }
 
@@ -223,8 +223,12 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
 
         try {
-            await client.getBatteryChargeLevel(this.getData().id);
-            return 'Yes';
+            const energyCapabilities = await client.getEnergyCapabilities(this.getData().id);
+            if (energyCapabilities?.getEnergyState?.isSupported == true) {
+                return 'Yes';
+            } else {
+                return 'No';
+            }
         } catch (error) {
             if (error.message?.includes('404')) {
                 return 'No';
@@ -327,19 +331,18 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async _refreshVehicleStatistics(client) {
         try {
-            const vehicleStats = await client.getVehicleStatistics(this.getData().id);
-
             // Handle energy information for hybrid and electric vehicles
             const type = this.getSetting('vehicleType');
             if ((type === config.vehicleType.HYBRID || type === config.vehicleType.ELECTRIC) &&
                 this.getSetting('supportsEnergyAPI') === 'Yes') {
 
-                await this._refreshBatteryInformation(client, vehicleStats);
-                await this._refreshChargingInformation(client);
+                await this._refreshEnergyInformation(client);
             }
 
             // Handle fuel range for hybrid and ICE vehicles
             if (type === config.vehicleType.HYBRID || type === config.vehicleType.ICE) {
+
+                const vehicleStats = await client.getVehicleStatistics(this.getData().id);
                 await this._updateProperty('range', vehicleStats?.data?.distanceToEmptyTank?.value || 0);
                 await this.updateTimestampSetting('rangeFuelTimestamp', vehicleStats?.data?.distanceToEmptyTank?.timestamp);
             }
@@ -348,30 +351,24 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _refreshBatteryInformation(client, vehicleStats) {
+    async _refreshEnergyInformation(client) {
         try {
-            const response = await client.getBatteryChargeLevel(this.getData().id);
-            await this._updateProperty('measure_battery', response.chargeLevel || 0);
-            await this.updateTimestampSetting('batteryTimestamp', response.timestamp);
+            const energyState = await client.getEnergyState(this.getData().id);
 
-            await this._updateProperty('range_battery', vehicleStats?.data?.distanceToEmptyBattery?.value || 0);
-            await this.updateTimestampSetting('rangeBatteryTimestamp', vehicleStats?.data?.distanceToEmptyBattery?.timestamp);
-        } catch (error) {
-            this.error('Failed to get battery charge level:', error);
-        }
-    }
+            await this._updateProperty('measure_battery', energyState?.batteryChargeLevel?.value || 0);
+            await this.updateTimestampSetting('batteryTimestamp', energyState?.batteryChargeLevel?.updatedAt);
 
-    async _refreshChargingInformation(client) {
-        try {
-            const chargingSystemState = await client.getChargingSystemStatus(this.getData().id);
-            const chargingSystemStatus = String(chargingSystemState?.data?.chargingSystemStatus?.value || '').replace('CHARGING_SYSTEM_', '');
+            await this._updateProperty('range_battery', energyState?.electricRange?.value || 0);
+            await this.updateTimestampSetting('rangeBatteryTimestamp', energyState?.electricRange?.updatedAt);
 
+            const chargingSystemStatus = energyState?.chargingStatus?.value;
             await this._updateProperty('charging_system_status', chargingSystemStatus);
-            await this.updateTimestampSetting('chargingSystemTimestamp', chargingSystemState?.data?.chargingSystemStatus?.timestamp);
+            await this.updateTimestampSetting('chargingSystemTimestamp', energyState?.chargingStatus?.updatedAt);
 
             await this._updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus));
+
         } catch (error) {
-            this.error('Failed to get charging system status:', error);
+            this.error('Failed to refresh energy information:', error);
         }
     }
 
@@ -379,14 +376,8 @@ class ConnectedVehicleDevice extends Homey.Device {
         try {
             const doorState = await client.getDoorState(this.getData().id);
             await this._updateProperty('locked', doorState?.data?.centralLock?.value === 'LOCKED');
-
-            try {
-                await this.setStoreValue(_DOOR_STATE, doorState);
-            } catch (error) {
-                this.error('Failed to store door state:', error);
-            }
-
             await this.updateTimestampSetting('lockTimestamp', doorState?.data?.centralLock?.timestamp);
+
         } catch (error) {
             this.error('Failed to get door state:', error);
         }
@@ -578,43 +569,77 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    isAnyDoorOpen() {
-        const doorState = this.getStoreValue(_DOOR_STATE);
-        if (!doorState) {
-            return false;
+    async isAnyWindowOpen() {
+        try {
+            const windowState = await this.createVolvoClient().getWindowState(this.getData().id);
+
+            const windowProperties = [
+                'frontLeftWindow',
+                'frontRightWindow',
+                'rearLeftWindow',
+                'rearRightWindow',
+                'sunroof'
+            ];
+
+            return windowProperties.some(window =>
+                windowState?.data?.[window]?.value === 'OPEN'
+            );
+
+        } catch (error) {
+            this.error('Failed to get window state:', error);
         }
-
-        const doorProperties = [
-            'frontLeftDoor',
-            'frontRightDoor',
-            'rearLeftDoor',
-            'rearRightDoor',
-            'tailgate',
-            'hood'
-        ];
-
-        return doorProperties.some(door =>
-            doorState?.data?.[door]?.value === 'OPEN'
-        );
     }
 
-    isDoorOpen(doorName) {
-        const doorState = this.getStoreValue(_DOOR_STATE);
-        if (!doorState) {
-            return false;
+    async isWindowOpen(windowName) {
+        try {
+            const windowState = await this.createVolvoClient().getWindowState(this.getData().id);
+            return windowState?.data?.[windowName]?.value === 'OPEN';
+
+        } catch (error) {
+            this.error('Failed to get window state:', error);
         }
+    }
 
-        const doorMappings = {
-            'tailgateOpen': 'tailgate',
-            'rearRightDoorOpen': 'rearRightDoor',
-            'rearLeftDoorOpen': 'rearLeftDoor',
-            'frontRightDoorOpen': 'frontRightDoor',
-            'frontLeftDoorOpen': 'frontLeftDoor',
-            'hoodOpen': 'hood'
-        };
+    async isAnyDoorOpen() {
+        try {
+            const doorState = await this.createVolvoClient().getDoorState(this.getData().id);
 
-        const doorProperty = doorMappings[doorName];
-        return doorProperty ? doorState?.data?.[doorProperty]?.value === 'OPEN' : false;
+            const doorProperties = [
+                'frontLeftDoor',
+                'frontRightDoor',
+                'rearLeftDoor',
+                'rearRightDoor',
+                'tailgate',
+                'hood'
+            ];
+
+            return doorProperties.some(door =>
+                doorState?.data?.[door]?.value === 'OPEN'
+            );
+        } catch (error) {
+            this.error('Failed to get door state:', error);
+        }
+    }
+
+    async isDoorOpen(doorName) {
+        try {
+            const doorState = await this.createVolvoClient().getDoorState(this.getData().id);
+
+            const doorMappings = {
+                'tailgateOpen': 'tailgate',
+                'rearRightDoorOpen': 'rearRightDoor',
+                'rearLeftDoorOpen': 'rearLeftDoor',
+                'frontRightDoorOpen': 'frontRightDoor',
+                'frontLeftDoorOpen': 'frontLeftDoor',
+                'hoodOpen': 'hood'
+            };
+
+            const doorProperty = doorMappings[doorName];
+            return doorProperty ? doorState?.data?.[doorProperty]?.value === 'OPEN' : false;
+
+        } catch (error) {
+            this.error('Failed to get door state:', error);
+        }
     }
 
     async _updateProperty(key, newValue) {
@@ -781,9 +806,10 @@ class ConnectedVehicleDevice extends Homey.Device {
             case 'IDLE':
             case 'SCHEDULED':
                 return 'plugged_in';
+            case 'DISCHARGING':
+                return 'plugged_in_discharging';
+            // case 'ERROR':
             // case 'DONE':
-            // case 'FAULT':
-            // case 'UNSPECIFIED':
             //     return 'plugged_out';
             default:
                 return 'plugged_out';

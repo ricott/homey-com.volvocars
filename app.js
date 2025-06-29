@@ -175,7 +175,7 @@ class VOCApp extends App {
         const anyDoorOpen = this.homey.flow.getConditionCard('anyDoorOpen');
         anyDoorOpen.registerRunListener(async (args, state) => {
             this.log('Flow condition.anyDoorOpen');
-            const anyDoorOpen = args.device.isAnyDoorOpen();
+            const anyDoorOpen = await args.device.isAnyDoorOpen();
             this.log(`- car.anyDoorOpen: ${anyDoorOpen}`);
             return anyDoorOpen;
         });
@@ -184,9 +184,26 @@ class VOCApp extends App {
         doorOpen.registerRunListener(async (args, state) => {
             this.log('Flow condition.doorOpen');
             this.log(`- args.door: '${args.door}'`);
-            const doorOpen = args.device.isDoorOpen(args.door);
+            const doorOpen = await args.device.isDoorOpen(args.door);
             this.log(`- doorOpen: ${doorOpen}`);
             return doorOpen;
+        });
+
+        const anyWindowOpen = this.homey.flow.getConditionCard('anyWindowOpen');
+        anyWindowOpen.registerRunListener(async (args, state) => {
+            this.log('Flow condition.anyWindowOpen');
+            const anyWindowOpen = await args.device.isAnyWindowOpen();
+            this.log(`- car.anyWindowOpen: ${anyWindowOpen}`);
+            return anyWindowOpen;
+        });
+
+        const windowOpen = this.homey.flow.getConditionCard('windowOpen');
+        windowOpen.registerRunListener(async (args, state) => {
+            this.log('Flow condition.windowOpen');
+            this.log(`- args.window: '${args.window}'`);
+            const windowOpen = await args.device.isWindowOpen(args.window);
+            this.log(`- windowOpen: ${windowOpen}`);
+            return windowOpen;
         });
 
         const chargeSystemStatus = this.homey.flow.getConditionCard('chargeSystemStatus');

@@ -1,7 +1,7 @@
 {
-    "id": "anyDoorOpen",
+    "id": "anyWindowOpen",
     "title": {
-        "en": "Any door is !{{|not}} open"
+        "en": "Any window is !{{|not}} open"
     },
     "args": [
         {

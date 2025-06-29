@@ -1,0 +1,55 @@
+{
+    "id": "windowOpen",
+    "title": {
+        "en": "Window is !{{|not}} open"
+    },
+    "titleFormatted": {
+        "en": "The [[window]] is !{{|not}} open"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        },
+        {
+            "name": "window",
+            "type": "dropdown",
+            "title": {
+                "en": "Window"
+            },
+            "values": [
+                {
+                    "id": "frontLeftWindow",
+                    "label": {
+                        "en": "Front left window"
+                    }
+                },
+                {
+                    "id": "frontRightWindow",
+                    "label": {
+                        "en": "Front right window"
+                    }
+                },
+                {
+                    "id": "rearLeftWindow",
+                    "label": {
+                        "en": "Rear left window"
+                    }
+                },
+                {
+                    "id": "rearRightWindow",
+                    "label": {
+                        "en": "Rear right window"
+                    }
+                },
+                {
+                    "id": "sunroof",
+                    "label": {
+                        "en": "Sunroof"
+                    }
+                }
+            ]
+        }
+    ]
+}

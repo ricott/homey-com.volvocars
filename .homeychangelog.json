@@ -1,4 +1,7 @@
 {
+    "1.4.7": {
+        "en": "Added support for window open conditions"
+    },
     "1.4.6": {
         "en": "Removed the Volvo On Call device type. Volvo has closed down the inofficial API and the device is no longer functional. Added support for Homey Energy for electric cars."
     },
