@@ -28,7 +28,8 @@
     },
     "pair": [
         {
-            "id": "settings"
+            "id": "login_oauth2",
+            "template": "login_oauth2"
         },
         {
             "id": "list_devices",
@@ -44,7 +45,8 @@
     ],
     "repair": [
         {
-            "id": "settings"
+            "id": "login_oauth2",
+            "template": "login_oauth2"
         }
     ]
 }

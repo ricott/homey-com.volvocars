@@ -1,43 +1,27 @@
 'use strict';
-const Homey = require('homey');
-const ConnectedVehicle = require('../../lib/connectedVehicle.js');
-const TokenManager = require('../../lib/tokenManager');
+
+const { OAuth2Device } = require('homey-oauth2app');
 const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
-const crypto = require('crypto');
-const algorithm = 'aes-256-ctr';
 
 const _AVAILABLE_COMMANDS_KEY = 'availableCommands';
-const _TOKEN_KEY = 'token';
 const _LOCATION_DATA = 'location';
 const _LOCATION_ADDRESS = 'locationAddress';
 const _LAST_TRIGGER_LOCATION = 'lastTriggerLocation';
 const _RAW_DISTANCE_HOMEY = 'rawDistanceHomey';
 const _DEVICE_CLASS = 'car';
 
-class ConnectedVehicleDevice extends Homey.Device {
+class ConnectedVehicleDevice extends OAuth2Device {
 
     #pollIntervals = [];
 
-    async onInit() {
-        this.logMessage('Connected Vehicle device initiated');
+    async onOAuth2Init() {
+        this.log('Connected Vehicle device OAuth2 initiated');
 
         // Change device class to car if not already
         if (this.getClass() !== _DEVICE_CLASS) {
             await this.setClass(_DEVICE_CLASS);
         }
-
-        this.tokenManager = TokenManager;
-        this._usernameSettingsKey = `cv.${this.getData().id}.username`;
-        this._passwordSettingsKey = `cv.${this.getData().id}.password`;
-
-        if (!this.homey.settings.get(this._usernameSettingsKey)) {
-            // This is a newly added device, lets copy login details to homey settings
-            await this.storeCredentialsEncrypted(this.getStoreValue('username'), this.getStoreValue('password'));
-        }
-
-        // Force renewal of token, if a user restarts the app a new token should be generated
-        await this.refreshAccessToken();
 
         await this.setupCapabilityListeners();
         // Load static vehicle info
@@ -50,14 +34,14 @@ class ConnectedVehicleDevice extends Homey.Device {
         await this.refreshInformation();
         await this.refreshLocation();
         // Start all times that refreshes data
-        this._initilializeTimers(
+        this.#initilializeTimers(
             this.getSetting('refresh_status_cloud'),
             this.getSetting('refresh_position')
         );
     }
 
-    _initilializeTimers(refreshStatusCloud, refreshPosition) {
-        this.logMessage(`Creating timers (${refreshStatusCloud}/${refreshPosition})`);
+    #initilializeTimers(refreshStatusCloud, refreshPosition) {
+        this.log(`Creating timers (${refreshStatusCloud}/${refreshPosition})`);
 
         this.#pollIntervals.push(this.homey.setInterval(async () => {
             await this.refreshInformation();
@@ -66,18 +50,9 @@ class ConnectedVehicleDevice extends Homey.Device {
         this.#pollIntervals.push(this.homey.setInterval(async () => {
             await this.refreshLocation();
         }, 60 * 1000 * Number(refreshPosition)));
-
-        // Refresh access token, each 1 mins from tokenManager
-        this.#pollIntervals.push(this.homey.setInterval(async () => {
-            try {
-                await this.refreshAccessToken();
-            } catch (error) {
-                this.error(error);
-            }
-        }, 60 * 1000 * 1));
     }
 
-    _deleteTimers() {
+    #deleteTimers() {
         // Kill interval object(s)
         this.log('Removing timers');
         this.#pollIntervals.forEach(timer => {
@@ -85,18 +60,18 @@ class ConnectedVehicleDevice extends Homey.Device {
         });
     }
 
-    _reinitializeTimers(refreshStatusCloud, refreshPosition) {
-        this._deleteTimers();
-        this._initilializeTimers(refreshStatusCloud, refreshPosition);
+    #reinitializeTimers(refreshStatusCloud, refreshPosition) {
+        this.#deleteTimers();
+        this.#initilializeTimers(refreshStatusCloud, refreshPosition);
     }
 
     async setupCapabilityListeners() {
         this.registerCapabilityListener('locked', async (lock) => {
             try {
                 if (lock) {
-                    await this.createVolvoClient().lock(this.getData().id);
+                    await this.oAuth2Client.lock(this.getData().id);
                 } else {
-                    await this.createVolvoClient().unlock(this.getData().id);
+                    await this.oAuth2Client.unlock(this.getData().id);
                 }
             } catch (error) {
                 this.error(error);
@@ -106,10 +81,10 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     async setupCapabilities() {
-        this.logMessage('Setting up capabilities');
+        this.log('Setting up capabilities');
         const type = this.getSetting('vehicleType');
 
-        this.logMessage(`${type} car, checking that we have correct capabilities defined ...`);
+        this.log(`${type} car, checking that we have correct capabilities defined ...`);
         if (type == config.vehicleType.ICE) {
             await this.removeCapabilityHelper('measure_battery');
             await this.removeCapabilityHelper('range_battery');
@@ -154,11 +129,10 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     async updateAvailableCommands() {
-        this.logMessage('Fetching available commands');
-        const client = this.createVolvoClient();
+        this.log('Fetching available commands');
 
         try {
-            const commands = await client.listAvailableCommands(this.getData().id);
+            const commands = await this.oAuth2Client.listAvailableCommands(this.getData().id);
 
             // Map commands to our format (no need for async here)
             let availComm = commands.data.map(command => ({
@@ -186,28 +160,25 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     async updateVehicleSettings() {
-        const client = this.createVolvoClient();
 
         try {
-            const vehicleInfo = await client.getVehicleInfo(this.getData().id);
-            const vehicleType = this._determineVehicleType(vehicleInfo.data.fuelType);
-            const supportsEnergyAPI = await this._checkEnergyAPISupport(client, vehicleType);
+            const vehicleInfo = await this.oAuth2Client.getVehicleInfo(this.getData().id);
+            const vehicleType = this.#determineVehicleType(vehicleInfo.data.fuelType);
 
             await this.setSettings({
                 model: `${vehicleInfo.data.descriptions.model} / ${vehicleInfo.data.modelYear}`,
                 fuelType: vehicleInfo.data.fuelType,
-                vehicleType: vehicleType,
-                supportsEnergyAPI: supportsEnergyAPI
+                vehicleType: vehicleType
             });
 
-            this.logMessage(`Vehicle settings updated - Type: ${vehicleType}, Energy API: ${supportsEnergyAPI}`);
+            this.log(`Vehicle settings updated - Type: ${vehicleType}`);
         } catch (error) {
             this.error('Failed to update vehicle settings:', error);
             throw error;
         }
     }
 
-    _determineVehicleType(fuelType) {
+    #determineVehicleType(fuelType) {
         if (fuelType === 'PETROL/ELECTRIC') {
             return config.vehicleType.HYBRID;
         } else if (fuelType === 'ELECTRIC' || fuelType === 'NONE') {
@@ -217,44 +188,39 @@ class ConnectedVehicleDevice extends Homey.Device {
         return config.vehicleType.ICE;
     }
 
-    async _checkEnergyAPISupport(client, vehicleType) {
-        if (vehicleType !== config.vehicleType.HYBRID && vehicleType !== config.vehicleType.ELECTRIC) {
-            return 'No';
-        }
-
-        try {
-            const energyCapabilities = await client.getEnergyCapabilities(this.getData().id);
-            if (energyCapabilities?.getEnergyState?.isSupported == true) {
-                return 'Yes';
-            } else {
-                return 'No';
-            }
-        } catch (error) {
-            if (error.message?.includes('404')) {
-                return 'No';
-            }
-            throw error;
-        }
-    }
-
     async refreshLocation() {
-        const client = this.createVolvoClient();
-        const oldCoordinates = this.getStoreValue(_LOCATION_DATA) || [0, 0];
-        const [oldLongitude = 0, oldLatitude = 0] = oldCoordinates;
+        this.log('=== Starting refreshLocation ===');
+        const oldCoordinates = this.getStoreValue(_LOCATION_DATA);
+        const isFirstRun = !oldCoordinates; // No stored location data yet
+        const [oldLongitude = 0, oldLatitude = 0] = oldCoordinates || [0, 0];
+
+        this.log(`Old coordinates: [${oldLongitude}, ${oldLatitude}], isFirstRun: ${isFirstRun}`);
 
         try {
-            const locationResponse = await client.getVehicleLocation(this.getData().id);
+            const locationResponse = await this.oAuth2Client.getVehicleLocation(this.getData().id);
             const newCoordinates = locationResponse?.data?.geometry?.coordinates || [0, 0];
+            this.log('Raw API response coordinates:', newCoordinates);
 
             if (!Array.isArray(newCoordinates) || newCoordinates.length < 2) {
                 throw new Error('Invalid coordinates received from API');
             }
 
             const [newLongitude = 0, newLatitude = 0] = newCoordinates;
+            this.log(`New coordinates: [${newLongitude}, ${newLatitude}]`);
 
-            // Only update if location has changed significantly
-            if (this._hasLocationChanged(oldLatitude, oldLongitude, newLatitude, newLongitude)) {
-                await this._updateLocationData(newCoordinates, newLatitude, newLongitude);
+            // Check if critical location capabilities are missing/null
+            const hasDistance = this.getCapabilityValue('distance') !== null;
+            const hasLocationHuman = this.getCapabilityValue('location_human') !== null;
+            const needsInitialSetup = !hasDistance || !hasLocationHuman;
+
+            // Update if this is the first run OR if location has changed significantly OR if capabilities need setup
+            const shouldUpdate = isFirstRun || needsInitialSetup || this.#hasLocationChanged(oldLatitude, oldLongitude, newLatitude, newLongitude);
+            this.log(`Should update location data: ${shouldUpdate} (firstRun:${isFirstRun}, needsSetup:${needsInitialSetup}, locationChanged:${!isFirstRun && !needsInitialSetup})`);
+
+            if (shouldUpdate) {
+                await this.#updateLocationData(newCoordinates, newLatitude, newLongitude);
+            } else {
+                this.log('Location unchanged and capabilities already set, skipping update');
             }
 
             // Always update timestamp
@@ -262,37 +228,48 @@ class ConnectedVehicleDevice extends Homey.Device {
         } catch (error) {
             this.error('Failed to refresh vehicle location:', error);
         }
+        this.log('=== Finished refreshLocation ===');
     }
 
-    _hasLocationChanged(oldLat, oldLong, newLat, newLong) {
-        return oldLat.toFixed(5) !== newLat.toFixed(5) ||
-            oldLong.toFixed(5) !== newLong.toFixed(5);
+    #hasLocationChanged(oldLat, oldLong, newLat, newLong) {
+        const oldLatFixed = oldLat.toFixed(5);
+        const oldLongFixed = oldLong.toFixed(5);
+        const newLatFixed = newLat.toFixed(5);
+        const newLongFixed = newLong.toFixed(5);
+
+        const hasChanged = oldLatFixed !== newLatFixed || oldLongFixed !== newLongFixed;
+        this.log(`Location change check: [${oldLatFixed}, ${oldLongFixed}] vs [${newLatFixed}, ${newLongFixed}] = ${hasChanged}`);
+
+        return hasChanged;
     }
 
-    async _updateLocationData(coordinates, latitude, longitude) {
-        this.logMessage('Updating location data');
+    async #updateLocationData(coordinates, latitude, longitude) {
+        this.log(`=== Updating location data for coordinates: [${coordinates[0]}, ${coordinates[1]}] ===`);
 
         try {
             // Store raw coordinates
             await this.setStoreValue(_LOCATION_DATA, coordinates);
+            this.log('Stored raw coordinates in store');
 
             // Update device properties
-            await this._updateProperty('location_longitude', longitude);
-            await this._updateProperty('location_latitude', latitude);
+            await this.#updateProperty('location_longitude', longitude);
+            await this.#updateProperty('location_latitude', latitude);
 
             // Calculate and store distance to Homey
-            const distanceHomey = await this._calculateDistanceToHomey(latitude, longitude);
-            await this._updateDistanceProperties(distanceHomey);
+            const distanceHomey = await this.#calculateDistanceToHomey(latitude, longitude);
+            this.log(`Calculated distance to Homey: ${distanceHomey}`);
+            await this.#updateDistanceProperties(distanceHomey);
 
             // Get and store human-readable location
-            await this._updateHumanReadableLocation(latitude, longitude);
+            await this.#updateHumanReadableLocation(latitude, longitude);
         } catch (error) {
             this.error('Failed to update location data:', error);
             throw error;
         }
+        this.log('=== Finished updating location data ===');
     }
 
-    async _calculateDistanceToHomey(latitude, longitude) {
+    async #calculateDistanceToHomey(latitude, longitude) {
         const distance = Osm.calculateDistance(
             latitude,
             longitude,
@@ -304,17 +281,21 @@ class ConnectedVehicleDevice extends Homey.Device {
         return distance;
     }
 
-    async _updateDistanceProperties(distanceHomey) {
+    async #updateDistanceProperties(distanceHomey) {
         const formattedDistance = this.formatDistance(distanceHomey < 1 ? 0 : distanceHomey);
-        await this._updateProperty('distance', formattedDistance);
+        this.log(`Distance: raw=${distanceHomey}, formatted="${formattedDistance}"`);
+        await this.#updateProperty('distance', formattedDistance);
     }
 
-    async _updateHumanReadableLocation(latitude, longitude) {
+    async #updateHumanReadableLocation(latitude, longitude) {
+        this.log(`Getting human-readable location for [${latitude}, ${longitude}]`);
         try {
             const osm_location = await Osm.geocodeLatLng(latitude, longitude);
+            this.log('OSM geocoding result:', osm_location);
             const locationString = `${osm_location.address}, ${osm_location.city}`;
+            this.log(`Human-readable location: "${locationString}"`);
 
-            await this._updateProperty('location_human', locationString);
+            await this.#updateProperty('location_human', locationString);
             await this.setStoreValue(_LOCATION_ADDRESS, osm_location);
         } catch (error) {
             this.error('Failed to update human readable location:', error);
@@ -322,28 +303,25 @@ class ConnectedVehicleDevice extends Homey.Device {
     }
 
     async refreshInformation() {
-        const client = this.createVolvoClient();
 
-        await this._refreshVehicleStatistics(client);
-        await this._refreshDoorState(client);
-        await this._refreshEngineState(client);
+        await this.#refreshVehicleStatistics();
+        await this.#refreshDoorState();
+        await this.#refreshEngineState();
     }
 
-    async _refreshVehicleStatistics(client) {
+    async #refreshVehicleStatistics() {
         try {
+            const vehicleStats = await this.oAuth2Client.getVehicleStatistics(this.getData().id);
+
             // Handle energy information for hybrid and electric vehicles
             const type = this.getSetting('vehicleType');
-            if ((type === config.vehicleType.HYBRID || type === config.vehicleType.ELECTRIC) &&
-                this.getSetting('supportsEnergyAPI') === 'Yes') {
-
-                await this._refreshEnergyInformation(client);
+            if (type === config.vehicleType.HYBRID || type === config.vehicleType.ELECTRIC) {
+                await this.#refreshEnergyInformation(vehicleStats);
             }
 
             // Handle fuel range for hybrid and ICE vehicles
             if (type === config.vehicleType.HYBRID || type === config.vehicleType.ICE) {
-
-                const vehicleStats = await client.getVehicleStatistics(this.getData().id);
-                await this._updateProperty('range', vehicleStats?.data?.distanceToEmptyTank?.value || 0);
+                await this.#updateProperty('range', vehicleStats?.data?.distanceToEmptyTank?.value || 0);
                 await this.updateTimestampSetting('rangeFuelTimestamp', vehicleStats?.data?.distanceToEmptyTank?.timestamp);
             }
         } catch (error) {
@@ -351,31 +329,46 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _refreshEnergyInformation(client) {
+    async #refreshEnergyInformation(vehicleStats) {
         try {
-            const energyState = await client.getEnergyState(this.getData().id);
+            const energyState = await this.oAuth2Client.getEnergyState(this.getData().id);
+            // this.log('Energy state:', energyState);
 
-            await this._updateProperty('measure_battery', energyState?.batteryChargeLevel?.value || 0);
-            await this.updateTimestampSetting('batteryTimestamp', energyState?.batteryChargeLevel?.updatedAt);
+            if (energyState?.batteryChargeLevel?.status === 'OK') {
+                await this.#updateProperty('measure_battery', energyState?.batteryChargeLevel?.value || 0);
+                await this.updateTimestampSetting('batteryTimestamp', energyState?.batteryChargeLevel?.updatedAt);
+            } else {
+                const feulState = await this.oAuth2Client.getFuelBatteryState(this.getData().id);
+                await this.#updateProperty('measure_battery', feulState?.data?.batteryChargeLevel?.value || 0);
+                await this.updateTimestampSetting('batteryTimestamp', feulState?.data?.batteryChargeLevel?.timestamp);
+            }
 
-            await this._updateProperty('range_battery', energyState?.electricRange?.value || 0);
-            await this.updateTimestampSetting('rangeBatteryTimestamp', energyState?.electricRange?.updatedAt);
+            if (energyState?.electricRange?.status === 'OK') {
+                await this.#updateProperty('range_battery', energyState?.electricRange?.value || 0);
+                await this.updateTimestampSetting('rangeBatteryTimestamp', energyState?.electricRange?.updatedAt);
+            } else {
+                await this.#updateProperty('range_battery', vehicleStats?.data?.distanceToEmptyBattery?.value || 0);
+                await this.updateTimestampSetting('rangeBatteryTimestamp', vehicleStats?.data?.distanceToEmptyBattery?.timestamp);
+            }
 
-            const chargingSystemStatus = energyState?.chargingStatus?.value;
-            await this._updateProperty('charging_system_status', chargingSystemStatus);
-            await this.updateTimestampSetting('chargingSystemTimestamp', energyState?.chargingStatus?.updatedAt);
-
-            await this._updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus));
+            if (energyState?.chargingStatus?.status === 'OK') {
+                const chargingSystemStatus = energyState?.chargingStatus?.value;
+                await this.#updateProperty('charging_system_status', chargingSystemStatus);
+                await this.updateTimestampSetting('chargingSystemTimestamp', energyState?.chargingStatus?.updatedAt);
+                await this.#updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus));
+            } else {
+                this.log('Charging status not supported');
+            }
 
         } catch (error) {
             this.error('Failed to refresh energy information:', error);
         }
     }
 
-    async _refreshDoorState(client) {
+    async #refreshDoorState() {
         try {
-            const doorState = await client.getDoorState(this.getData().id);
-            await this._updateProperty('locked', doorState?.data?.centralLock?.value === 'LOCKED');
+            const doorState = await this.oAuth2Client.getDoorState(this.getData().id);
+            await this.#updateProperty('locked', doorState?.data?.centralLock?.value === 'LOCKED');
             await this.updateTimestampSetting('lockTimestamp', doorState?.data?.centralLock?.timestamp);
 
         } catch (error) {
@@ -383,10 +376,10 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _refreshEngineState(client) {
+    async #refreshEngineState() {
         try {
-            const engineState = await client.getEngineState(this.getData().id);
-            await this._updateProperty('engine', engineState?.data?.engineStatus?.value === 'RUNNING');
+            const engineState = await this.oAuth2Client.getEngineState(this.getData().id);
+            await this.#updateProperty('engine', engineState?.data?.engineStatus?.value === 'RUNNING');
             await this.updateTimestampSetting('engineTimestamp', engineState?.data?.engineStatus?.timestamp);
         } catch (error) {
             this.error('Failed to get engine state:', error);
@@ -404,117 +397,10 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async refreshAccessToken() {
-        try {
-            const token = await this.tokenManager.getToken(
-                Homey.env.VCC_LOGIN_TOKEN,
-                this.getUsername(),
-                this.getPassword(),
-                this.getToken(),
-                this
-            );
-
-            if (this.getToken().access_token !== token.access_token) {
-                this.logMessage('We have a new access token from TokenManager');
-            }
-
-            await this.setToken(token);
-        } catch (error) {
-            this.error('Failed to refresh access token:', error);
-        }
-    }
-
-    createVolvoClient() {
-        const options = {
-            accessToken: this.getToken().access_token,
-            vccApiKey: this.getSetting('vccApiKey'),
-            device: this
-        };
-
-        const cv = new ConnectedVehicle(options);
-
-        cv.on('error', async (jsonError) => {
-            this.error(`[${this.getName()}] Houston we have a problem`, jsonError);
-
-            let message = '';
-            try {
-                message = JSON.stringify(jsonError, null, 2);
-            } catch (error) {
-                this.log('Failed to stringify error object', error);
-                message = 'Error could not be serialized';
-            }
-
-            const dateTime = new Date().toLocaleString('sv-se', {
-                timeZone: this.homey.clock.getTimezone()
-            });
-
-            try {
-                await this.setSettings({
-                    last_error: `${dateTime}\n${message}`
-                });
-            } catch (error) {
-                this.error('Failed to update settings last_error', error);
-            }
-        });
-
-        return cv;
-    }
-
-    getToken() {
-        return this.getStoreValue(_TOKEN_KEY);
-    }
-
-    async setToken(token) {
-        try {
-            await this.setStoreValue(_TOKEN_KEY, token);
-        } catch (error) {
-            this.error('Failed to set token', error);
-        }
-    }
-
-    async storeCredentialsEncrypted(plainUser, plainPassword) {
-        this.logMessage(`Storing encrypted credentials for user '${plainUser}'`);
-        await this.homey.settings.set(this._usernameSettingsKey, this.encryptText(plainUser));
-        await this.homey.settings.set(this._passwordSettingsKey, this.encryptText(plainPassword));
-
-        // Remove unencrypted credentials passed from driver
-        await this.unsetStoreValue('username');
-        await this.unsetStoreValue('password');
-    }
-
-    getUsername() {
-        return this.decryptText(this.homey.settings.get(this._usernameSettingsKey));
-    }
-
-    getPassword() {
-        return this.decryptText(this.homey.settings.get(this._passwordSettingsKey));
-    }
-
-    encryptText(text) {
-        let iv = crypto.randomBytes(16);
-        let cipher = crypto.createCipheriv(algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
-        let encrypted = cipher.update(text);
-        encrypted = Buffer.concat([encrypted, cipher.final()]);
-        return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
-    }
-
-    decryptText(text) {
-        let iv = Buffer.from(text.iv, 'hex');
-        let encryptedText = Buffer.from(text.encryptedData, 'hex');
-        let decipher = crypto.createDecipheriv(algorithm, Buffer.from(Homey.env.ENCRYPTION_KEY), iv);
-        let decrypted = decipher.update(encryptedText);
-        decrypted = Buffer.concat([decrypted, decipher.final()]);
-        return decrypted.toString();
-    }
-
-    logMessage(message) {
-        this.log(`[${this.getName()}] ${message}`);
-    }
-
     async removeCapabilityHelper(capability) {
         if (this.hasCapability(capability)) {
             try {
-                this.logMessage(`Remove existing capability '${capability}'`);
+                this.log(`Remove existing capability '${capability}'`);
                 await this.removeCapability(capability);
             } catch (reason) {
                 this.error(`Failed to removed capability '${capability}'`);
@@ -525,7 +411,7 @@ class ConnectedVehicleDevice extends Homey.Device {
     async addCapabilityHelper(capability) {
         if (!this.hasCapability(capability)) {
             try {
-                this.logMessage(`Adding missing capability '${capability}'`);
+                this.log(`Adding missing capability '${capability}'`);
                 await this.addCapability(capability);
             } catch (reason) {
                 this.error(`Failed to add capability '${capability}'`);
@@ -537,7 +423,7 @@ class ConnectedVehicleDevice extends Homey.Device {
     async updateCapabilityOptions(capability, options) {
         if (this.hasCapability(capability)) {
             try {
-                this.logMessage(`Updating capability options '${capability}'`);
+                this.log(`Updating capability options '${capability}'`);
                 await this.setCapabilityOptions(capability, options);
             } catch (reason) {
                 this.error(`Failed to update capability options for '${capability}'`);
@@ -550,7 +436,7 @@ class ConnectedVehicleDevice extends Homey.Device {
         let options = {};
         if (this.hasCapability(capability)) {
             try {
-                //this.logMessage(`Trying to fetch capability options for '${capability}'`);
+                //this.log(`Trying to fetch capability options for '${capability}'`);
                 options = this.getCapabilityOptions(capability);
             } catch (reason) {
                 this.error(`Failed to fetch capability options for '${capability}', even if it exists!!!`);
@@ -571,7 +457,7 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async isAnyWindowOpen() {
         try {
-            const windowState = await this.createVolvoClient().getWindowState(this.getData().id);
+            const windowState = await this.oAuth2Client.getWindowState(this.getData().id);
 
             const windowProperties = [
                 'frontLeftWindow',
@@ -592,7 +478,7 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async isWindowOpen(windowName) {
         try {
-            const windowState = await this.createVolvoClient().getWindowState(this.getData().id);
+            const windowState = await this.oAuth2Client.getWindowState(this.getData().id);
             return windowState?.data?.[windowName]?.value === 'OPEN';
 
         } catch (error) {
@@ -602,7 +488,7 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async isAnyDoorOpen() {
         try {
-            const doorState = await this.createVolvoClient().getDoorState(this.getData().id);
+            const doorState = await this.oAuth2Client.getDoorState(this.getData().id);
 
             const doorProperties = [
                 'frontLeftDoor',
@@ -623,7 +509,7 @@ class ConnectedVehicleDevice extends Homey.Device {
 
     async isDoorOpen(doorName) {
         try {
-            const doorState = await this.createVolvoClient().getDoorState(this.getData().id);
+            const doorState = await this.oAuth2Client.getDoorState(this.getData().id);
 
             const doorMappings = {
                 'tailgateOpen': 'tailgate',
@@ -642,34 +528,42 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _updateProperty(key, newValue) {
-        if (!this.hasCapability(key)) {
+    async #updateProperty(key, newValue) {
+        const hasCapability = this.hasCapability(key);
+        this.log(`Updating property ${key}: hasCapability=${hasCapability}, newValue=`, newValue);
+
+        if (!hasCapability) {
+            this.log(`Device missing capability: ${key}`);
             return;
         }
 
+        const oldValue = this.getCapabilityValue(key);
         const hasValueChanged = this.isCapabilityValueChanged(key, newValue);
+        this.log(`Property ${key}: oldValue=${oldValue}, newValue=${newValue}, hasChanged=${hasValueChanged}`);
 
         try {
             await this.setCapabilityValue(key, newValue);
+            this.log(`Successfully set capability ${key} to:`, newValue);
 
             if (hasValueChanged) {
-                await this._handlePropertyChangeEvents(key, newValue);
+                this.log(`Triggering change events for ${key}`);
+                await this.#handlePropertyChangeEvents(key, newValue);
             }
         } catch (error) {
             this.error(`Failed to update property ${key}:`, error);
         }
     }
 
-    async _handlePropertyChangeEvents(key, newValue) {
+    async #handlePropertyChangeEvents(key, newValue) {
         const propertyHandlers = {
-            engine: () => this._handleEngineChange(newValue),
-            distance: () => this._handleDistanceChange(),
-            location_human: () => this._handleLocationChange(),
-            location_longitude: () => this._handleLocationChange(),
-            location_latitude: () => this._handleLocationChange(),
-            range: () => this._handleFuelRangeChange(newValue),
-            range_battery: () => this._handleBatteryRangeChange(newValue),
-            charging_system_status: () => this._handleChargingStatusChange(newValue)
+            engine: () => this.#handleEngineChange(newValue),
+            distance: () => this.#handleDistanceChange(),
+            location_human: () => this.#handleLocationChange(),
+            location_longitude: () => this.#handleLocationChange(),
+            location_latitude: () => this.#handleLocationChange(),
+            range: () => this.#handleFuelRangeChange(newValue),
+            range_battery: () => this.#handleBatteryRangeChange(newValue),
+            charging_system_status: () => this.#handleChargingStatusChange(newValue)
         };
 
         const handler = propertyHandlers[key];
@@ -678,7 +572,7 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _handleEngineChange(isRunning) {
+    async #handleEngineChange(isRunning) {
         if (isRunning) {
             await this.homey.app.triggerEngineStarted(this);
         } else {
@@ -689,24 +583,24 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    async _handleDistanceChange() {
+    async #handleDistanceChange() {
         const isAtHome = this.isCarAtHome();
         const lastTriggerLocation = this.getStoreValue(_LAST_TRIGGER_LOCATION);
 
         if (!isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.HOME)) {
-            this.logMessage(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
+            this.log(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
             await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.AWAY)
                 .catch(error => this.error(error));
             await this.homey.app.triggerCarLeftHome(this);
         } else if (isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.AWAY)) {
-            this.logMessage(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
+            this.log(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
             await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME)
                 .catch(error => this.error(error));
             await this.homey.app.triggerCarCameHome(this);
         }
     }
 
-    async _handleLocationChange() {
+    async #handleLocationChange() {
         const location = this.getStoreValue(_LOCATION_ADDRESS);
         const coordinatesArray = this.getStoreValue(_LOCATION_DATA);
 
@@ -727,17 +621,17 @@ class ConnectedVehicleDevice extends Homey.Device {
         await this.homey.app.triggerLocationHumanChanged(this, tokens);
     }
 
-    async _handleFuelRangeChange(range) {
+    async #handleFuelRangeChange(range) {
         const tokens = { fuel_range: range };
         await this.homey.app.triggerFuelRangeChanged(this, tokens);
     }
 
-    async _handleBatteryRangeChange(range) {
+    async #handleBatteryRangeChange(range) {
         const tokens = { battery_range: range };
         await this.homey.app.triggerBatteryRangeChanged(this, tokens);
     }
 
-    async _handleChargingStatusChange(status) {
+    async #handleChargingStatusChange(status) {
         const tokens = { status };
         await this.homey.app.triggerChargeSystemStatusChanged(this, tokens);
     }
@@ -752,12 +646,9 @@ class ConnectedVehicleDevice extends Homey.Device {
         }
     }
 
-    onDeleted() {
-        this.logMessage(`Deleting cVehicle device from Homey`);
-        this._deleteTimers();
-
-        this.homey.settings.unset(this._usernameSettingsKey);
-        this.homey.settings.unset(this._passwordSettingsKey);
+    onOAuth2Deleted() {
+        this.log(`Deleting cVehicle device from Homey`);
+        this.#deleteTimers();
     }
 
     async onSettings({ oldSettings, newSettings, changedKeys }) {
@@ -780,13 +671,9 @@ class ConnectedVehicleDevice extends Homey.Device {
             this.log('Proximity home value was change to:', newSettings.proximity_home);
         }
 
-        if (changedKeys.indexOf("vccApiKey") > -1) {
-            this.log('VCC API key value was change to:', newSettings.vccApiKey);
-        }
-
         if (change) {
             //We also need to re-initialize the timer
-            this._reinitializeTimers(refresh_status_cloud, refresh_position);
+            this.#reinitializeTimers(refresh_status_cloud, refresh_position);
         }
     }
 
@@ -803,17 +690,18 @@ class ConnectedVehicleDevice extends Homey.Device {
         switch (chargingSystemStatus) {
             case 'CHARGING':
                 return 'plugged_in_charging';
+            case 'DONE':
             case 'IDLE':
             case 'SCHEDULED':
                 return 'plugged_in';
             case 'DISCHARGING':
                 return 'plugged_in_discharging';
             // case 'ERROR':
-            // case 'DONE':
             //     return 'plugged_out';
             default:
                 return 'plugged_out';
         }
     }
 }
+
 module.exports = ConnectedVehicleDevice;

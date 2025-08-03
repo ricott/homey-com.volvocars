@@ -6,14 +6,6 @@
         },
         "children": [
             {
-                "id": "vccApiKey",
-                "type": "text",
-                "label": {
-                    "en": "VCC API key"
-                },
-                "value": ""
-            },
-            {
                 "id": "refresh_status_cloud",
                 "type": "number",
                 "label": {
@@ -81,7 +73,31 @@
                 "label": {
                     "en": "Supports Energy API"
                 },
-                "value": "Yes"
+                "value": "No"
+            },
+            {
+                "id": "supportsEnergyAPI_battery",
+                "type": "label",
+                "label": {
+                    "en": "Supports Energy API battery"
+                },
+                "value": "No"
+            },
+            {
+                "id": "supportsEnergyAPI_range",
+                "type": "label",
+                "label": {
+                    "en": "Supports Energy API range"
+                },
+                "value": "No"
+            },
+            {
+                "id": "supportsEnergyAPI_status",
+                "type": "label",
+                "label": {
+                    "en": "Supports Energy API status"
+                },
+                "value": "No"
             }
         ]
     },

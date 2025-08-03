@@ -1,9 +1,17 @@
 'use strict';
-const { App } = require('homey');
+// const { App } = require('homey');
+const { OAuth2App } = require('homey-oauth2app');
+const VolvoOAuth2Client = require('./lib/VolvoOAuth2Client.js');
 const { chargingSystemStatus, commands } = require('./lib/const');
 
-class VOCApp extends App {
-    async onInit() {
+class VOCApp extends OAuth2App {
+
+    static OAUTH2_CLIENT = VolvoOAuth2Client; // Default: OAuth2Client
+    // static OAUTH2_DEBUG = true; // Default: false
+
+    async onOAuth2Init() {
+        // Do App logic here
+
         this.log(`Volvo on Call v${this.#getAppVersion()} is running`);
 
         this.#setupGlobalFetch();
@@ -22,6 +30,10 @@ class VOCApp extends App {
         this.#registerActions();
     }
 
+    #getAppVersion() {
+        return this.homey.manifest.version;
+    }
+
     #setupGlobalFetch() {
         if (!global.fetch) {
             global.fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -35,10 +47,6 @@ class VOCApp extends App {
                 return controller.signal;
             }
         }
-    }
-
-    #getAppVersion() {
-        return this.homey.manifest.version;
     }
 
     getChargingSystemStates() {
