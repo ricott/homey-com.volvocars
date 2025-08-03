@@ -2,8 +2,6 @@ Get notified if you accidentally leave a door or window open. Lock the car if yo
 Blink lights and honk the horn of your car if it is parked at home and you want to raise awareness for an event such as a fire or security alarm. 
 Verify battery level and start charging (if supported) your car if needed.
 
-The new Connected Vehicle device type supports Android auto based cars, model year 2022 and later. To add this device type you need to register at the Volvo developer portal and get hold of a VCC API key.
-
 [1] Please note that the delay for these events is dependent on how frequently your car pushes updates to the Volvo Cloud.
 
 For more information about the app and the possibility of getting support please visit the forum link in the section below.
