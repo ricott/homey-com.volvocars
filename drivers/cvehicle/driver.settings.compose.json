@@ -66,38 +66,6 @@
                     "en": "Vehicle type"
                 },
                 "value": ""
-            },
-            {
-                "id": "supportsEnergyAPI",
-                "type": "label",
-                "label": {
-                    "en": "Supports Energy API"
-                },
-                "value": "No"
-            },
-            {
-                "id": "supportsEnergyAPI_battery",
-                "type": "label",
-                "label": {
-                    "en": "Supports Energy API battery"
-                },
-                "value": "No"
-            },
-            {
-                "id": "supportsEnergyAPI_range",
-                "type": "label",
-                "label": {
-                    "en": "Supports Energy API range"
-                },
-                "value": "No"
-            },
-            {
-                "id": "supportsEnergyAPI_status",
-                "type": "label",
-                "label": {
-                    "en": "Supports Energy API status"
-                },
-                "value": "No"
             }
         ]
     },
@@ -181,14 +149,6 @@
                 },
                 "hint": {
                     "en": "When the Volvo API last got an update from the vehicle for this object"
-                },
-                "value": ""
-            },
-            {
-                "id": "last_error",
-                "type": "textarea",
-                "label": {
-                    "en": "Most recent API Error"
                 },
                 "value": ""
             }
