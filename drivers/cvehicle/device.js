@@ -353,9 +353,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
             if (energyState?.chargingStatus?.status === 'OK') {
                 const chargingSystemStatus = energyState?.chargingStatus?.value;
+                const chargerConnectionStatus = energyState?.chargerConnectionStatus?.value;
                 await this.#updateProperty('charging_system_status', chargingSystemStatus);
                 await this.updateTimestampSetting('chargingSystemTimestamp', energyState?.chargingStatus?.updatedAt);
-                await this.#updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus));
+                await this.#updateProperty('ev_charging_state', this.mapChargingSystemStatus(chargingSystemStatus, chargerConnectionStatus));
             } else {
                 this.log('Charging status not supported');
             }
@@ -686,18 +687,26 @@ class ConnectedVehicleDevice extends OAuth2Device {
         return Math.round(t.toFixed(1) * 10) / 10;
     }
 
-    mapChargingSystemStatus(chargingSystemStatus) {
+    mapChargingSystemStatus(chargingSystemStatus, chargerConnectionStatus) {
+        this.log(`Mapping charging system status: ${chargingSystemStatus}, ${chargerConnectionStatus}`);
+
+        // We need to check chargerConnectionStatus since chargingSystemStatus
+        // says IDLE even when the car is not connected to the charger
+        if (chargerConnectionStatus === 'DISCONNECTED') {
+            return 'plugged_out';
+        }
+
         switch (chargingSystemStatus) {
             case 'CHARGING':
                 return 'plugged_in_charging';
-            case 'DONE':
             case 'IDLE':
+            case 'DONE':
             case 'SCHEDULED':
                 return 'plugged_in';
             case 'DISCHARGING':
                 return 'plugged_in_discharging';
-            // case 'ERROR':
-            //     return 'plugged_out';
+            case 'ERROR':
+                return 'plugged_out';
             default:
                 return 'plugged_out';
         }
