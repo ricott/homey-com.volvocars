@@ -140,12 +140,6 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 name: command.command
             }));
 
-            // Remove engine start and stop - the oauth scope is not allowed
-            availComm = availComm.filter(comm =>
-                comm.name !== config.commands.ENGINE_START &&
-                comm.name !== config.commands.ENGINE_STOP
-            );
-
             // Sort commands alphabetically
             availComm.sort((a, b) => a.name.localeCompare(b.name));
 

@@ -114,7 +114,7 @@ class VOCApp extends OAuth2App {
             this.log(`[${deviceName}] Action 'executeCommand' triggered`);
             this.log(`[${deviceName}] Command name: '${commandName}'`);
 
-            const client = args.device.createVolvoClient();
+            const client = args.device.oAuth2Client;
             const deviceId = args.device.getData().id;
 
             // Command mapping for cleaner code
@@ -127,9 +127,8 @@ class VOCApp extends OAuth2App {
                 [commands.LOCK]: () => client.lock(deviceId),
                 [commands.LOCK_REDUCED_GUARD]: () => client.lockReducedGuard(deviceId),
                 [commands.UNLOCK]: () => client.unlock(deviceId),
-                // Commented out commands for future implementation
-                // [commands.ENGINE_START]: () => client.startEngine(deviceId),
-                // [commands.ENGINE_STOP]: () => client.stopEngine(deviceId),
+                [commands.ENGINE_START]: () => client.startEngine(deviceId),
+                [commands.ENGINE_STOP]: () => client.stopEngine(deviceId),
             };
 
             const handler = commandHandlers[commandName];
