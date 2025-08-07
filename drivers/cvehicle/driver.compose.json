@@ -22,9 +22,6 @@
         "ev_charging_state"
     ],
     "energy": {
-        "batteries": [
-            "INTERNAL"
-        ]
     },
     "pair": [
         {

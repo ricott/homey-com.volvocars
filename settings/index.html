@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volvo On Call Settings</title>
+    <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1a3547;
+            margin-bottom: 30px;
+            font-size: 24px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        input[type="password"]:focus {
+            border-color: #1a3547;
+            outline: none;
+        }
+        
+        .hint {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        button, #save {
+            background-color: #007bff !important;
+            color: white !important;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover, #save:hover {
+            background-color: #0056b3 !important;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .info h3 {
+            margin: 0 0 10px 0;
+            color: #0056b3;
+            font-size: 16px;
+        }
+        
+        .info p {
+            margin: 0;
+            font-size: 14px;
+            color: #004085;
+        }
+        
+        .info a {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Volvo On Call Settings</h1>
+        
+        <div class="info">
+            <h3>🔑 VCC API Key Required</h3>
+            <p>To use this app, you need a VCC (Volvo Connected Cars) API key. Get one from the <a href="https://developer.volvocars.com/" target="_blank">Volvo Developer Portal</a>.</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="vcc_api_key">VCC API Key:</label>
+            <input type="password" id="vcc_api_key" placeholder="Enter your VCC API key">
+            <div class="hint">This key is required to connect to Volvo's Connected Cars API.</div>
+        </div>
+        
+        <button id="save">Save settings</button>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // Required function for Homey settings pages
+        function onHomeyReady(Homey) {
+            // Tell Homey we're ready to be displayed
+            Homey.ready();
+
+            // Load existing setting
+            Homey.get('vcc_api_key', function(err, value) {
+                if (err) return Homey.alert(err);
+                if (value) {
+                    document.getElementById('vcc_api_key').value = value;
+                }
+            });
+            
+            // Setup save button listener
+            document.getElementById('save').addEventListener('click', function() {
+                const apiKey = document.getElementById('vcc_api_key').value.trim();
+                const saveButton = document.getElementById('save');
+                const status = document.getElementById('status');
+                
+                if (!apiKey) {
+                    showStatus('Please enter a VCC API key', 'error');
+                    return;
+                }
+                
+                saveButton.disabled = true;
+                saveButton.textContent = 'Saving...';
+                
+                Homey.set('vcc_api_key', apiKey, function(err) {
+                    saveButton.disabled = false;
+                    saveButton.textContent = 'Save Settings';
+                    
+                    if (err) {
+                        Homey.alert(err);
+                        showStatus('Failed to save settings. Please try again.', 'error');
+                    } else {
+                        showStatus('Settings saved successfully!', 'success');
+                        setTimeout(() => hideStatus(), 3000);
+                    }
+                });
+            });
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        function hideStatus() {
+            document.getElementById('status').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

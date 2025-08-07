@@ -1,4 +1,7 @@
 {
+    "1.4.8": {
+        "en": "Authentication refactored to use Volvo's official OAuth2 API"
+    },
     "1.4.7": {
         "en": "Added support for window open conditions"
     },

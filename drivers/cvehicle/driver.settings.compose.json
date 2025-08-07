@@ -6,6 +6,17 @@
         },
         "children": [
             {
+                "id": "vccApiKey",
+                "type": "text",
+                "label": {
+                    "en": "VCC API key"
+                },
+                "value": "",
+                "hint": {
+                    "en": "Visit https://developer.volvocars.com to get your VCC API key"
+                }
+            },
+            {
                 "id": "refresh_status_cloud",
                 "type": "number",
                 "label": {
