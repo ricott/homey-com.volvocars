@@ -534,7 +534,11 @@
         "measure_battery",
         "ev_charging_state"
       ],
-      "energy": {},
+      "energy": {
+        "batteries": [
+          "INTERNAL"
+        ]
+      },
       "pair": [
         {
           "id": "login_oauth2",
