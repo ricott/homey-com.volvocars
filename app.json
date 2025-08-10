@@ -576,10 +576,7 @@
               "label": {
                 "en": "VCC API key"
               },
-              "value": "",
-              "hint": {
-                "en": "Visit https://developer.volvocars.com to get your VCC API key"
-              }
+              "value": ""
             },
             {
               "id": "refresh_status_cloud",
@@ -589,7 +586,10 @@
               },
               "value": 5,
               "min": 1,
-              "max": 1440
+              "max": 1440,
+              "hint": {
+                "en": "How frequently the status from the Volvo On Call cloud is updated in your Homey."
+              }
             },
             {
               "id": "refresh_position",
@@ -599,7 +599,10 @@
               },
               "value": 5,
               "min": 1,
-              "max": 1440
+              "max": 1440,
+              "hint": {
+                "en": "How frequently the location from the Volvo On Call cloud is updated in your Homey."
+              }
             },
             {
               "id": "proximity_home",
@@ -609,7 +612,10 @@
               },
               "value": 50,
               "min": 1,
-              "max": 10000
+              "max": 10000,
+              "hint": {
+                "en": "The distance from your home in meters. If the vehicle is within this distance, the car is at home."
+              }
             }
           ]
         },
