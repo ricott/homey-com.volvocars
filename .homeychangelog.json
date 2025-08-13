@@ -1,4 +1,7 @@
 {
+    "1.4.9": {
+        "en": "Fixed bug with engine start command"
+    },
     "1.4.8": {
         "en": "Authentication refactored to use Volvo's official OAuth2 API"
     },
