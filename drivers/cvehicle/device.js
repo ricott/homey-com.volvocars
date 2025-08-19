@@ -249,13 +249,14 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.#updateProperty('location_longitude', longitude);
             await this.#updateProperty('location_latitude', latitude);
 
+            // Get and store human-readable location
+            await this.#updateHumanReadableLocation(latitude, longitude);
+
             // Calculate and store distance to Homey
             const distanceHomey = await this.#calculateDistanceToHomey(latitude, longitude);
             this.log(`Calculated distance to Homey: ${distanceHomey}`);
             await this.#updateDistanceProperties(distanceHomey);
 
-            // Get and store human-readable location
-            await this.#updateHumanReadableLocation(latitude, longitude);
         } catch (error) {
             this.error('Failed to update location data:', error);
             throw error;
@@ -289,8 +290,9 @@ class ConnectedVehicleDevice extends OAuth2Device {
             const locationString = `${osm_location.address}, ${osm_location.city}`;
             this.log(`Human-readable location: "${locationString}"`);
 
-            await this.#updateProperty('location_human', locationString);
+            // Store human-readable location before triggering the event
             await this.setStoreValue(_LOCATION_ADDRESS, osm_location);
+            await this.#updateProperty('location_human', locationString);
         } catch (error) {
             this.error('Failed to update human readable location:', error);
         }
@@ -554,8 +556,6 @@ class ConnectedVehicleDevice extends OAuth2Device {
             engine: () => this.#handleEngineChange(newValue),
             distance: () => this.#handleDistanceChange(),
             location_human: () => this.#handleLocationChange(),
-            location_longitude: () => this.#handleLocationChange(),
-            location_latitude: () => this.#handleLocationChange(),
             range: () => this.#handleFuelRangeChange(newValue),
             range_battery: () => this.#handleBatteryRangeChange(newValue),
             charging_system_status: () => this.#handleChargingStatusChange(newValue)
@@ -581,14 +581,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
     async #handleDistanceChange() {
         const isAtHome = this.isCarAtHome();
         const lastTriggerLocation = this.getStoreValue(_LAST_TRIGGER_LOCATION);
+        this.log(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
 
         if (!isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.HOME)) {
-            this.log(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
             await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.AWAY)
                 .catch(error => this.error(error));
             await this.homey.app.triggerCarLeftHome(this);
         } else if (isAtHome && (!lastTriggerLocation || lastTriggerLocation === config.location.AWAY)) {
-            this.log(`Distance changed. At home: ${isAtHome}. Last trigger location: ${lastTriggerLocation}`);
             await this.setStoreValue(_LAST_TRIGGER_LOCATION, config.location.HOME)
                 .catch(error => this.error(error));
             await this.homey.app.triggerCarCameHome(this);

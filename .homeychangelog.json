@@ -1,4 +1,7 @@
 {
+    "1.5.0": {
+        "en": "Fixed bug with location change trigger"
+    },
     "1.4.9": {
         "en": "Fixed bug with engine start command"
     },
