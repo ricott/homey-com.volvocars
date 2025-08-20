@@ -18,10 +18,12 @@ class ConnectedVehicleDevice extends OAuth2Device {
     async onOAuth2Init() {
         this.log('Connected Vehicle device OAuth2 initiated');
 
-        // Change device class to car if not already
-        if (this.getClass() !== _DEVICE_CLASS) {
-            await this.setClass(_DEVICE_CLASS);
+        if (!this.getAvailable()) {
+            this.log('Device is not available, presumable a repair triggered this. Making device available again');
+            await this.setAvailable();
         }
+
+        await this.#upgradeDevice();
 
         await this.setupCapabilityListeners();
         // Load static vehicle info
@@ -33,11 +35,19 @@ class ConnectedVehicleDevice extends OAuth2Device {
         // Refresh values immediately
         await this.refreshInformation();
         await this.refreshLocation();
-        // Start all times that refreshes data
-        this.#initilializeTimers(
+        // Start all timers that refreshes data
+        this.#reinitializeTimers(
             this.getSetting('refresh_status_cloud'),
             this.getSetting('refresh_position')
         );
+    }
+
+    async #upgradeDevice() {
+        this.log('Upgrading device');
+        // Change device class to car if not already
+        if (this.getClass() !== _DEVICE_CLASS) {
+            await this.setClass(_DEVICE_CLASS);
+        }
     }
 
     #initilializeTimers(refreshStatusCloud, refreshPosition) {

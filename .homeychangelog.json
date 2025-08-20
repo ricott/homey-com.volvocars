@@ -1,4 +1,7 @@
 {
+    "1.5.1": {
+        "en": "Fixed bug with device not being available after repair"
+    },
     "1.5.0": {
         "en": "Fixed bug with location change trigger"
     },
