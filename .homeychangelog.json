@@ -1,4 +1,7 @@
 {
+    "1.5.2": {
+        "en": "Fixed bug with average fuel consumption missing in engine stopped trigger"
+    },
     "1.5.1": {
         "en": "Fixed bug with device not being available after repair"
     },

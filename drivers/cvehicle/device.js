@@ -330,6 +330,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 await this.#updateProperty('range', vehicleStats?.data?.distanceToEmptyTank?.value || 0);
                 await this.updateTimestampSetting('rangeFuelTimestamp', vehicleStats?.data?.distanceToEmptyTank?.timestamp);
             }
+
+            // To be used in the triggerEngineStopped event
+            await this.setStoreValue('averageFuelConsumption', vehicleStats?.data?.averageFuelConsumption?.value || 0);
+
         } catch (error) {
             this.error('Failed to get vehicle statistics:', error);
         }
@@ -582,7 +586,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.homey.app.triggerEngineStarted(this);
         } else {
             const tokens = {
-                average_fuel_consumption: 0
+                average_fuel_consumption: this.getStoreValue('averageFuelConsumption') || 0
             };
             await this.homey.app.triggerEngineStopped(this, tokens);
         }
