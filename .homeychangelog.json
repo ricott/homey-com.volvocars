@@ -1,5 +1,5 @@
 {
-    "1.5.2": {
+    "1.5.3": {
         "en": "Fixed bug with average fuel consumption missing in engine stopped trigger"
     },
     "1.5.1": {

@@ -10,6 +10,7 @@ const _LOCATION_ADDRESS = 'locationAddress';
 const _LAST_TRIGGER_LOCATION = 'lastTriggerLocation';
 const _RAW_DISTANCE_HOMEY = 'rawDistanceHomey';
 const _DEVICE_CLASS = 'car';
+const _AVERAGE_CONSUMPTION = 'averageConsumption';
 
 class ConnectedVehicleDevice extends OAuth2Device {
 
@@ -332,7 +333,11 @@ class ConnectedVehicleDevice extends OAuth2Device {
             }
 
             // To be used in the triggerEngineStopped event
-            await this.setStoreValue('averageFuelConsumption', vehicleStats?.data?.averageFuelConsumption?.value || 0);
+            if (type === config.vehicleType.ELECTRIC) {
+                await this.setStoreValue(_AVERAGE_CONSUMPTION, vehicleStats?.data?.averageEnergyConsumptionAutomatic?.value || 0);
+            } else {
+                await this.setStoreValue(_AVERAGE_CONSUMPTION, vehicleStats?.data?.averageFuelConsumption?.value || 0);
+            }
 
         } catch (error) {
             this.error('Failed to get vehicle statistics:', error);
@@ -585,8 +590,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
         if (isRunning) {
             await this.homey.app.triggerEngineStarted(this);
         } else {
+            const averageConsumptionRaw = Number(this.getStoreValue(_AVERAGE_CONSUMPTION)) || 0;
+            const averageConsumption = Math.round((averageConsumptionRaw + Number.EPSILON) * 100) / 100;
             const tokens = {
-                average_fuel_consumption: this.getStoreValue('averageFuelConsumption') || 0
+                average_fuel_consumption: averageConsumption
             };
             await this.homey.app.triggerEngineStopped(this, tokens);
         }

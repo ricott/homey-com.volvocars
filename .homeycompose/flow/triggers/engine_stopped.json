@@ -15,10 +15,10 @@
             "name": "average_fuel_consumption",
             "type": "number",
             "title": {
-                "en": "Average fuel consumption"
+                "en": "Average fuel (litres) or energy (kWh) consumption per 100 km"
             },
             "example": {
-                "en": "28"
+                "en": "19.30"
             }
         }
     ]
