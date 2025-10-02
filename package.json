@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/ricott/homey-com.volvocars#readme",
   "devDependencies": {
-    "mocha": "^11.7.1"
+    "mocha": "^11.7.2"
   }
 }

@@ -24,23 +24,109 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.setAvailable();
         }
 
-        await this.#upgradeDevice();
+        try {
+            await this.#upgradeDevice();
+            await this.setupCapabilityListeners();
+            
+            // Initialize device with retry logic for critical operations
+            await this.#initializeDeviceWithRetry();
+            
+        } catch (error) {
+            this.error('Failed to initialize device:', error);
+            
+            // Check if this is a token-related error that requires re-authorization
+            if (error.message && error.message.includes('refresh token')) {
+                this.error('Token refresh failed - device needs re-authorization');
+                await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                return;
+            }
+            
+            // Don't make device unavailable immediately for other errors - try to recover
+            this.log('Attempting to recover from initialization failure...');
+            
+            // Start timers even if some initialization failed
+            this.#reinitializeTimers(
+                this.getSetting('refresh_status_cloud'),
+                this.getSetting('refresh_position')
+            );
+            
+            // Schedule a retry in 5 minutes
+            this.homey.setTimeout(async () => {
+                this.log('Retrying device initialization after failure...');
+                try {
+                    await this.#initializeDeviceWithRetry();
+                    this.log('Device initialization retry successful');
+                } catch (retryError) {
+                    this.error('Device initialization retry failed:', retryError);
+                    
+                    // Check again if it's a token error
+                    if (retryError.message && retryError.message.includes('refresh token')) {
+                        await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                    } else {
+                        await this.setUnavailable('Failed to initialize device. Please repair the device.');
+                    }
+                }
+            }, 5 * 60 * 1000); // 5 minutes
+        }
+    }
 
-        await this.setupCapabilityListeners();
-        // Load static vehicle info
-        await this.updateVehicleSettings();
-        // Make sure the device has the right capabilities
-        await this.setupCapabilities();
-        // Get the list of commands available for this vehicle
-        await this.updateAvailableCommands();
-        // Refresh values immediately
-        await this.refreshInformation();
-        await this.refreshLocation();
-        // Start all timers that refreshes data
+    async #initializeDeviceWithRetry() {
+        const operations = [
+            { name: 'updateVehicleSettings', fn: () => this.updateVehicleSettings(), critical: true },
+            { name: 'setupCapabilities', fn: () => this.setupCapabilities(), critical: true },
+            { name: 'updateAvailableCommands', fn: () => this.updateAvailableCommands(), critical: false },
+            { name: 'refreshInformation', fn: () => this.refreshInformation(), critical: false },
+            { name: 'refreshLocation', fn: () => this.refreshLocation(), critical: false }
+        ];
+
+        let criticalFailures = 0;
+
+        for (const operation of operations) {
+            try {
+                await this.#retryOperation(operation.fn, operation.name);
+            } catch (error) {
+                this.error(`Failed to ${operation.name}:`, error);
+                
+                if (operation.critical) {
+                    criticalFailures++;
+                    if (criticalFailures >= 2) {
+                        throw new Error(`Too many critical initialization failures (${criticalFailures})`);
+                    }
+                }
+            }
+        }
+
+        // Start timers after successful initialization
         this.#reinitializeTimers(
             this.getSetting('refresh_status_cloud'),
             this.getSetting('refresh_position')
         );
+    }
+
+    async #retryOperation(operation, operationName, maxRetries = 3) {
+        let lastError;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                await operation();
+                if (attempt > 1) {
+                    this.log(`${operationName} succeeded on attempt ${attempt}`);
+                }
+                return;
+            } catch (error) {
+                lastError = error;
+                this.log(`${operationName} failed on attempt ${attempt}/${maxRetries}:`, error.message);
+                
+                if (attempt < maxRetries) {
+                    // Wait before retry with exponential backoff
+                    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                    this.log(`Retrying ${operationName} in ${delay}ms...`);
+                    await new Promise(resolve => this.homey.setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        throw lastError;
     }
 
     async #upgradeDevice() {
@@ -54,12 +140,55 @@ class ConnectedVehicleDevice extends OAuth2Device {
     #initilializeTimers(refreshStatusCloud, refreshPosition) {
         this.log(`Creating timers (${refreshStatusCloud}/${refreshPosition})`);
 
+        // Add a token refresh check timer that runs every 2 minutes
         this.#pollIntervals.push(this.homey.setInterval(async () => {
-            await this.refreshInformation();
+            try {
+                this.log('Checking token expiration status...');
+                const oAuth2Client = this.oAuth2Client;
+                const token = await oAuth2Client.getToken();
+                
+                if (token && token.isExpired && token.isExpired() && token.isRefreshable()) {
+                    this.log('Token will expire soon, triggering proactive refresh...');
+                    try {
+                        await oAuth2Client.refreshToken();
+                        this.log('Token refresh successful during periodic check');
+                    } catch (refreshError) {
+                        this.error('Failed to refresh token during periodic check:', refreshError);
+                    }
+                }
+            } catch (error) {
+                this.error('Error during token expiration check:', error);
+            }
+        }, 2 * 60 * 1000)); // Check every 2 minutes
+
+        this.#pollIntervals.push(this.homey.setInterval(async () => {
+            try {
+                await this.refreshInformation();
+            } catch (error) {
+                this.error('Error during scheduled information refresh:', error);
+                
+                // Check if this is a token-related error
+                if (error.message && error.message.includes('refresh token')) {
+                    this.error('Refresh token error in scheduled refresh - device needs repair');
+                    this.#deleteTimers(); // Stop further attempts
+                    await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                }
+            }
         }, 60 * 1000 * Number(refreshStatusCloud)));
 
         this.#pollIntervals.push(this.homey.setInterval(async () => {
-            await this.refreshLocation();
+            try {
+                await this.refreshLocation();
+            } catch (error) {
+                this.error('Error during scheduled location refresh:', error);
+                
+                // Check if this is a token-related error
+                if (error.message && error.message.includes('refresh token')) {
+                    this.error('Refresh token error in scheduled refresh - device needs repair');
+                    this.#deleteTimers(); // Stop further attempts
+                    await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                }
+            }
         }, 60 * 1000 * Number(refreshPosition)));
     }
 
@@ -659,6 +788,22 @@ class ConnectedVehicleDevice extends OAuth2Device {
         } else {
             return false;
         }
+    }
+
+    async onOAuth2Expired() {
+        this.error('OAuth2 token has expired - setting device unavailable');
+        
+        // Clear any existing timers to prevent further API calls with expired token
+        this.#deleteTimers();
+        
+        // Set device unavailable immediately with clear message
+        await this.setUnavailable('OAuth2 session has expired. Please repair the device to re-authorize with Volvo.');
+    }
+
+    async onOAuth2Destroyed() {
+        this.error('OAuth2 session has been destroyed');
+        this.#deleteTimers();
+        await super.onOAuth2Destroyed();
     }
 
     onOAuth2Deleted() {
