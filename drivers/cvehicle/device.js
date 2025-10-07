@@ -71,6 +71,14 @@ class ConnectedVehicleDevice extends OAuth2Device {
     }
 
     async #initializeDeviceWithRetry() {
+        // First, ensure token is valid before making any API calls
+        try {
+            await this.oAuth2Client.ensureTokenValid();
+        } catch (error) {
+            this.error('Token validation failed during initialization:', error);
+            throw error;
+        }
+
         const operations = [
             { name: 'updateVehicleSettings', fn: () => this.updateVehicleSettings(), critical: true },
             { name: 'setupCapabilities', fn: () => this.setupCapabilities(), critical: true },
@@ -139,6 +147,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
     #initilializeTimers(refreshStatusCloud, refreshPosition) {
         this.log(`Creating timers (${refreshStatusCloud}/${refreshPosition})`);
+        this.log(`Current timer count before creation: ${this.#pollIntervals.length}`);
+        
+        // Safety check: if timers already exist, clear them first
+        if (this.#pollIntervals.length > 0) {
+            this.log('Warning: Timers already exist, clearing them first');
+            this.#deleteTimers();
+        }
 
         // Add a token refresh check timer that runs every 2 minutes
         this.#pollIntervals.push(this.homey.setInterval(async () => {
@@ -190,6 +205,8 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 }
             }
         }, 60 * 1000 * Number(refreshPosition)));
+        
+        this.log(`Timer creation complete. Total timers: ${this.#pollIntervals.length}`);
     }
 
     #deleteTimers() {
@@ -198,6 +215,8 @@ class ConnectedVehicleDevice extends OAuth2Device {
         this.#pollIntervals.forEach(timer => {
             this.homey.clearInterval(timer);
         });
+        // Clear the array to prevent memory leaks and duplicate timers
+        this.#pollIntervals = [];
     }
 
     #reinitializeTimers(refreshStatusCloud, refreshPosition) {
@@ -294,8 +313,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
     }
 
     async updateVehicleSettings() {
-
         try {
+            // Ensure token is valid before making API call
+            await this.oAuth2Client.ensureTokenValid();
+            
             const vehicleInfo = await this.oAuth2Client.getVehicleInfo(this.getData().id);
             const vehicleType = this.#determineVehicleType(vehicleInfo.data.fuelType);
 
