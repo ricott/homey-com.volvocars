@@ -169,6 +169,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
                         this.log('Token refresh successful during periodic check');
                     } catch (refreshError) {
                         this.error('Failed to refresh token during periodic check:', refreshError);
+                        
+                        // Check if this is a critical error that requires re-authorization
+                        if (refreshError.message && (refreshError.message.includes('refresh token') || refreshError.message.includes('invalid'))) {
+                            this.error('Critical token error in periodic check - device needs repair');
+                            this.#deleteTimers(); // Stop further attempts
+                            await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                        }
                     }
                 }
             } catch (error) {
@@ -182,11 +189,15 @@ class ConnectedVehicleDevice extends OAuth2Device {
             } catch (error) {
                 this.error('Error during scheduled information refresh:', error);
                 
-                // Check if this is a token-related error
-                if (error.message && error.message.includes('refresh token')) {
-                    this.error('Refresh token error in scheduled refresh - device needs repair');
+                // Check if this is a critical token-related error
+                if (error.message && (error.message.includes('refresh token') || error.message.includes('invalid'))) {
+                    this.error('Critical token error in scheduled refresh - device needs repair');
                     this.#deleteTimers(); // Stop further attempts
                     await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                }
+                // For network errors, just log and continue - don't make device unavailable
+                else if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
+                    this.log('Network error during scheduled refresh - will retry on next cycle');
                 }
             }
         }, 60 * 1000 * Number(refreshStatusCloud)));
@@ -197,11 +208,15 @@ class ConnectedVehicleDevice extends OAuth2Device {
             } catch (error) {
                 this.error('Error during scheduled location refresh:', error);
                 
-                // Check if this is a token-related error
-                if (error.message && error.message.includes('refresh token')) {
-                    this.error('Refresh token error in scheduled refresh - device needs repair');
+                // Check if this is a critical token-related error
+                if (error.message && (error.message.includes('refresh token') || error.message.includes('invalid'))) {
+                    this.error('Critical token error in scheduled refresh - device needs repair');
                     this.#deleteTimers(); // Stop further attempts
                     await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
+                }
+                // For network errors, just log and continue - don't make device unavailable
+                else if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
+                    this.log('Network error during scheduled refresh - will retry on next cycle');
                 }
             }
         }, 60 * 1000 * Number(refreshPosition)));
