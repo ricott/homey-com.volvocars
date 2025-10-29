@@ -249,7 +249,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 }
             } catch (error) {
                 this.error(error);
-                return Promise.reject(error);
+                throw error;
             }
         });
     }

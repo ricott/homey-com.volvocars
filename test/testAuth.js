@@ -34,7 +34,6 @@ const password = testData.credentials.password;
         // } else if (response.authState == config.authState.COMPLETED) {
 
     } else {
-        // return Promise.reject(new Error(`Unkown auth state '${authState}'`));
         console.log(`Auth state not implemented '${response.authState}'`);
     }
 })().catch(reason => {
