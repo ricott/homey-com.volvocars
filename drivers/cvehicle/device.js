@@ -33,51 +33,22 @@ class ConnectedVehicleDevice extends OAuth2Device {
             
         } catch (error) {
             this.error('Failed to initialize device:', error);
-            
-            // Check if this is a token-related error that requires re-authorization
-            if (error.message && error.message.includes('refresh token')) {
-                this.error('Token refresh failed - device needs re-authorization');
-                await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
-                return;
-            }
-            
-            // Don't make device unavailable immediately for other errors - try to recover
-            this.log('Attempting to recover from initialization failure...');
-            
-            // Start timers even if some initialization failed
-            this.#reinitializeTimers(
-                this.getSetting('refresh_status_cloud'),
-                this.getSetting('refresh_position')
-            );
-            
-            // Schedule a retry in 5 minutes
-            this.homey.setTimeout(async () => {
-                this.log('Retrying device initialization after failure...');
-                try {
-                    await this.#initializeDeviceWithRetry();
-                    this.log('Device initialization retry successful');
-                } catch (retryError) {
-                    this.error('Device initialization retry failed:', retryError);
-                    
-                    // Check again if it's a token error
-                    if (retryError.message && retryError.message.includes('refresh token')) {
-                        await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
-                    } else {
-                        await this.setUnavailable('Failed to initialize device. Please repair the device.');
-                    }
-                }
-            }, 5 * 60 * 1000); // 5 minutes
+
+            // For token validation errors during initialization, let OAuth2Client handle through events
+            // The 'expired' event should have been emitted and will call onOAuth2Expired()
+            // Don't try to recover or mark unavailable here - let the OAuth2 event system handle it
+            this.log('Initialization failed - OAuth2 event system should handle token issues');
+
+            // Don't start timers or retry for token errors - let user re-authorize first
+            throw error;
         }
     }
 
     async #initializeDeviceWithRetry() {
         // First, ensure token is valid before making any API calls
-        try {
-            await this.oAuth2Client.ensureTokenValid();
-        } catch (error) {
-            this.error('Token validation failed during initialization:', error);
-            throw error;
-        }
+        // Note: Let OAuth2Client handle token expiration through events
+        // Don't catch token errors here - let them bubble up to trigger proper OAuth2 flow
+        await this.oAuth2Client.ensureTokenValid();
 
         const operations = [
             { name: 'updateVehicleSettings', fn: () => this.updateVehicleSettings(), critical: true },
@@ -169,13 +140,9 @@ class ConnectedVehicleDevice extends OAuth2Device {
                         this.log('Token refresh successful during periodic check');
                     } catch (refreshError) {
                         this.error('Failed to refresh token during periodic check:', refreshError);
-                        
-                        // Check if this is a critical error that requires re-authorization
-                        if (refreshError.message && (refreshError.message.includes('refresh token') || refreshError.message.includes('invalid'))) {
-                            this.error('Critical token error in periodic check - device needs repair');
-                            this.#deleteTimers(); // Stop further attempts
-                            await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
-                        }
+
+                        // Let OAuth2Client handle token expiration through proper event flow
+                        // Don't mark device unavailable here - let onOAuth2Expired() handle it
                     }
                 }
             } catch (error) {
@@ -188,17 +155,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 await this.refreshInformation();
             } catch (error) {
                 this.error('Error during scheduled information refresh:', error);
-                
-                // Check if this is a critical token-related error
-                if (error.message && (error.message.includes('refresh token') || error.message.includes('invalid'))) {
-                    this.error('Critical token error in scheduled refresh - device needs repair');
-                    this.#deleteTimers(); // Stop further attempts
-                    await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
-                }
-                // For network errors, just log and continue - don't make device unavailable
-                else if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
+
+                // Let OAuth2Client handle token expiration through proper event flow
+                // Only handle non-token errors here (network issues, etc.)
+                if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
                     this.log('Network error during scheduled refresh - will retry on next cycle');
                 }
+                // Token errors will be handled by onOAuth2Expired() event
             }
         }, 60 * 1000 * Number(refreshStatusCloud)));
 
@@ -207,17 +170,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 await this.refreshLocation();
             } catch (error) {
                 this.error('Error during scheduled location refresh:', error);
-                
-                // Check if this is a critical token-related error
-                if (error.message && (error.message.includes('refresh token') || error.message.includes('invalid'))) {
-                    this.error('Critical token error in scheduled refresh - device needs repair');
-                    this.#deleteTimers(); // Stop further attempts
-                    await this.setUnavailable('OAuth2 session expired. Please repair the device to re-authorize.');
-                }
-                // For network errors, just log and continue - don't make device unavailable
-                else if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
+
+                // Let OAuth2Client handle token expiration through proper event flow
+                // Only handle non-token errors here (network issues, etc.)
+                if (error.message && (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch'))) {
                     this.log('Network error during scheduled refresh - will retry on next cycle');
                 }
+                // Token errors will be handled by onOAuth2Expired() event
             }
         }, 60 * 1000 * Number(refreshPosition)));
         
