@@ -1,6 +1,6 @@
 'use strict';
 
-const { OAuth2Device } = require('homey-oauth2app');
+const { OAuth2Device } = require('../../lib/oauth2');
 const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
 

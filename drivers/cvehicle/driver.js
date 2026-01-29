@@ -1,6 +1,6 @@
 'use strict';
 
-const { OAuth2Driver } = require('homey-oauth2app');
+const { OAuth2Driver } = require('../../lib/oauth2');
 
 class ConnectedVehicleDriver extends OAuth2Driver {
 

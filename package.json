@@ -5,10 +5,7 @@
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {
-    "homey-oauth2app": "^3.7.2",
-    "node-fetch": "^3.3.2"
-  },
+  "dependencies": {},
   "scripts": {
     "test": "mocha"
   },
@@ -25,6 +22,6 @@
   },
   "homepage": "https://github.com/ricott/homey-com.volvocars#readme",
   "devDependencies": {
-    "mocha": "^11.7.2"
+    "mocha": "^11.7.5"
   }
 }

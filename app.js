@@ -1,6 +1,6 @@
 'use strict';
-// const { App } = require('homey');
-const { OAuth2App } = require('homey-oauth2app');
+
+const { OAuth2App } = require('./lib/oauth2');
 const VolvoOAuth2Client = require('./lib/VolvoOAuth2Client.js');
 const { chargingSystemStatus, commands } = require('./lib/const');
 
@@ -13,8 +13,6 @@ class VOCApp extends OAuth2App {
         // Do App logic here
 
         this.log(`Volvo on Call v${this.#getAppVersion()} is running`);
-
-        this.#setupGlobalFetch();
 
         // Register common triggers
         this._car_left_home = this.homey.flow.getDeviceTriggerCard('car_left_home');
@@ -32,21 +30,6 @@ class VOCApp extends OAuth2App {
 
     #getAppVersion() {
         return this.homey.manifest.version;
-    }
-
-    #setupGlobalFetch() {
-        if (!global.fetch) {
-            global.fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-        }
-        if (!global.AbortSignal.timeout) {
-            global.AbortSignal.timeout = timeout => {
-                const controller = new AbortController();
-                const abort = setTimeout(() => {
-                    controller.abort();
-                }, timeout);
-                return controller.signal;
-            }
-        }
     }
 
     getChargingSystemStates() {

@@ -1,6 +1,6 @@
 {
-    "1.5.8": {
-        "en": "Fixed bug with token expiration"
+    "1.5.9": {
+        "en": "Refactored OAuth2 client to use proactive token refresh"
     },
     "1.5.3": {
         "en": "Fixed bug with average fuel consumption missing in engine stopped trigger"
