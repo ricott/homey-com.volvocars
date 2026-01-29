@@ -19,7 +19,8 @@
         "range_battery",
         "charging_system_status",
         "measure_battery",
-        "ev_charging_state"
+        "ev_charging_state",
+        "odometer"
     ],
     "energy": {
         "batteries": [

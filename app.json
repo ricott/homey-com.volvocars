@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.volvocars",
-  "version": "1.5.9",
+  "version": "1.6.0",
   "brandColor": "#1a3547",
   "compatibility": ">=12.9.0",
   "sdk": 3,
@@ -532,7 +532,8 @@
         "range_battery",
         "charging_system_status",
         "measure_battery",
-        "ev_charging_state"
+        "ev_charging_state",
+        "odometer"
       ],
       "energy": {
         "batteries": [
@@ -733,6 +734,17 @@
                 "en": "When the Volvo API last got an update from the vehicle for this object"
               },
               "value": ""
+            },
+            {
+              "id": "odometerTimestamp",
+              "type": "label",
+              "label": {
+                "en": "Odometer timestamp"
+              },
+              "hint": {
+                "en": "When the Volvo API last got an update from the vehicle for this object"
+              },
+              "value": ""
             }
           ]
         }
@@ -799,6 +811,19 @@
       "setable": false,
       "uiComponent": null,
       "insights": false
+    },
+    "odometer": {
+      "type": "number",
+      "title": {
+        "en": "Odometer"
+      },
+      "units": {
+        "en": "km"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/odometer.svg"
     },
     "range": {
       "type": "number",

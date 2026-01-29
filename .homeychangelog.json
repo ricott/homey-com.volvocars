@@ -1,4 +1,7 @@
 {
+    "1.6.0": {
+        "en": "Added odometer capability"
+    },
     "1.5.9": {
         "en": "Refactored OAuth2 client to use proactive token refresh"
     },

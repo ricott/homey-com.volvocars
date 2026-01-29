@@ -168,6 +168,17 @@
                     "en": "When the Volvo API last got an update from the vehicle for this object"
                 },
                 "value": ""
+            },
+            {
+                "id": "odometerTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Odometer timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
             }
         ]
     }

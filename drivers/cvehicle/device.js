@@ -114,6 +114,8 @@ class ConnectedVehicleDevice extends OAuth2Device {
         if (this.getClass() !== _DEVICE_CLASS) {
             await this.setClass(_DEVICE_CLASS);
         }
+        // Add odometer capability if not already present
+        await this.addCapabilityHelper('odometer');
     }
 
     #initilializeTimers(refreshStatusCloud, refreshPosition) {
@@ -436,8 +438,20 @@ class ConnectedVehicleDevice extends OAuth2Device {
     async refreshInformation() {
 
         await this.#refreshVehicleStatistics();
+        await this.#refreshOdometer();
         await this.#refreshDoorState();
         await this.#refreshEngineState();
+    }
+
+    async #refreshOdometer() {
+        try {
+            const odometerState = await this.oAuth2Client.getOdometerState(this.getData().id);
+            const odometerValue = odometerState?.data?.odometer?.value || 0;
+            await this.#updateProperty('odometer', odometerValue);
+            await this.updateTimestampSetting('odometerTimestamp', odometerState?.data?.odometer?.timestamp);
+        } catch (error) {
+            this.error('Failed to get odometer state:', error);
+        }
     }
 
     async #refreshVehicleStatistics() {
