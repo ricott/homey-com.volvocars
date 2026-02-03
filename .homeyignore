@@ -2,8 +2,7 @@
 /test/
 
 # Documentation (not needed in app bundle)
-README.md
-README.txt
+README.*
 
 # Development files
 .gitignore
