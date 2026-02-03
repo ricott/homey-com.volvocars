@@ -1,0 +1,10 @@
+# Test files
+/test/
+
+# Documentation (not needed in app bundle)
+README.md
+README.txt
+
+# Development files
+.gitignore
+.github/
