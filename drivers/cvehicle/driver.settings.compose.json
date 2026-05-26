@@ -126,6 +126,17 @@
                 "value": ""
             },
             {
+                "id": "chargingCurrentLimitTimestamp",
+                "type": "label",
+                "label": {
+                    "en": "Charging current limit timestamp"
+                },
+                "hint": {
+                    "en": "When the Volvo API last got an update from the vehicle for this object"
+                },
+                "value": ""
+            },
+            {
                 "id": "engineTimestamp",
                 "type": "label",
                 "label": {

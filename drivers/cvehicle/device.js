@@ -5,6 +5,7 @@ const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
 
 const _AVAILABLE_COMMANDS_KEY = 'availableCommands';
+const _ENERGY_CAPABILITIES_KEY = 'energyCapabilities';
 const _LOCATION_DATA = 'location';
 const _LOCATION_ADDRESS = 'locationAddress';
 const _LAST_TRIGGER_LOCATION = 'lastTriggerLocation';
@@ -52,6 +53,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
         const operations = [
             { name: 'updateVehicleSettings', fn: () => this.updateVehicleSettings(), critical: true },
+            { name: 'updateEnergyCapabilities', fn: () => this.updateEnergyCapabilities(), critical: false },
             { name: 'setupCapabilities', fn: () => this.setupCapabilities(), critical: true },
             { name: 'updateAvailableCommands', fn: () => this.updateAvailableCommands(), critical: false },
             { name: 'refreshInformation', fn: () => this.refreshInformation(), critical: false },
@@ -225,6 +227,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.removeCapabilityHelper('range_battery');
             await this.removeCapabilityHelper('charging_system_status');
             await this.removeCapabilityHelper('ev_charging_state');
+            await this.removeCapabilityHelper('charging_current_limit');
             // Make sure range is there
             await this.addCapabilityHelper('range');
 
@@ -235,6 +238,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
             await this.addCapabilityHelper('ev_charging_state');
+            await this.#setupChargingCurrentLimitCapability();
 
             await this.setEnergy({ electricCar: true });
 
@@ -244,8 +248,18 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
             await this.addCapabilityHelper('ev_charging_state');
+            await this.#setupChargingCurrentLimitCapability();
 
             await this.setEnergy({ electricCar: true });
+        }
+    }
+
+    async #setupChargingCurrentLimitCapability() {
+        if (this.isEnergyCapabilitySupported(config.energyCapability.CHARGING_CURRENT_LIMIT)) {
+            await this.addCapabilityHelper('charging_current_limit');
+        } else {
+            this.log('chargingCurrentLimit not supported by this vehicle, skipping capability');
+            await this.removeCapabilityHelper('charging_current_limit');
         }
     }
 
@@ -286,6 +300,28 @@ class ConnectedVehicleDevice extends OAuth2Device {
         } catch (error) {
             this.error('Failed to list available commands:', error);
         }
+    }
+
+    async updateEnergyCapabilities() {
+        this.log('Fetching energy capabilities');
+
+        try {
+            const response = await this.oAuth2Client.getEnergyCapabilities(this.getData().id);
+            const capabilities = response?.getEnergyState || {};
+            await this.setStoreValue(_ENERGY_CAPABILITIES_KEY, capabilities);
+            this.log('Energy capabilities stored');
+        } catch (error) {
+            // Non-critical: keep whatever we already have, default to empty
+            this.error('Failed to fetch energy capabilities:', error);
+            if (this.getStoreValue(_ENERGY_CAPABILITIES_KEY) == null) {
+                await this.setStoreValue(_ENERGY_CAPABILITIES_KEY, {});
+            }
+        }
+    }
+
+    isEnergyCapabilitySupported(capabilityKey) {
+        const capabilities = this.getStoreValue(_ENERGY_CAPABILITIES_KEY) || {};
+        return capabilities?.[capabilityKey]?.isSupported === true;
     }
 
     async updateVehicleSettings() {
@@ -514,6 +550,15 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 this.log('Charging status not supported');
             }
 
+            if (this.hasCapability('charging_current_limit')) {
+                if (energyState?.chargingCurrentLimit?.status === 'OK') {
+                    await this.#updateProperty('charging_current_limit', energyState?.chargingCurrentLimit?.value || 0);
+                    await this.updateTimestampSetting('chargingCurrentLimitTimestamp', energyState?.chargingCurrentLimit?.updatedAt);
+                } else {
+                    this.log('Charging current limit not supported or not available');
+                }
+            }
+
         } catch (error) {
             this.error('Failed to refresh energy information:', error);
         }
@@ -715,7 +760,8 @@ class ConnectedVehicleDevice extends OAuth2Device {
             location_human: () => this.#handleLocationChange(),
             range: () => this.#handleFuelRangeChange(newValue),
             range_battery: () => this.#handleBatteryRangeChange(newValue),
-            charging_system_status: () => this.#handleChargingStatusChange(newValue)
+            charging_system_status: () => this.#handleChargingStatusChange(newValue),
+            charging_current_limit: () => this.#handleChargingCurrentLimitChange(newValue)
         };
 
         const handler = propertyHandlers[key];
@@ -787,6 +833,11 @@ class ConnectedVehicleDevice extends OAuth2Device {
     async #handleChargingStatusChange(status) {
         const tokens = { status };
         await this.homey.app.triggerChargeSystemStatusChanged(this, tokens);
+    }
+
+    async #handleChargingCurrentLimitChange(currentLimit) {
+        const tokens = { current_limit: currentLimit };
+        await this.homey.app.triggerChargingCurrentLimitChanged(this, tokens);
     }
 
     isCapabilityValueChanged(key, newValue) {

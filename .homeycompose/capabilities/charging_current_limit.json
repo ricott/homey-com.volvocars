@@ -1,0 +1,14 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Charging current limit"
+    },
+    "units": {
+        "en": "A"
+    },
+    "decimals": 0,
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/assets/cable.svg"
+}

@@ -1,0 +1,25 @@
+{
+    "id": "charging_current_limit_changed",
+    "title": {
+        "en": "Charging current limit changed"
+    },
+    "args": [
+        {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+        }
+    ],
+    "tokens": [
+        {
+            "name": "current_limit",
+            "type": "number",
+            "title": {
+                "en": "Current limit (A)"
+            },
+            "example": {
+                "en": "8"
+            }
+        }
+    ]
+}

@@ -23,6 +23,7 @@ class VOCApp extends OAuth2App {
         this._fuel_range_changed = this.homey.flow.getDeviceTriggerCard('fuel_range_changed');
         this._battery_range_changed = this.homey.flow.getDeviceTriggerCard('battery_range_changed');
         this._charge_system_status_changed = this.homey.flow.getDeviceTriggerCard('charge_system_status_changed');
+        this._charging_current_limit_changed = this.homey.flow.getDeviceTriggerCard('charging_current_limit_changed');
 
         this.#registerConditionFlows();
         this.#registerActions();
@@ -80,6 +81,9 @@ class VOCApp extends OAuth2App {
     }
     async triggerChargeSystemStatusChanged(device, tokens) {
         await this._charge_system_status_changed.trigger(device, tokens, {}).catch(this.error);
+    }
+    async triggerChargingCurrentLimitChanged(device, tokens) {
+        await this._charging_current_limit_changed.trigger(device, tokens, {}).catch(this.error);
     }
     async triggerHeaterStarted(device) {
         await this._heater_started.trigger(device, {}, {}).catch(this.error);
@@ -209,6 +213,19 @@ class VOCApp extends OAuth2App {
                 return this.getChargingSystemStates();
             }
         );
+
+        const chargingCurrentLimitBelow = this.homey.flow.getConditionCard('chargingCurrentLimitBelow');
+        chargingCurrentLimitBelow.registerRunListener(async (args, state) => {
+            this.log('Flow condition.chargingCurrentLimitBelow');
+            if (!args.device.hasCapability('charging_current_limit')) {
+                this.log('- car does not support charging_current_limit');
+                return false;
+            }
+            const limit = args.device.getCapabilityValue('charging_current_limit');
+            this.log(`- car.charging_current_limit: ${limit}, threshold: ${args.ampere}`);
+            if (limit == null) return false;
+            return Number(limit) < Number(args.ampere);
+        });
     }
 }
 

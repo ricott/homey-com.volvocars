@@ -129,6 +129,31 @@
         ]
       },
       {
+        "id": "charging_current_limit_changed",
+        "title": {
+          "en": "Charging current limit changed"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          }
+        ],
+        "tokens": [
+          {
+            "name": "current_limit",
+            "type": "number",
+            "title": {
+              "en": "Current limit (A)"
+            },
+            "example": {
+              "en": "8"
+            }
+          }
+        ]
+      },
+      {
         "id": "engine_started",
         "title": {
           "en": "Engine started"
@@ -324,6 +349,32 @@
             "title": {
               "en": "Charge status"
             }
+          }
+        ]
+      },
+      {
+        "id": "chargingCurrentLimitBelow",
+        "title": {
+          "en": "Charging current limit is !{{below|not below}}"
+        },
+        "titleFormatted": {
+          "en": "Charging current limit is !{{below|not below}} [[ampere]] A"
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=cvehicle"
+          },
+          {
+            "name": "ampere",
+            "type": "number",
+            "title": {
+              "en": "Ampere"
+            },
+            "min": 0,
+            "max": 64,
+            "step": 1
           }
         ]
       },
@@ -531,6 +582,7 @@
         "range",
         "range_battery",
         "charging_system_status",
+        "charging_current_limit",
         "measure_battery",
         "ev_charging_state",
         "odometer"
@@ -692,6 +744,17 @@
               "value": ""
             },
             {
+              "id": "chargingCurrentLimitTimestamp",
+              "type": "label",
+              "label": {
+                "en": "Charging current limit timestamp"
+              },
+              "hint": {
+                "en": "When the Volvo API last got an update from the vehicle for this object"
+              },
+              "value": ""
+            },
+            {
               "id": "engineTimestamp",
               "type": "label",
               "label": {
@@ -752,6 +815,20 @@
     }
   ],
   "capabilities": {
+    "charging_current_limit": {
+      "type": "number",
+      "title": {
+        "en": "Charging current limit"
+      },
+      "units": {
+        "en": "A"
+      },
+      "decimals": 0,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/cable.svg"
+    },
     "charging_system_status": {
       "type": "string",
       "title": {
