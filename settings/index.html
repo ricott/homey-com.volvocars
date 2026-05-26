@@ -80,6 +80,33 @@
             background-color: #6c757d;
             cursor: not-allowed;
         }
+
+        .secondary-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .secondary-section h2 {
+            font-size: 18px;
+            color: #1a3547;
+            margin: 0 0 8px 0;
+        }
+
+        .secondary-section p {
+            font-size: 14px;
+            color: #555;
+            margin: 0 0 12px 0;
+        }
+
+        button.danger {
+            background-color: #b94a48 !important;
+            margin-top: 4px;
+        }
+
+        button.danger:hover {
+            background-color: #963430 !important;
+        }
         
         .status {
             margin-top: 15px;
@@ -142,8 +169,15 @@
         </div>
         
         <button id="save">Save settings</button>
-        
+
         <div id="status" class="status"></div>
+
+        <div class="secondary-section">
+            <h2>Switch Volvo ID account</h2>
+            <p>Signs out of every saved Volvo ID session for this app. Your vehicles stay installed and become unavailable until you use the "Repair" option on each device to sign in again, optionally with a different Volvo ID.</p>
+            <button id="signout" class="danger">Sign out of all sessions</button>
+            <div id="signout-status" class="status"></div>
+        </div>
     </div>
 
     <script>
@@ -164,8 +198,7 @@
             document.getElementById('save').addEventListener('click', function() {
                 const apiKey = document.getElementById('vcc_api_key').value.trim();
                 const saveButton = document.getElementById('save');
-                const status = document.getElementById('status');
-                
+
                 if (!apiKey) {
                     showStatus('Please enter a VCC API key', 'error');
                     return;
@@ -187,6 +220,35 @@
                     }
                 });
             });
+
+            // Setup sign-out button listener
+            document.getElementById('signout').addEventListener('click', function() {
+                Homey.confirm(
+                    'This will sign out of every saved Volvo ID session. Your vehicles will remain installed but become unavailable until you re-authorize them through the device\'s Repair option. Continue?',
+                    'warning',
+                    function(err, confirmed) {
+                        if (err || !confirmed) return;
+
+                        const signOutButton = document.getElementById('signout');
+                        signOutButton.disabled = true;
+                        signOutButton.textContent = 'Signing out...';
+
+                        Homey.api('POST', '/signOut', null, function(err, result) {
+                            signOutButton.disabled = false;
+                            signOutButton.textContent = 'Sign out of all sessions';
+
+                            if (err) {
+                                showSignOutStatus('Failed to sign out: ' + (err.message || err), 'error');
+                                return;
+                            }
+
+                            const sessions = (result && result.sessions) || 0;
+                            const devices = (result && result.devices) || 0;
+                            showSignOutStatus('Signed out of ' + sessions + ' session(s). ' + devices + ' device(s) marked for re-authorization. Open each vehicle in Homey and choose "Repair" to sign in again.', 'success');
+                        });
+                    }
+                );
+            });
         }
 
         function showStatus(message, type) {
@@ -198,6 +260,13 @@
 
         function hideStatus() {
             document.getElementById('status').style.display = 'none';
+        }
+
+        function showSignOutStatus(message, type) {
+            const status = document.getElementById('signout-status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
         }
     </script>
 </body>

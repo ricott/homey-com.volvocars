@@ -85,6 +85,65 @@ class VOCApp extends OAuth2App {
     async triggerChargingCurrentLimitChanged(device, tokens) {
         await this._charging_current_limit_changed.trigger(device, tokens, {}).catch(this.error);
     }
+
+    /**
+     * Sign out of every saved OAuth2 session and mark all devices unavailable.
+     *
+     * This wipes the stored access/refresh tokens (the `OAuth2Sessions` setting
+     * managed by `OAuth2App`) and destroys the in-memory clients. Devices stay
+     * installed so the user can use the device's "Repair" flow to log in with
+     * a different account, including a different Volvo ID, without removing
+     * and re-pairing them.
+     *
+     * @returns {Promise<{ sessions: number, devices: number }>}
+     */
+    async signOutAllSessions() {
+        const savedSessions = this.getSavedOAuth2Sessions();
+        const sessionEntries = Object.entries(savedSessions);
+
+        let devicesAffected = 0;
+
+        for (const [sessionId, session] of sessionEntries) {
+            const configId = session?.configId || 'default';
+
+            // Mark every device tied to this session unavailable so the user
+            // gets a clear "please re-authorize" state until they repair.
+            try {
+                const devices = await this.getOAuth2Devices({ sessionId, configId });
+                for (const device of devices) {
+                    try {
+                        await device.setUnavailable('Signed out. Please use Repair to sign in again.');
+                        devicesAffected++;
+                    } catch (err) {
+                        this.error(`Failed to mark device ${device.getName?.()} unavailable:`, err);
+                    }
+                }
+            } catch (err) {
+                this.error(`Failed to enumerate devices for session ${sessionId}:`, err);
+            }
+
+            // Destroy the in-memory client (if any) and remove the saved
+            // session entry. deleteOAuth2Client() handles the settings update.
+            try {
+                if (this.hasOAuth2Client({ sessionId, configId })) {
+                    const client = this.getOAuth2Client({ sessionId, configId });
+                    client.destroy();
+                } else {
+                    this.deleteOAuth2Client({ sessionId, configId });
+                }
+            } catch (err) {
+                this.error(`Failed to destroy client for session ${sessionId}:`, err);
+                // Fall back to removing the saved entry directly.
+                this.deleteOAuth2Client({ sessionId, configId });
+            }
+        }
+
+        // Defensive cleanup in case any entries weren't removed above.
+        this.homey.settings.set('OAuth2Sessions', {});
+
+        this.log(`Signed out of ${sessionEntries.length} session(s), affected ${devicesAffected} device(s)`);
+        return { sessions: sessionEntries.length, devices: devicesAffected };
+    }
     async triggerHeaterStarted(device) {
         await this._heater_started.trigger(device, {}, {}).catch(this.error);
     }

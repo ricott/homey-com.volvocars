@@ -1,6 +1,6 @@
 {
     "1.6.3": {
-        "en": "Added charging current limit capability"
+        "en": "Added charging current limit capability for supported electric and hybrid vehicles, with a flow trigger and condition. Added a sign out button to the app settings to switch Volvo ID account, and forced re-authentication during repair so the Volvo ID login screen always appears."
     },
     "1.6.2": {
         "en": "Maintenance"

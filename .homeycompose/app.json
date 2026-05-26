@@ -48,5 +48,11 @@
     "images": {
         "large": "/assets/images/large.png",
         "small": "/assets/images/small.png"
+    },
+    "api": {
+        "signOut": {
+            "method": "POST",
+            "path": "/signOut"
+        }
     }
 }
