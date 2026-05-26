@@ -1,4 +1,7 @@
 {
+    "1.6.3": {
+        "en": "Added charging current limit capability"
+    },
     "1.6.2": {
         "en": "Maintenance"
     },
