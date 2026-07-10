@@ -5,7 +5,9 @@
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@sentry/node": "^7.120.4"
+  },
   "scripts": {
     "test": "mocha"
   },

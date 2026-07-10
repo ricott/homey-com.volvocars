@@ -3,11 +3,49 @@
 const { OAuth2App } = require('./lib/oauth2');
 const VolvoOAuth2Client = require('./lib/VolvoOAuth2Client.js');
 const { chargingSystemStatus, commands } = require('./lib/const');
+const logger = require('./lib/logger.js');
+const { formatError } = require('./lib/util.js');
 
 class VOCApp extends OAuth2App {
 
     static OAUTH2_CLIENT = VolvoOAuth2Client; // Default: OAuth2Client
     // static OAUTH2_DEBUG = true; // Default: false
+
+    async onInit() {
+        // Optional, anonymous error reporting (Sentry). Enabled only when a
+        // SENTRY_DSN is present in env.json; a no-op otherwise. Initialised
+        // before the OAuth2 machinery so early sign-in / token issues are
+        // captured. A telemetry failure must never block app startup.
+        try {
+            const telemetryEnabled = logger.init(this.homey);
+            this.log(`Telemetry ${telemetryEnabled ? 'enabled' : 'disabled'}, Node ${process.version}`);
+        } catch (err) {
+            this.error(`Failed to initialize telemetry: ${formatError(err)}`);
+        }
+
+        // Safety net: surface any stray unhandled promise rejection readably and
+        // report it, instead of letting a non-Error rejection turn into an
+        // unreadable '[object Object]' crash. Installed once per process.
+        if (!VOCApp.unhandledRejectionHandlerInstalled) {
+            VOCApp.unhandledRejectionHandlerInstalled = true;
+            process.on('unhandledRejection', (reason) => {
+                this.error(`Unhandled promise rejection: ${formatError(reason)}`);
+                logger.captureException(
+                    reason instanceof Error ? reason : new Error(formatError(reason)),
+                    { tags: { source: 'unhandledRejection' } }
+                );
+            });
+        }
+
+        // Hand off to OAuth2App.onInit(), which sets up the OAuth2 config and
+        // then calls this.onOAuth2Init() below.
+        await super.onInit();
+    }
+
+    async onOAuth2Uninit() {
+        // Give Sentry a moment to send any buffered events before shutdown.
+        await logger.flush();
+    }
 
     async onOAuth2Init() {
         // Do App logic here
@@ -189,6 +227,7 @@ class VOCApp extends OAuth2App {
                 return true;
             } catch (error) {
                 this.log(`[${deviceName}] Command '${commandName}' failed:`, error);
+                logger.reportCommandFailure(commandName, error);
                 throw error;
             }
         });

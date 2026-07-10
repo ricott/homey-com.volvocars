@@ -3,6 +3,7 @@
 const { OAuth2Device } = require('../../lib/oauth2');
 const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
+const logger = require('../../lib/logger.js');
 
 const _AVAILABLE_COMMANDS_KEY = 'availableCommands';
 const _ENERGY_CAPABILITIES_KEY = 'energyCapabilities';
@@ -71,7 +72,15 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 if (operation.critical) {
                     criticalFailures++;
                     if (criticalFailures >= 2) {
-                        throw new Error(`Too many critical initialization failures (${criticalFailures})`);
+                        const initError = new Error(`Too many critical initialization failures (${criticalFailures})`);
+                        logger.captureException(initError, {
+                            tags: {
+                                phase: 'device-init',
+                                vehicleType: this.getSetting('vehicleType') || 'unknown'
+                            },
+                            extra: { lastOperation: operation.name }
+                        });
+                        throw initError;
                     }
                 }
             }
@@ -852,7 +861,14 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
     async onOAuth2Expired() {
         this.error('OAuth2 token has expired - setting device unavailable');
-        
+
+        // Report the user-visible impact of an auth failure (device going
+        // unavailable). Rate-limited per session inside the logger.
+        logger.reportSessionExpired({
+            sessionId: this.getStoreValue('OAuth2SessionId') || 'default',
+            tags: { vehicleType: this.getSetting('vehicleType') || 'unknown' }
+        });
+
         // Clear any existing timers to prevent further API calls with expired token
         this.#deleteTimers();
         

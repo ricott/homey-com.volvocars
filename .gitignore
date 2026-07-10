@@ -14,4 +14,7 @@
 # Added by Homey CLI
 /.homeybuild/
 
+# Generated from .homeycompose/app.json by the Homey CLI
+/app.json
+
 node_modules
