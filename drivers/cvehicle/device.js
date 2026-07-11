@@ -863,9 +863,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
         this.error('OAuth2 token has expired - setting device unavailable');
 
         // Report the user-visible impact of an auth failure (device going
-        // unavailable). Rate-limited per session inside the logger.
+        // unavailable), carrying the cause of the last refresh failure if the
+        // client recorded one. Rate-limited per session inside the logger.
+        const lastRefreshError = this.oAuth2Client?._lastRefreshError || {};
         logger.reportSessionExpired({
             sessionId: this.getStoreValue('OAuth2SessionId') || 'default',
+            reason: lastRefreshError.oauthError || null,
+            httpStatus: lastRefreshError.status || null,
             tags: { vehicleType: this.getSetting('vehicleType') || 'unknown' }
         });
 

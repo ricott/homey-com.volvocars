@@ -1,4 +1,7 @@
 {
+    "1.6.5": {
+        "en": "Improved diagnostics for sign-in and token refresh failures, capturing the underlying reason to better pinpoint why re-authentication is sometimes required."
+    },
     "1.6.4": {
         "en": "Added optional anonymous error reporting to help diagnose sign-in and connection issues faster."
     },
