@@ -1,5 +1,5 @@
 {
-    "1.6.5": {
+    "1.6.6": {
         "en": "Improved diagnostics for sign-in and token refresh failures, capturing the underlying reason to better pinpoint why re-authentication is sometimes required."
     },
     "1.6.4": {
