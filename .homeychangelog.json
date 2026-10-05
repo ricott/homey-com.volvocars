@@ -1,4 +1,7 @@
 {
+    "1.6.7": {
+        "en": "Fixed a misleading \"Token refresh failed\" error when adding a car with an invalid or inactive VCC API key. The actual reason from Volvo is now shown, with a hint to check the API key in the app settings."
+    },
     "1.6.6": {
         "en": "Improved diagnostics for sign-in and token refresh failures, capturing the underlying reason to better pinpoint why re-authentication is sometimes required."
     },
