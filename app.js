@@ -74,7 +74,7 @@ class VOCApp extends OAuth2App {
     getChargingSystemStates() {
         let statusArray = [];
         Object.keys(chargingSystemStatus).forEach(key => {
-            const val = String(chargingSystemStatus[key]).replace('CHARGING_SYSTEM_', '');
+            const val = chargingSystemStatus[key];
             statusArray.push({
                 id: val,
                 name: val

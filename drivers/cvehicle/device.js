@@ -14,6 +14,15 @@ const _RAW_DISTANCE_HOMEY = 'rawDistanceHomey';
 const _DEVICE_CLASS = 'car';
 const _AVERAGE_CONSUMPTION = 'averageConsumption';
 
+// Optional charging capabilities, each backed by an Energy API v2 state field.
+// Only added when the Energy API reports the field as supported for the vehicle.
+const _OPTIONAL_ENERGY_CAPABILITIES = [
+    { capability: 'charging_current_limit', field: config.energyCapability.CHARGING_CURRENT_LIMIT, timestampSetting: 'chargingCurrentLimitTimestamp' },
+    { capability: 'charging_power', field: config.energyCapability.CHARGING_POWER, timestampSetting: 'chargingPowerTimestamp' },
+    { capability: 'charging_time_remaining', field: config.energyCapability.CHARGING_TIME_REMAINING, timestampSetting: 'chargingTimeRemainingTimestamp' },
+    { capability: 'charging_target_level', field: config.energyCapability.TARGET_BATTERY_CHARGE_LEVEL, timestampSetting: 'chargingTargetLevelTimestamp' }
+];
+
 class ConnectedVehicleDevice extends OAuth2Device {
 
     #pollIntervals = [];
@@ -236,9 +245,12 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.removeCapabilityHelper('range_battery');
             await this.removeCapabilityHelper('charging_system_status');
             await this.removeCapabilityHelper('ev_charging_state');
-            await this.removeCapabilityHelper('charging_current_limit');
+            for (const { capability } of _OPTIONAL_ENERGY_CAPABILITIES) {
+                await this.removeCapabilityHelper(capability);
+            }
             // Make sure range is there
             await this.addCapabilityHelper('range');
+            await this.#applyEnergyConfig(false);
 
         } else if (type == config.vehicleType.ELECTRIC) {
             await this.removeCapabilityHelper('range');
@@ -247,9 +259,8 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
             await this.addCapabilityHelper('ev_charging_state');
-            await this.#setupChargingCurrentLimitCapability();
-
-            await this.setEnergy({ electricCar: true });
+            await this.#setupOptionalEnergyCapabilities();
+            await this.#applyEnergyConfig(true);
 
         } else if (type == config.vehicleType.HYBRID) {
             await this.addCapabilityHelper('range');
@@ -257,27 +268,49 @@ class ConnectedVehicleDevice extends OAuth2Device {
             await this.addCapabilityHelper('range_battery');
             await this.addCapabilityHelper('charging_system_status');
             await this.addCapabilityHelper('ev_charging_state');
-            await this.#setupChargingCurrentLimitCapability();
-
-            await this.setEnergy({ electricCar: true });
+            await this.#setupOptionalEnergyCapabilities();
+            await this.#applyEnergyConfig(true);
         }
     }
 
-    async #setupChargingCurrentLimitCapability() {
-        if (this.isEnergyCapabilitySupported(config.energyCapability.CHARGING_CURRENT_LIMIT)) {
-            await this.addCapabilityHelper('charging_current_limit');
-        } else {
-            this.log('chargingCurrentLimit not supported by this vehicle, skipping capability');
-            await this.removeCapabilityHelper('charging_current_limit');
+    async #setupOptionalEnergyCapabilities() {
+        for (const { capability, field } of _OPTIONAL_ENERGY_CAPABILITIES) {
+            if (this.isEnergyCapabilitySupported(field)) {
+                await this.addCapabilityHelper(capability);
+            } else {
+                this.log(`${field} not supported by this vehicle, skipping capability ${capability}`);
+                await this.removeCapabilityHelper(capability);
+            }
+        }
+    }
+
+    /**
+     * Mark the device as an EV in Homey Energy, or restore the driver's
+     * manifest energy config for non-EVs. setEnergy() is impactful, so it is
+     * only called when the stored override actually differs.
+     * @param {boolean} electricCar
+     */
+    async #applyEnergyConfig(electricCar) {
+        try {
+            const isElectricCar = this.getEnergy()?.electricCar === true;
+            if (electricCar && !isElectricCar) {
+                this.log('Marking device as electric car in Homey Energy');
+                await this.setEnergy({ electricCar: true });
+            } else if (!electricCar && isElectricCar) {
+                this.log('Restoring manifest energy configuration (not an electric car)');
+                await this.setEnergy(this.driver.manifest.energy || {});
+            }
+        } catch (error) {
+            this.error('Failed to apply energy configuration:', error);
         }
     }
 
     getAvailableCommands() {
-        return this.getStoreValue(_AVAILABLE_COMMANDS_KEY);
+        return this.getStoreValue(_AVAILABLE_COMMANDS_KEY) || [];
     }
 
     isCommandAvailable(command) {
-        const availableCommands = this.getStoreValue(_AVAILABLE_COMMANDS_KEY);
+        const availableCommands = this.getAvailableCommands();
         const available = availableCommands.find(comm => comm.id == command);
         if (available) {
             return true;
@@ -482,7 +515,15 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
     async refreshInformation() {
 
-        await this.#refreshVehicleStatistics();
+        const vehicleStats = await this.#refreshVehicleStatistics();
+
+        // Energy data comes from the Energy API and must not depend on the
+        // statistics endpoint succeeding; statistics is only a fallback source.
+        const type = this.getSetting('vehicleType');
+        if (type === config.vehicleType.HYBRID || type === config.vehicleType.ELECTRIC) {
+            await this.#refreshEnergyInformation(vehicleStats);
+        }
+
         await this.#refreshOdometer();
         await this.#refreshDoorState();
         await this.#refreshEngineState();
@@ -499,15 +540,13 @@ class ConnectedVehicleDevice extends OAuth2Device {
         }
     }
 
+    /**
+     * @returns {Promise<object|null>} the statistics response, or null if it could not be fetched
+     */
     async #refreshVehicleStatistics() {
         try {
             const vehicleStats = await this.oAuth2Client.getVehicleStatistics(this.getData().id);
-
-            // Handle energy information for hybrid and electric vehicles
             const type = this.getSetting('vehicleType');
-            if (type === config.vehicleType.HYBRID || type === config.vehicleType.ELECTRIC) {
-                await this.#refreshEnergyInformation(vehicleStats);
-            }
 
             // Handle fuel range for hybrid and ICE vehicles
             if (type === config.vehicleType.HYBRID || type === config.vehicleType.ICE) {
@@ -522,8 +561,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 await this.setStoreValue(_AVERAGE_CONSUMPTION, vehicleStats?.data?.averageFuelConsumption?.value || 0);
             }
 
+            return vehicleStats;
         } catch (error) {
             this.error('Failed to get vehicle statistics:', error);
+            return null;
         }
     }
 
@@ -544,7 +585,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
             if (energyState?.electricRange?.status === 'OK') {
                 await this.#updateProperty('range_battery', energyState?.electricRange?.value || 0);
                 await this.updateTimestampSetting('rangeBatteryTimestamp', energyState?.electricRange?.updatedAt);
-            } else {
+            } else if (vehicleStats) {
                 await this.#updateProperty('range_battery', vehicleStats?.data?.distanceToEmptyBattery?.value || 0);
                 await this.updateTimestampSetting('rangeBatteryTimestamp', vehicleStats?.data?.distanceToEmptyBattery?.timestamp);
             }
@@ -559,12 +600,16 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 this.log('Charging status not supported');
             }
 
-            if (this.hasCapability('charging_current_limit')) {
-                if (energyState?.chargingCurrentLimit?.status === 'OK') {
-                    await this.#updateProperty('charging_current_limit', energyState?.chargingCurrentLimit?.value || 0);
-                    await this.updateTimestampSetting('chargingCurrentLimitTimestamp', energyState?.chargingCurrentLimit?.updatedAt);
+            for (const { capability, field, timestampSetting } of _OPTIONAL_ENERGY_CAPABILITIES) {
+                if (!this.hasCapability(capability)) {
+                    continue;
+                }
+                const resource = energyState?.[field];
+                if (resource?.status === 'OK') {
+                    await this.#updateProperty(capability, resource.value ?? 0);
+                    await this.updateTimestampSetting(timestampSetting, resource.updatedAt);
                 } else {
-                    this.log('Charging current limit not supported or not available');
+                    this.log(`${field} not available: ${resource?.code || 'no data'}`);
                 }
             }
 

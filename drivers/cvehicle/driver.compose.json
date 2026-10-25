@@ -19,6 +19,9 @@
         "range_battery",
         "charging_system_status",
         "charging_current_limit",
+        "charging_power",
+        "charging_time_remaining",
+        "charging_target_level",
         "measure_battery",
         "ev_charging_state",
         "odometer"

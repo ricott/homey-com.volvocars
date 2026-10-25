@@ -1,0 +1,16 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Charging target level"
+    },
+    "units": {
+        "en": "%"
+    },
+    "decimals": 0,
+    "min": 0,
+    "max": 100,
+    "getable": true,
+    "setable": false,
+    "uiComponent": "sensor",
+    "icon": "/assets/battery.svg"
+}
