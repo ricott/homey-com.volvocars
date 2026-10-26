@@ -1,4 +1,7 @@
 {
+    "1.7.1": {
+        "en": "Fixed locking and other car commands failing with \"Unsupported Media Type\" on some cars."
+    },
     "1.7.0": {
         "en": "Electric and plug-in hybrid cars now show charging power, time remaining and target charge level when the car supports them. The charging status condition now offers the statuses Volvo actually reports, including Error and Discharging. Improved diagnostics when adding or repairing a car."
     },
