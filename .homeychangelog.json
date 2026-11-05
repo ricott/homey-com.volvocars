@@ -1,4 +1,7 @@
 {
+    "1.8.0": {
+        "en": "Volvo has changed its sign-in service. After updating, please repair your car once (device settings > Repair) and sign in to Volvo ID again. Your VCC API key does not need to change. If Volvo rejects your VCC API key, the car now shows a clear message and recovers as soon as you enter a valid key."
+    },
     "1.7.1": {
         "en": "Fixed locking and other car commands failing with \"Unsupported Media Type\" on some cars."
     },
