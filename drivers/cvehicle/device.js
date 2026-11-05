@@ -4,6 +4,7 @@ const { OAuth2Device } = require('../../lib/oauth2');
 const config = require('../../lib/const.js');
 const Osm = require('../../lib/maps.js');
 const logger = require('../../lib/logger.js');
+const VolvoOAuth2Client = require('../../lib/VolvoOAuth2Client.js');
 
 const _AVAILABLE_COMMANDS_KEY = 'availableCommands';
 const _ENERGY_CAPABILITIES_KEY = 'energyCapabilities';
@@ -26,9 +27,20 @@ const _OPTIONAL_ENERGY_CAPABILITIES = [
 class ConnectedVehicleDevice extends OAuth2Device {
 
     #pollIntervals = [];
+    #apiKeyRejected = false;
+    #onAppSettingSet = (key) => {
+        if (key === 'vcc_api_key') {
+            this.#onVccApiKeyChanged().catch(this.error);
+        }
+    };
 
     async onOAuth2Init() {
         this.log('Connected Vehicle device OAuth2 initiated');
+
+        this.oAuth2Client.on('apiKeyRejected', () => {
+            this.#onApiKeyRejected().catch(this.error);
+        });
+        this.homey.settings.on('set', this.#onAppSettingSet);
 
         if (!this.getAvailable()) {
             this.log('Device is not available, presumable a repair triggered this. Making device available again');
@@ -77,7 +89,14 @@ class ConnectedVehicleDevice extends OAuth2Device {
                 await this.#retryOperation(operation.fn, operation.name);
             } catch (error) {
                 this.error(`Failed to ${operation.name}:`, error);
-                
+
+                // Nothing else can succeed with a rejected key. Stay idle (no
+                // timers) until the key is changed in app settings.
+                if (VolvoOAuth2Client.isApiKeyRejectedError(error)) {
+                    await this.#onApiKeyRejected();
+                    return;
+                }
+
                 if (operation.critical) {
                     criticalFailures++;
                     if (criticalFailures >= 2) {
@@ -115,7 +134,12 @@ class ConnectedVehicleDevice extends OAuth2Device {
             } catch (error) {
                 lastError = error;
                 this.log(`${operationName} failed on attempt ${attempt}/${maxRetries}:`, error.message);
-                
+
+                // Retrying cannot fix a rejected API key
+                if (VolvoOAuth2Client.isApiKeyRejectedError(error)) {
+                    break;
+                }
+
                 if (attempt < maxRetries) {
                     // Wait before retry with exponential backoff
                     const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
@@ -925,6 +949,31 @@ class ConnectedVehicleDevice extends OAuth2Device {
         await this.setUnavailable('OAuth2 session has expired. Please repair the device to re-authorize with Volvo.');
     }
 
+    async #onApiKeyRejected() {
+        if (this.#apiKeyRejected) {
+            return;
+        }
+        this.#apiKeyRejected = true;
+        this.error('VCC API key rejected by Volvo - pausing polling until the key is changed');
+        this.#deleteTimers();
+        await this.setUnavailable('Volvo rejected the VCC API key. Enter a valid key from developer.volvocars.com in the Volvo app settings.');
+    }
+
+    async #onVccApiKeyChanged() {
+        if (!this.#apiKeyRejected) {
+            return;
+        }
+        this.log('VCC API key changed - retrying initialization');
+        this.#apiKeyRejected = false;
+        await this.setAvailable();
+        await this.#initializeDeviceWithRetry();
+    }
+
+    async onOAuth2Uninit() {
+        this.homey.settings.removeListener('set', this.#onAppSettingSet);
+        this.#deleteTimers();
+    }
+
     async onOAuth2Destroyed() {
         this.error('OAuth2 session has been destroyed');
         this.#deleteTimers();
@@ -933,6 +982,7 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
     onOAuth2Deleted() {
         this.log(`Deleting cVehicle device from Homey`);
+        this.homey.settings.removeListener('set', this.#onAppSettingSet);
         this.#deleteTimers();
     }
 
