@@ -28,6 +28,9 @@ class ConnectedVehicleDevice extends OAuth2Device {
 
     #pollIntervals = [];
     #apiKeyRejected = false;
+    #onApiKeyRejectedEvent = () => {
+        this.#onApiKeyRejected().catch(this.error);
+    };
     #onAppSettingSet = (key) => {
         if (key === 'vcc_api_key') {
             this.#onVccApiKeyChanged().catch(this.error);
@@ -37,9 +40,10 @@ class ConnectedVehicleDevice extends OAuth2Device {
     async onOAuth2Init() {
         this.log('Connected Vehicle device OAuth2 initiated');
 
-        this.oAuth2Client.on('apiKeyRejected', () => {
-            this.#onApiKeyRejected().catch(this.error);
-        });
+        // onOAuth2Init runs again after a repair, so register idempotently
+        this.oAuth2Client.removeListener('apiKeyRejected', this.#onApiKeyRejectedEvent);
+        this.oAuth2Client.on('apiKeyRejected', this.#onApiKeyRejectedEvent);
+        this.homey.settings.removeListener('set', this.#onAppSettingSet);
         this.homey.settings.on('set', this.#onAppSettingSet);
 
         if (!this.getAvailable()) {
